@@ -258,9 +258,6 @@ config.log
 # Temporary build files
 build/
 
-# Custom
-.tmp
-
 # Godot 4+ specific ignores
 .godot/
 .nomedia
@@ -277,3 +274,6 @@ export_credentials.cfg
 .mono/
 data_*/
 mono_crash.*.json
+
+# Custom
+*.tmp
