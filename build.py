@@ -1,26 +1,30 @@
-import os
+from pathlib import Path
 import shutil
 import subprocess
 
 def main():
     # Clean files from previous runs
-    shutil.rmtree('build', ignore_errors=True)
+    build_dir = Path('build')
+    shutil.rmtree(build_dir, ignore_errors=True)
     # Create a new working copy
-    shutil.copytree('src', 'build/modules/ftlib')
+    src_dir = Path('src')
+    ftlib_dir = build_dir / 'modules' / 'ftlib'
+    shutil.copytree(src_dir, ftlib_dir)
     # Godot requires these specific files to be at the top level of the module
     files_to_move = [
         'config.py',
         'register_types.h',
         'SCsub'
     ]
+    godot_adapter_dir = ftlib_dir / 'godot_adapter'
     for fname in files_to_move:
-        src = os.path.join('build/modules/ftlib/godot_adapter', fname)
-        dst = os.path.join('build/modules/ftlib', fname)
-        if os.path.exists(src):
-            shutil.move(src, dst)
+        src = godot_adapter_dir / fname
+        dst = ftlib_dir / fname
+        shutil.move(src, dst)
     # Run scons in godot directory
-    if os.path.isdir('godot'):
-        subprocess.run(['scons', 'custom_modules=../build/modules'], cwd='godot', check=True)
+    godot_dir = Path('godot')
+    if godot_dir.is_dir():
+        subprocess.run(['scons', 'custom_modules=../build/modules'], cwd=godot_dir, check=True)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
