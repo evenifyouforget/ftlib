@@ -89,6 +89,7 @@ struct block {
 
 struct ft_sim_state {
 	b2World *world;
+	// TODO: refactor into std::vector ?
 	block *blocks;
 	int block_cnt;
 	int tick = 0;
