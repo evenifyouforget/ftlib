@@ -1,0 +1,13 @@
+Import('env')
+
+module_env = env.Clone()
+module_env.add_source_files(env.modules_sources, [
+    'godot_adapter/register_types.cpp',
+    'godot_adapter/summator.cpp',
+    'render/render.cpp'
+    ])
+module_env.Append(CPPPATH=[
+    '.',
+    'godot_adapter',
+    'render',
+    ])
