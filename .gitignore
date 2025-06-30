@@ -259,6 +259,8 @@ config.log
 build/
 
 # Custom
+.tmp
+
 # Godot 4+ specific ignores
 .godot/
 .nomedia
