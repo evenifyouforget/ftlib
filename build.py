@@ -1,6 +1,7 @@
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 
 def main():
     # Clean files from previous runs
@@ -22,9 +23,10 @@ def main():
         dst = ftlib_dir / fname
         shutil.move(src, dst)
     # Run scons in godot directory
+    pass_args = sys.argv[1:]
     godot_dir = Path('godot')
     if godot_dir.is_dir():
-        subprocess.run(['scons', 'custom_modules=../build/modules'], cwd=godot_dir, check=True)
+        subprocess.run(['scons', 'custom_modules=../build/modules'] + pass_args, cwd=godot_dir, check=True)
 
 if __name__ == '__main__':
     main()
