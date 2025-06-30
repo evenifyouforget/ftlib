@@ -42,3 +42,9 @@ If we don't do it exactly correct, it may be a flaw that prevents the adoption o
 
 * Behind fcsim (my fork)
 * Mostly done on the simulation side, but far from overall feature parity with FC
+
+## What does this build?
+
+It builds Godot, with ftlib as a Godot module.
+
+We need ftlib under `godot/modules/` to include it as a Godot module, but we don't want to fork Godot directly or make excessive assumptions about the Godot git structure that will end up baked into our architecture, so we include Godot as a submodule, don't modify it directly, and instead copy Godot to a build directory, and copy in ftlib to that copy of Godot, and then build Godot.
