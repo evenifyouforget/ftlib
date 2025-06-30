@@ -1,0 +1,37 @@
+import SCons
+
+Import('env')
+
+flatten=lambda l: sum(map(flatten,l),[]) if isinstance(l,list) else [l]
+
+def GlobRecursive(pattern, node='.'):
+    results = []
+    for f in Glob(str(node) + '/*', source=True):
+        if type(f) is SCons.Node.FS.Dir:
+            results += GlobRecursive(pattern, f)
+    results += Glob(str(node) + '/' + pattern, source=True)
+    return results
+
+def AllCXXFiles(node='.'):
+    if isinstance(node, list):
+        return flatten([AllCXXFiles(n) for n in node])
+    return GlobRecursive('*.c', node) + GlobRecursive('*.cpp', node)
+
+src_toplevel_dirs = [
+    'box2d',
+    'game',
+    'glib',
+    'glib_adapter',
+    'godot_adapter',
+    'openlibm',
+    'render',
+    'softfloat',
+    'spectre',
+    ]
+src_all_cxx_files = AllCXXFiles(src_toplevel_dirs)
+
+module_env = env.Clone()
+module_env.add_source_files(env.modules_sources, src_all_cxx_files)
+module_env.Append(CPPPATH=[
+    '.',
+    ] + src_toplevel_dirs)
