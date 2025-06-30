@@ -2,8 +2,15 @@
 #define FTLIB_HPP_
 
 #include <string>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "softfloat.h"
 #include "ftmath.h"
+#ifdef __cplusplus
+}
+#endif
 
 std::string ft_math_hash();
 
