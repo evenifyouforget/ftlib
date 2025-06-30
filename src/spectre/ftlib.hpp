@@ -7,10 +7,10 @@
 extern "C" {
 #endif
 #include "softfloat.h"
-#include "ftmath.h"
 #ifdef __cplusplus
 }
 #endif
+#include "ftmath.h"
 
 std::string ft_math_hash();
 

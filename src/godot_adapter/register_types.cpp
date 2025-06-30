@@ -1,6 +1,6 @@
 #include "register_types.h"
 
-#include "core/object/class_db.h"
+#include "backend_adapter.hpp"
 #include "summator.h"
 #include "render.h"
 
@@ -10,6 +10,7 @@ void initialize_ftlib_module(ModuleInitializationLevel p_level) {
 	}
 	ClassDB::register_class<Summator>();
     ClassDB::register_class<FTRender>();
+    ClassDB::register_class<FTBackend>();
 }
 
 void uninitialize_ftlib_module(ModuleInitializationLevel p_level) {

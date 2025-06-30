@@ -84,7 +84,6 @@ double ft_rem(double x, double y) {
 }
 
 #endif
-
 union if64_t {
   uint64_t i;
   double f;
