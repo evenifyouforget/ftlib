@@ -45,6 +45,12 @@ If we don't do it exactly correct, it may be a flaw that prevents the adoption o
 
 ## What does this build?
 
-It builds Godot, with ftlib as a Godot module.
+It builds Godot, with ftlib as a Godot module using the custom modules feature.
 
-We need ftlib under `godot/modules/` to include it as a Godot module, but we don't want to fork Godot directly or make excessive assumptions about the Godot git structure that will end up baked into our architecture, so we include Godot as a submodule, don't modify it directly, and instead copy Godot to a build directory, and copy in ftlib to that copy of Godot, and then build Godot.
+So we can make as few assumptions about Godot's git structure, Godot is included as a submodule.
+We don't modify Godot's files directly, at all, instead we use the custom modules feature to include `src/` at the equivalent of `godot/modules/ftlib/`
+by copying it to a temporary `build/modules/ftlib/` and specifying to use `build/modules/` as the custom modules directory.
+
+Try `build.sh`.
+
+Since we build with Godot directly, all the results go in `godot/bin/` as usual.
