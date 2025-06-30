@@ -6,6 +6,7 @@
 #include <vector>
 #include "box2d/Include/Box2D.h"
 
+// TODO: refactor into enum
 #define FCSIM_STAT_RECT   0
 #define FCSIM_STAT_CIRCLE 1
 #define FCSIM_DYN_RECT    2
@@ -31,6 +32,7 @@ struct fcsim_block_def {
 	double x, y;
 	double w, h;
 	double angle;
+	// TODO: refactor to use int64_t ? or even better, its own type with safety
 	uint16_t joints[2];
 };
 

@@ -54,3 +54,30 @@ by copying it to a temporary `build/modules/ftlib/` and specifying to use `build
 Try `build.sh`.
 
 Since we build with Godot directly, all the results go in `godot/bin/` as usual.
+
+# Developer guidelines
+
+For all new code contributed, please try to follow these guidelines.
+They are not hard rules, but are likely to result in higher quality code based on our experience.
+
+## Programming language
+
+* Internal/engine code should use C++
+* Scripts/meta code should use Python
+* Build files should use scons
+* Godot in-game files should use GDScript
+
+## C/C++ quirks
+
+* Be aware of our fixed-spectre math functions, and use them where appropriate, especially in game logic which needs to be consistent. You can find the list in `src/spectre/ftmath.h`.
+* Make use of STL. We know Godot discourages it, but their reasons don't really apply to our use cases.
+* Use `int64_t` for integers unless you have a very good reason to use another type. It avoids overflow errors and it's unlikely to impact performance.
+* Assume the compiler is decently smart, and don't prematurely try to make low-level optimizations. We rely on a lot of inlining, including LTO (link time optimization) for maximum performance.
+* Avoid macros like `#define`, unless you have a very good reason to use them. Global constants in particular are a terrible reason to use macros. You can use the old-style `extern const`, or the new-style `inline constexpr` (C++17). Do use `enum` types for enums.
+
+## Git etiquette
+
+* Use PRs. Never push to main. (GitHub is configured to block it)
+* Use squash or rebase, not merge. Merge makes the git history a mess, and is sometimes erroneous. (GitHub is configured to block it)
+* Test every new feature you add, with automated tests if possible. If you make any change at all, check the tests again.
+* Document everything, especially if it's not obvious. Your future self and everyone else will thank you.
