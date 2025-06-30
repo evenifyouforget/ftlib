@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="Flying Triangles"
+config/name="FTLib Example"
 run/main_scene="uid://cn4n73u4r8y2v"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 config/icon="res://icon.svg"
