@@ -29,8 +29,8 @@ var pj2 = PackedInt64Array([65535, 65535, 65535, 1, 65535, 3, 65535, 65535, 6553
 var build_area = PackedFloat64Array([215.2, -348.05, 662.4, 346.0])
 var goal_area = PackedFloat64Array([159.45, -96.95, 100.0, 100.0])
 
-var scale: float = 1
-var shift: Vector2 = Vector2(0, 0)
+var scale: float = 0.5
+var shift: Vector2 = Vector2(600, 400)
 const maxScale = 100
 const minScale = 0.01
 func zoom(deltaScale: float, screen_pos: Vector2):
