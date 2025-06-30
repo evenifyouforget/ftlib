@@ -51,7 +51,7 @@ So we can make as few assumptions about Godot's git structure, Godot is included
 We don't modify Godot's files directly, at all, instead we use the custom modules feature to include `src/` at the equivalent of `godot/modules/ftlib/`
 by copying it to a temporary `build/modules/ftlib/` and specifying to use `build/modules/` as the custom modules directory.
 
-Try `build.sh`.
+Try `build.py`.
 
 Since we build with Godot directly, all the results go in `godot/bin/` as usual.
 
