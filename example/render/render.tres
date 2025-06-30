@@ -1,0 +1,7 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://c7pyjdqr3nu18"]
+
+[ext_resource type="Shader" uid="uid://d0qgtte33n6nt" path="res://render/render.gdshader" id="1_55jsf"]
+
+[resource]
+shader = ExtResource("1_55jsf")
+shader_parameter/dataLayerSize = Vector2i(0, 0)
