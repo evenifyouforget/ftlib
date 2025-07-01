@@ -523,10 +523,11 @@ void FTRender::addJointedRod(Vector2 pos, Vector2 size, float rotation, PieceTyp
 
 void FTRender::addCircleJoints(Vector2 pos, float diameter, float rotation, PieceType::Type type) {
 	addJoint(pos, 0, ObjType::JOINT_WHEEL_CENTER);
-	addJoint(Vector2(diameter, 0).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
-	addJoint(Vector2(-diameter, 0).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
-	addJoint(Vector2(0, diameter).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
-	addJoint(Vector2(0, -diameter).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
+	float radius = diameter * 0.5;
+	addJoint(Vector2(radius, 0).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
+	addJoint(Vector2(-radius, 0).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
+	addJoint(Vector2(0, radius).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
+	addJoint(Vector2(0, -radius).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
 	if (diameter > innerJointThresholdDiameter) {
 		addJoint(Vector2(innerJointThresholdDiameter, 0).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
 		addJoint(Vector2(-innerJointThresholdDiameter, 0).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
