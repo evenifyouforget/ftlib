@@ -63,36 +63,36 @@ struct joint {
 	double x, y;
 	int type;
 	bool generated;
-	block *block1;
-	block *block2;
-	joint *next;
+	block* block1;
+	block* block2;
+	joint* next;
 };
 
 // list of "joints" that are joined together to form 1 joint-ish ("joint stack")
 struct joint_collection {
 	double x, y;
-	block *top_block;
-	joint *joints_head;
-	joint *joints_tail;
+	block* top_block;
+	joint* joints_head;
+	joint* joints_tail;
 };
 
 // linked list node for list of joint stacks which this body is a member of
 struct joint_collection_list {
-	joint_collection *jc;
-	joint_collection_list *next;
+	joint_collection* jc;
+	joint_collection_list* next;
 };
 
 struct block {
 	fcsim_block_def bdef;
-	b2Body *body; // not managed by us
-	joint_collection_list *jcs_head;
-	joint_collection_list *jcs_tail;
+	b2Body* body; // not managed by us
+	joint_collection_list* jcs_head;
+	joint_collection_list* jcs_tail;
 };
 
 struct ft_sim_state {
-	b2World *world;
+	b2World* world;
 	// TODO: refactor into std::vector ?
-	block *blocks;
+	block* blocks;
 	int block_cnt;
 	int tick = 0;
 	~ft_sim_state();
@@ -107,14 +107,14 @@ std::shared_ptr<ft_sim_state> fcsim_new(std::shared_ptr<ft_sim_state> handle, ft
 void fcsim_step(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings&);
 
 template <typename T> void add_unique(std::vector<T>& vec, const T& el) {
-	for(int i = 0; i < vec.size(); ++i) {
-		if(vec[i] == el) {return;}
+	for (int i = 0; i < vec.size(); ++i) {
+		if (vec[i] == el) { return; }
 	}
 	vec.push_back(el);
 }
 
 template <typename T> void delete_all(std::vector<T*>& vec) {
-	for(int i = 0; i < vec.size(); ++i) {
+	for (int i = 0; i < vec.size(); ++i) {
 		delete vec[i];
 	}
 }

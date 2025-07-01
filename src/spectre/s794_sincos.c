@@ -262,29 +262,29 @@ static union tab_t tab = { .x = {
 	0xBFB917A6BC29B42C,
 	0x3C3E2718E0000000,
 	0x3FF0000000000000,
-}};
+} };
 
-static double c0  = -0.16666666666666666;
-static double c1  = -0.5;
-static double c2  =  0.008333333333333333;
-static double c3  =  0.041666666666666664;
-static double c4  = -0.0001984126984126984;
-static double c5  = -0.001388888888888889;
-static double c6  =  2.7557319223985893e-06;
-static double c7  =  2.48015873015873e-05;
-static double c8  =  10.185916357881302;
-static double c9  =  6755399441055744.0;
-static double c10 =  3.798187816439979e-12;
-static double c11 =  3.798187816439979e-12;
-static double c12 =  0.09817477042088285;
-static double c13 =  1.2639164054974691e-22;
+static double c0 = -0.16666666666666666;
+static double c1 = -0.5;
+static double c2 = 0.008333333333333333;
+static double c3 = 0.041666666666666664;
+static double c4 = -0.0001984126984126984;
+static double c5 = -0.001388888888888889;
+static double c6 = 2.7557319223985893e-06;
+static double c7 = 2.48015873015873e-05;
+static double c8 = 10.185916357881302;
+static double c9 = 6755399441055744.0;
+static double c10 = 3.798187816439979e-12;
+static double c11 = 3.798187816439979e-12;
+static double c12 = 0.09817477042088285;
+static double c13 = 1.2639164054974691e-22;
 
 static double s794_sincos(double x, int off)
 {
 	double x0, x1, x2, x3, x4, x5, x6, x7;
 	double x0h, x1h, x2h, x5h, x6h;
 	int idx;
-	double *ptr;
+	double* ptr;
 
 	x0 = x;
 	x1 = c8;
