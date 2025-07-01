@@ -19,7 +19,7 @@ def AllCXXFiles(node='.'):
 
 src_toplevel_dirs = [
     'box2d',
-    'game',
+    'sim',
     'glib',
     'glib_adapter',
     'godot_adapter',

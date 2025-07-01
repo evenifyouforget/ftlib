@@ -257,3 +257,6 @@ config.log
 
 # Temporary build files
 build/
+
+# Custom
+.editorconfig
