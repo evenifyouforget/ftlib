@@ -100,6 +100,11 @@ def pieceDomToStruct(dom):
     angle = 0
     if(len(dom.getElementsByTagName("rotation")) > 0):
         angle = float(dom.getElementsByTagName("rotation")[0].firstChild.nodeValue)
+    # static circles and dynamic circles use radius instead of diameter like every other piece. let's fix that
+    use_radius = piece_type in (fcsim_piece_types.FCSIM_STATIC_CIRC.value, fcsim_piece_types.FCSIM_DYNAMIC_CIRC.value)
+    if use_radius:
+        w *= 2
+        h *= 2
     # return struct
     return FCPieceStruct(
         type_id=piece_type,
