@@ -103,7 +103,7 @@ struct ft_sim_settings {
 
 };
 
-std::shared_ptr<ft_sim_state> fcsim_new(std::shared_ptr<ft_sim_state> handle, ft_design_spec& arena, const ft_sim_settings&);
+std::shared_ptr<ft_sim_state> fcsim_new(std::shared_ptr<ft_sim_state> handle, const ft_design_spec& arena, const ft_sim_settings&);
 
 void fcsim_step(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings&);
 
@@ -121,6 +121,6 @@ template <typename T> void delete_all(std::vector<T*>& vec) {
 }
 
 bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area);
-bool fcsim_is_solved(std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec);
+bool fcsim_is_solved(const std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec);
 
 #endif
