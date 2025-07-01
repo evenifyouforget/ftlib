@@ -336,16 +336,16 @@ ObjType::Type FTRender::getPieceBorder(PieceType::Type piece) {
 		return ObjType::GP_RECT_BORDER;
 	case PieceType::GP_CIRC:
 		return ObjType::GP_CIRC_BORDER;
-	case PieceType::WOOD:
-		return ObjType::WOOD_BORDER;
-	case PieceType::WATER:
-		return ObjType::WATER_BORDER;
+	case PieceType::UPW:
+		return ObjType::UPW_BORDER;
 	case PieceType::CW:
 		return ObjType::CW_BORDER;
 	case PieceType::CCW:
 		return ObjType::CCW_BORDER;
-	case PieceType::UPW:
-		return ObjType::UPW_BORDER;
+	case PieceType::WATER:
+		return ObjType::WATER_BORDER;
+	case PieceType::WOOD:
+		return ObjType::WOOD_BORDER;
 	case PieceType::BUILD:
 		return ObjType::BUILD_BORDER;
 	case PieceType::GOAL:
@@ -369,16 +369,16 @@ ObjType::Type FTRender::getPieceInside(PieceType::Type piece) {
 		return ObjType::GP_RECT_INSIDE;
 	case PieceType::GP_CIRC:
 		return ObjType::GP_CIRC_INSIDE;
-	case PieceType::WOOD:
-		return ObjType::WOOD_INSIDE;
-	case PieceType::WATER:
-		return ObjType::WATER_INSIDE;
+	case PieceType::UPW:
+		return ObjType::UPW_INSIDE;
 	case PieceType::CW:
 		return ObjType::CW_INSIDE;
 	case PieceType::CCW:
 		return ObjType::CCW_INSIDE;
-	case PieceType::UPW:
-		return ObjType::UPW_INSIDE;
+	case PieceType::WATER:
+		return ObjType::WATER_INSIDE;
+	case PieceType::WOOD:
+		return ObjType::WOOD_INSIDE;
 	case PieceType::BUILD:
 		return ObjType::BUILD_INSIDE;
 	case PieceType::GOAL:
@@ -390,12 +390,12 @@ ObjType::Type FTRender::getPieceInside(PieceType::Type piece) {
 
 ObjType::Type FTRender::getPieceDecal(PieceType::Type piece) {
 	switch (piece) {
+	case PieceType::UPW:
+		return ObjType::UPW_DECAL;
 	case PieceType::CW:
 		return ObjType::CW_DECAL;
 	case PieceType::CCW:
 		return ObjType::CCW_DECAL;
-	case PieceType::UPW:
-		return ObjType::UPW_DECAL;
 	default:
 		ERR_FAIL_V_MSG(ObjType::OBJ_TYPE_SIZE, "This piece type doesn't have a decal!");
 	}
@@ -409,15 +409,15 @@ bool FTRender::getObjIsCircle(ObjType::Type obj) {
 	case ObjType::DYNAMIC_CIRC_INSIDE:
 	case ObjType::GP_CIRC_BORDER:
 	case ObjType::GP_CIRC_INSIDE:
+	case ObjType::UPW_BORDER:
+	case ObjType::UPW_INSIDE:
+	case ObjType::UPW_DECAL:
 	case ObjType::CW_BORDER:
 	case ObjType::CW_INSIDE:
 	case ObjType::CW_DECAL:
 	case ObjType::CCW_BORDER:
 	case ObjType::CCW_INSIDE:
 	case ObjType::CCW_DECAL:
-	case ObjType::UPW_BORDER:
-	case ObjType::UPW_INSIDE:
-	case ObjType::UPW_DECAL:
 	case ObjType::JOINT_NORMAL:
 	case ObjType::JOINT_WHEEL_CENTER:
 		return true;
@@ -428,12 +428,12 @@ bool FTRender::getObjIsCircle(ObjType::Type obj) {
 
 SdfType::Type FTRender::getObjSdfType(ObjType::Type obj) {
 	switch (obj) {
+	case ObjType::UPW_DECAL:
+		return SdfType::UPW;
 	case ObjType::CW_DECAL:
 		return SdfType::CW;
 	case ObjType::CCW_DECAL:
 		return SdfType::CCW;
-	case ObjType::UPW_DECAL:
-		return SdfType::UPW;
 	default:
 		return SdfType::ROUNDED_RECT;
 	}
