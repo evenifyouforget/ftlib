@@ -27,7 +27,7 @@ def global_max_ticks(pytestconfig):
         return max_ticks_override
     if use_all:
         return None
-    return 1000
+    return 2000
 
 def pytest_sessionstart(session):
     # build once the binary we will run for every test

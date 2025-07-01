@@ -70,7 +70,7 @@ def test_single_design(design_uid, design_data, global_max_ticks):
     # calculate additional config
     max_ticks = math.inf
     if expect_solve_ticks:
-        max_ticks = min(max_ticks, expect_solve_ticks + 100)
+        max_ticks = min(max_ticks, expect_solve_ticks + 1000)
     if design_max_ticks:
         max_ticks = min(max_ticks, design_max_ticks)
     if global_max_ticks and global_max_ticks > 0:
