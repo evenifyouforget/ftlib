@@ -5,7 +5,7 @@ import csv
 from pathlib import Path
 import re
 import subprocess
-from get_design import retrieveLevel, retrieveDesign
+from get_design import retrieveLevel, retrieveDesign, designDomToStruct
 
 SingleDesignData = namedtuple('SingleDesignData', ['design_uid', 'serialized_input', 'expect_solve_ticks', 'design_max_ticks'])
 
@@ -42,7 +42,8 @@ def generate_test_single_design_data():
         # placeholder
         # TODO: download actual data
         design_xml = retrieveDesign(design_id) if design_id else retrieveLevel(level_id)
-        print(design_xml)
+        design_struct = designDomToStruct(design_xml)
+        print(len(design_struct.level_pieces))
         serialized_input = '10 0 0 0 100 100 0 0 100 100'
         # build result tuple
         result.append(SingleDesignData(
