@@ -2,6 +2,9 @@ from enum import Enum
 from collections import namedtuple
 import requests
 from xml.dom import minidom
+from pathlib import Path
+
+DISABLE_CACHE = 'DISABLE_CACHE'
 
 class fcsim_piece_types(Enum):
     FCSIM_STATIC_RECT = 0
@@ -32,19 +35,41 @@ class fcxml_piece_types(Enum):
 FCPieceStruct = namedtuple('FCPieceStruct', ['type_id', 'piece_id', 'x', 'y', 'w', 'h', 'angle', 'joints'])
 FCDesignStruct = namedtuple('FCDesignStruct', ['name', 'base_level_id', 'goal_pieces', 'design_pieces', 'level_pieces', 'build_area', 'goal_area'])
 
-def retrieveLevel(levelId, is_design=False):
-    URL = "http://www.fantasticcontraption.com/retrieveLevel.php"
+def retrieveLevel(levelId, is_design=False, cache=None):
+    # try to get it from cache first
+    raw_text = None
+    if cache != DISABLE_CACHE:
+        if cache:
+            cache_dir = Path(cache)
+        else:
+            cache_dir = Path() / '.fc_design_cache'
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        design_uid = f'D{levelId}' if is_design else f'L{levelId}'
+        design_file_path = cache_dir / design_uid
+        if design_file_path.is_file():
+            with open(design_file_path) as file:
+                raw_text = file.read()
 
-    # defining a params dict for the parameters to be sent to the API
-    PARAMS = {'id' : levelId}
+    if not raw_text:
+        URL = "http://www.fantasticcontraption.com/retrieveLevel.php"
 
-    if is_design:
-        PARAMS['loadDesign'] = '1'
+        # defining a params dict for the parameters to be sent to the API
+        PARAMS = {'id' : levelId}
 
-    # sending POST request and saving the response as response object
-    r = requests.post(URL, data = PARAMS)
+        if is_design:
+            PARAMS['loadDesign'] = '1'
 
-    dom = minidom.parseString(r.text)
+        # sending POST request and saving the response as response object
+        r = requests.post(URL, data = PARAMS)
+
+        raw_text = r.text
+
+        # save to cache
+        if cache != DISABLE_CACHE:
+            with open(design_file_path, 'w') as file:
+                file.write(raw_text)
+
+    dom = minidom.parseString(raw_text)
 
     return dom
 
