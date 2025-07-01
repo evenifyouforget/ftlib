@@ -53,38 +53,10 @@ def generate_test_single_design_data():
             ))
     return result
 
-# placeholder test
-def f():
-    raise SystemExit(1)
-
-
-def test_mytest():
-    with pytest.raises(SystemExit):
-        f()
-
-# another placeholder test
-def add(a, b):
-    return a + b
-
-# Define the data for test case generation
-test_data = [
-    ((1, 2), 3),   # Input: (1, 2) | Expected Output: 3
-    ((0, 0), 0),   # Input: (0, 0) | Expected Output: 0
-    ((-1, 1), 0),  # Input: (-1, 1) | Expected Output: 0
-]
-
 # Define the pytest_generate_tests hook to generate test cases
 def pytest_generate_tests(metafunc):
-    if 'test_input' in metafunc.fixturenames:
-        # Generate test cases based on the test_data list
-        metafunc.parametrize('test_input,expected_output', test_data)
     if 'design_uid' in metafunc.fixturenames:
         metafunc.parametrize('design_uid,design_struct,expect_solve_ticks,design_max_ticks', generate_test_single_design_data())
-
-# Define the actual test function
-def test_addition(test_input, expected_output):
-    result = add(*test_input)
-    assert result == expected_output, f"Expected {expected_output}, but got {result}"
 
 # test single designs
 def test_single_design(design_uid, design_struct, global_max_ticks, expect_solve_ticks, design_max_ticks):
