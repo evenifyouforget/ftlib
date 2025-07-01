@@ -9,7 +9,7 @@ import subprocess
 from get_design import retrieveLevel, retrieveDesign, designDomToStruct
 from run_design import run_design
 
-SingleDesignData = namedtuple('SingleDesignData', ['design_uid', 'design_struct', 'expect_solve_ticks', 'design_max_ticks'])
+SingleDesignData = namedtuple('SingleDesignData', ['design_uid', 'design_struct', 'expect_solve_ticks', 'design_max_ticks', 'user_comment'])
 
 def int_or_none(value):
     if value == '':
@@ -45,21 +45,28 @@ def generate_test_single_design_data():
         design_xml = retrieveDesign(design_id) if design_id else retrieveLevel(level_id)
         design_struct = designDomToStruct(design_xml)
         # build result tuple
-        result.append(SingleDesignData(
+        sdd = SingleDesignData(
             design_uid=design_uid,
             design_struct=design_struct,
             expect_solve_ticks=solve_ticks,
-            design_max_ticks=design_max_ticks
-            ))
+            design_max_ticks=design_max_ticks,
+            user_comment=user_comment,
+            )
+        result.append((design_uid, sdd))
     return result
 
 # Define the pytest_generate_tests hook to generate test cases
 def pytest_generate_tests(metafunc):
     if 'design_uid' in metafunc.fixturenames:
-        metafunc.parametrize('design_uid,design_struct,expect_solve_ticks,design_max_ticks', generate_test_single_design_data())
+        metafunc.parametrize('design_uid,design_data', generate_test_single_design_data())
 
 # test single designs
-def test_single_design(design_uid, design_struct, global_max_ticks, expect_solve_ticks, design_max_ticks):
+def test_single_design(design_uid, design_data, global_max_ticks):
+    # unpack tuple
+    design_struct = design_data.design_struct
+    expect_solve_ticks = design_data.expect_solve_ticks
+    design_max_ticks = design_data.design_max_ticks
+    user_comment = design_data.user_comment
     # calculate additional config
     max_ticks = math.inf
     if expect_solve_ticks:
@@ -72,16 +79,21 @@ def test_single_design(design_uid, design_struct, global_max_ticks, expect_solve
         max_ticks = -1 # program treats -1 as infinity
     # run the design
     run_result = run_design(design_struct, max_ticks)
+    # unpack result
     real_solve_ticks = run_result.real_solve_ticks
     real_end_ticks = run_result.real_end_ticks
+    # check result
     correct_result_message = f'solves at {expect_solve_ticks}' if expect_solve_ticks is not None else f'still no solve within {design_max_ticks}'
+    post_message = ''
+    if user_comment:
+        post_message += f' (user comment: {user_comment})'
     if expect_solve_ticks is None or expect_solve_ticks > real_end_ticks:
         # should not solve
         if real_solve_ticks != -1:
-            raise AssertionError(f'Design solved at {real_solve_ticks} (expected: {correct_result_message})')
+            raise AssertionError(f'Design solved at {real_solve_ticks} (expected: {correct_result_message}){post_message}')
     else:
         # should solve
         if real_solve_ticks == -1:
-            raise AssertionError(f'Design did not solve within {real_end_ticks} (expected: {correct_result_message})')
+            raise AssertionError(f'Design did not solve within {real_end_ticks} (expected: {correct_result_message}){post_message}')
         if real_solve_ticks != expect_solve_ticks:
-            raise AssertionError(f'Design solved at {real_solve_ticks} (expected: {correct_result_message})')
+            raise AssertionError(f'Design solved at {real_solve_ticks} (expected: {correct_result_message}){post_message}')
