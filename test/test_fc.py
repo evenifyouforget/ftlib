@@ -127,3 +127,15 @@ def test_single_design(design_uid, design_struct, global_max_ticks, expect_solve
     proc = subprocess.run([exec_path], text=True, input=serialized_input, stdout=subprocess.PIPE)
     assert proc.returncode == 0
     stdout = proc.stdout
+    real_solve_ticks, real_end_ticks = map(int, stdout.strip().split())
+    correct_result_message = f'solves at {expect_solve_ticks}' if expect_solve_ticks is not None else f'still no solve within {design_max_ticks}'
+    if expect_solve_ticks is None or expect_solve_ticks > real_end_ticks:
+        # should not solve
+        if real_solve_ticks != -1:
+            raise AssertionError(f'Design solved at {real_solve_ticks} (expected: {correct_result_message})')
+    else:
+        # should solve
+        if real_solve_ticks == -1:
+            raise AssertionError(f'Design did not solve within {real_end_ticks} (expected: {correct_result_message})')
+        if real_solve_ticks != expect_solve_ticks:
+            raise AssertionError(f'Design solved at {real_solve_ticks} (expected: {correct_result_message})')
