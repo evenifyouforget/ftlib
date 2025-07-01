@@ -6,21 +6,21 @@
 #include <vector>
 #include "box2d/Include/Box2D.h"
 
-// TODO: refactor into enum
-#define FCSIM_STAT_RECT   0
-#define FCSIM_STAT_CIRCLE 1
-#define FCSIM_DYN_RECT    2
-#define FCSIM_DYN_CIRCLE  3
-#define FCSIM_GOAL_RECT   4
-#define FCSIM_GOAL_CIRCLE 5
-#define FCSIM_WHEEL       6
-#define FCSIM_CW_WHEEL    7
-#define FCSIM_CCW_WHEEL   8
-#define FCSIM_ROD         9
-#define FCSIM_SOLID_ROD   10
-
-#define FCSIM_TYPE_LAST FCSIM_SOLID_ROD
-#define FCSIM_NO_JOINT 65535
+enum fcsim_piece_type : uint16_t {
+	FCSIM_STAT_RECT,
+	FCSIM_STAT_CIRCLE,
+	FCSIM_DYN_RECT,
+	FCSIM_DYN_CIRCLE,
+	FCSIM_GOAL_RECT,
+	FCSIM_GOAL_CIRCLE,
+	FCSIM_WHEEL,
+	FCSIM_CW_WHEEL,
+	FCSIM_CCW_WHEEL,
+	FCSIM_ROD,
+	FCSIM_SOLID_ROD,
+	FCSIM_SIZE,
+	FCSIM_NO_JOINT = 65535,
+};
 
 inline bool type_is_player(int t) {
 	return t >= FCSIM_GOAL_RECT;
