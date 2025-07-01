@@ -31,6 +31,15 @@ double ft_cos(double x) {
   return ftref_cos(x);
 }
 #endif
+#ifdef USE_FPATAN
+double ft_atan2(double y, double x) {
+  return fpatan(y, x);
+}
+#else
+double ft_atan2(double y, double x) {
+  return ftref_atan2(y, x);
+}
+#endif
 #endif
 
 #ifdef HARDFLOAT_TOGGLE

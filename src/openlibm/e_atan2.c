@@ -48,10 +48,6 @@
 #include "math_private.h"
 #include "ftmath.h"
 
-#ifdef USE_SYSTEM_MATH
-#define ft_atan2 _ft_atan2
-#endif
-
 static volatile double
 tiny  = 1.0e-300;
 static const double
@@ -63,7 +59,7 @@ static volatile double
 pi_lo   = 1.2246467991473531772E-16; /* 0x3CA1A626, 0x33145C07 */
 
 OLM_DLLEXPORT double
-ft_atan2(double y, double x)
+ftref_atan2(double y, double x)
 {
 	double z;
 	int32_t k,m,hx,hy,ix,iy;

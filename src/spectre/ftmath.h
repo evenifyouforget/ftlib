@@ -5,6 +5,13 @@
 extern "C" {
 #endif
 
+#ifdef USE_FPATAN
+// use fpatan x86 instruction
+// see fpatan.s
+double fpatan(double y, double x);
+#endif
+
+double ftref_atan2(double, double);
 double ftref_sin(double);
 double ftref_cos(double);
 double s794_sin(double);

@@ -29,6 +29,7 @@ src_toplevel_dirs = [
 src_toplevel_dirs = ['../' + path for path in src_toplevel_dirs]
 
 src_all_cxx_files = AllCXXFiles(src_toplevel_dirs) + ['../sim/fcsim.cpp']
+src_all_asm_files = ['../spectre/fpatan.s']
 
 include_dirs = [
     '..',
@@ -40,6 +41,7 @@ cppflags = ['-std=c++17']
 cppdefines = [
     'HARDFLOAT_TOGGLE', # use hard float
     'S794',
+    'USE_FPATAN',
     ]
 
 env.Append(
@@ -50,5 +52,5 @@ env.Append(
     )
 env.Program(
     target='run_single_design',
-    source=src_all_cxx_files
+    source=src_all_cxx_files + src_all_asm_files
     )
