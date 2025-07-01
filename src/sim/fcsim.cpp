@@ -8,7 +8,7 @@ ft_sim_state::~ft_sim_state() {
 	std::vector<joint_collection*> uj1;
 	std::vector<joint*> uj0;
 	// clean up joints
-	for (int i = 0; i < block_cnt; i++) {
+	for (int i = 0; i < blocks.size(); i++) {
 		block* b = &(blocks[i]);
 		for (joint_collection_list* l = b->jcs_head; l; l = l->next) {
 			add_unique(uj2, l);
@@ -24,7 +24,6 @@ ft_sim_state::~ft_sim_state() {
 	// clean up world data
 	world->CleanBodyList();
 	delete world;
-	delete blocks;
 }
 
 class collision_filter : public b2CollisionFilter {
@@ -166,7 +165,7 @@ static bool is_player(fcsim_block_def& bdef)
 
 static block* find_block_by_id(std::shared_ptr<ft_sim_state> handle, int id)
 {
-	for (int i = 0; i < handle->block_cnt; i++) {
+	for (int i = 0; i < handle->blocks.size(); i++) {
 		if (handle->blocks[i].bdef.id == id)
 			return &handle->blocks[i];
 	}
@@ -217,7 +216,7 @@ void get_rod_endpoints(fcsim_block_def bdef, double* x0, double* y0, double* x1,
 
 int share_block(std::shared_ptr<ft_sim_state> handle, joint_collection* jc0, joint_collection* jc1)
 {
-	for (int i = 0; i < handle->block_cnt; i++) {
+	for (int i = 0; i < handle->blocks.size(); i++) {
 		bool f0 = false, f1 = false;
 		for (joint_collection_list* j = handle->blocks[i].jcs_head; j; j = j->next) {
 			if (j->jc == jc0) f0 = true;
@@ -456,7 +455,8 @@ static void create_joints(block* b, std::shared_ptr<ft_sim_state> handle)
 
 void add_block(std::shared_ptr<ft_sim_state> handle, fcsim_block_def bdef)
 {
-	block* block = &handle->blocks[handle->block_cnt++];
+	handle->blocks.emplace_back();
+	block* block = &handle->blocks.back();
 
 	memset(block, 0, sizeof(*block));
 
@@ -488,9 +488,6 @@ std::shared_ptr<ft_sim_state> fcsim_new(std::shared_ptr<ft_sim_state> handle, ft
 	handle->world = new b2World(aabb, gravity, true);
 	handle->world->SetFilter(&fcsim_collision_filter);
 
-	handle->blocks = new block[arena.blocks.size()];
-	handle->block_cnt = 0;
-
 	for (int i = 0; i < arena.blocks.size(); i++) {
 		if (is_player(arena.blocks[i]))
 			add_block(handle, arena.blocks[i]);
@@ -501,10 +498,10 @@ std::shared_ptr<ft_sim_state> fcsim_new(std::shared_ptr<ft_sim_state> handle, ft
 			add_block(handle, arena.blocks[i]);
 	}
 
-	for (int i = 0; i < handle->block_cnt; i++)
+	for (int i = 0; i < handle->blocks.size(); i++)
 		generate_body(handle->world, &handle->blocks[i]);
 
-	for (int i = 0; i < handle->block_cnt; i++) {
+	for (int i = 0; i < handle->blocks.size(); i++) {
 		block* b = &handle->blocks[i];
 		for (joint_collection_list* l = b->jcs_head; l; l = l->next) {
 			for (joint* j = l->jc->joints_head; j; j = j->next)
@@ -531,7 +528,7 @@ void fcsim_step(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings&)
 		joint = next;
 	}
 
-	for (int i = 0; i < handle->block_cnt; i++) {
+	for (int i = 0; i < handle->blocks.size(); i++) {
 		block* b = &handle->blocks[i];
 		b2Vec2 pos = b->body->GetOriginPosition();
 		double angle = b->body->GetRotation()._v;
@@ -573,7 +570,7 @@ bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
 
 bool fcsim_is_solved(std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec) {
 	bool goal_exist = false;
-	for (int i = 0; i < sim->block_cnt; ++i) {
+	for (int i = 0; i < sim->blocks.size(); ++i) {
 		fcsim_block_def& bdef = sim->blocks[i].bdef;
 		if (!is_goal_object(bdef.type))continue;
 		goal_exist = true;
