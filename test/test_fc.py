@@ -87,13 +87,15 @@ def test_single_design(design_uid, design_data, global_max_ticks):
     post_message = ''
     if user_comment:
         post_message += f' (user comment: {user_comment})'
+    real_result_message = f'Design solved at {real_solve_ticks}' if real_solve_ticks != -1 else f'Design did not solve within {real_end_ticks}'
+    error_message = f'{real_result_message} (expected: {correct_result_message}){post_message}'
     if expect_solve_ticks is None or expect_solve_ticks > real_end_ticks:
         # should not solve
         if real_solve_ticks != -1:
-            raise AssertionError(f'Design solved at {real_solve_ticks} (expected: {correct_result_message}){post_message}')
+            raise AssertionError(error_message)
     else:
         # should solve
         if real_solve_ticks == -1:
-            raise AssertionError(f'Design did not solve within {real_end_ticks} (expected: {correct_result_message}){post_message}')
+            raise AssertionError(error_message)
         if real_solve_ticks != expect_solve_ticks:
-            raise AssertionError(f'Design solved at {real_solve_ticks} (expected: {correct_result_message}){post_message}')
+            raise AssertionError(error_message)
