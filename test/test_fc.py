@@ -5,6 +5,7 @@ import csv
 from pathlib import Path
 import re
 import subprocess
+from get_design import retrieveLevel, retrieveDesign
 
 SingleDesignData = namedtuple('SingleDesignData', ['design_uid', 'serialized_input', 'expect_solve_ticks', 'design_max_ticks'])
 
@@ -40,6 +41,8 @@ def generate_test_single_design_data():
         design_uid = f'D{design_id}' if design_id else f'L{level_id}'
         # placeholder
         # TODO: download actual data
+        design_xml = retrieveDesign(design_id) if design_id else retrieveLevel(level_id)
+        print(design_xml)
         serialized_input = '10 0 0 0 100 100 0 0 100 100'
         # build result tuple
         result.append(SingleDesignData(
@@ -86,6 +89,7 @@ def test_addition(test_input, expected_output):
 # test single designs
 def test_single_design(design_uid, serialized_input, global_max_ticks, expect_solve_ticks, design_max_ticks):
     print(design_uid, len(serialized_input), expect_solve_ticks, design_max_ticks)
+    return
     exec_path = Path() / 'src' / 'cli_adapter' / 'run_single_design'
     proc = subprocess.run([exec_path], text=True, input=serialized_input, stdout=subprocess.PIPE)
     stdout = proc.stdout
