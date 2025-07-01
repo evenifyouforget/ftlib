@@ -99,3 +99,12 @@ def test_single_design(design_uid, design_data, global_max_ticks):
             raise AssertionError(error_message)
         if real_solve_ticks != expect_solve_ticks:
             raise AssertionError(error_message)
+
+# test memory safety
+def test_valgrind(design_uid, design_data):
+    # unpack tuple
+    design_struct = design_data.design_struct
+    # calculate additional config
+    max_ticks = 100
+    # run the design
+    run_result = run_design(design_struct, max_ticks, command_prepend=['valgrind', '--error-exitcode=1'])
