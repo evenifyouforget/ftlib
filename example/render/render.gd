@@ -3,17 +3,18 @@ extends Node
 @onready var render: FTRender = $FTRender
 
 enum PieceTypes {
-	FCSIM_STAT_RECT,
-	FCSIM_STAT_CIRCLE,
-	FCSIM_DYN_RECT,
-	FCSIM_DYN_CIRCLE,
-	FCSIM_GOAL_RECT,
-	FCSIM_GOAL_CIRCLE,
-	FCSIM_WHEEL,
-	FCSIM_CW_WHEEL,
-	FCSIM_CCW_WHEEL,
-	FCSIM_ROD,
-	FCSIM_SOLID_ROD,
+	FCSIM_STATIC_RECT,
+	FCSIM_STATIC_CIRC,
+	FCSIM_DYNAMIC_RECT,
+	FCSIM_DYNAMIC_CIRC,
+	FCSIM_GP_RECT,
+	FCSIM_GP_CIRC,
+	FCSIM_UPW,
+	FCSIM_CW,
+	FCSIM_CCW,
+	FCSIM_WATER,
+	FCSIM_WOOD,
+	FCSIM_SIZE,
 }
 
 # design data: generated
@@ -144,27 +145,27 @@ func _process(_delta: float) -> void:
 	render.addGoalArea(Vector2(goal_area[0], goal_area[1]), Vector2(goal_area[2], goal_area[3]), 0)
 	for i in range(npcs):
 		match pt[i]:
-			PieceTypes.FCSIM_STAT_RECT:
+			PieceTypes.FCSIM_STATIC_RECT:
 				render.addStaticRect(Vector2(cpx[i], cpy[i]), Vector2(pw[i], ph[i]), cpr[i])
-			PieceTypes.FCSIM_STAT_CIRCLE:
+			PieceTypes.FCSIM_STATIC_CIRC:
 				render.addStaticCirc(Vector2(cpx[i], cpy[i]), pw[i]/2, cpr[i])
-			PieceTypes.FCSIM_DYN_RECT:
+			PieceTypes.FCSIM_DYNAMIC_RECT:
 				render.addDynamicRect(Vector2(cpx[i], cpy[i]), Vector2(pw[i], ph[i]), cpr[i])
-			PieceTypes.FCSIM_DYN_CIRCLE:
+			PieceTypes.FCSIM_DYNAMIC_CIRC:
 				render.addDynamicCirc(Vector2(cpx[i], cpy[i]), pw[i]/2, cpr[i])
-			PieceTypes.FCSIM_GOAL_RECT:
+			PieceTypes.FCSIM_GP_RECT:
 				render.addGPRect(Vector2(cpx[i], cpy[i]), Vector2(pw[i], ph[i]), cpr[i])
-			PieceTypes.FCSIM_GOAL_CIRCLE:
+			PieceTypes.FCSIM_GP_CIRC:
 				render.addGPCirc(Vector2(cpx[i], cpy[i]), pw[i]/2, cpr[i])
-			PieceTypes.FCSIM_WHEEL:
+			PieceTypes.FCSIM_UPW:
 				render.addUPW(Vector2(cpx[i], cpy[i]), pw[i]/2, cpr[i])
-			PieceTypes.FCSIM_CW_WHEEL:
+			PieceTypes.FCSIM_CW:
 				render.addCW(Vector2(cpx[i], cpy[i]), pw[i]/2, cpr[i])
-			PieceTypes.FCSIM_CCW_WHEEL:
+			PieceTypes.FCSIM_CCW:
 				render.addCCW(Vector2(cpx[i], cpy[i]), pw[i]/2, cpr[i])
-			PieceTypes.FCSIM_ROD:
+			PieceTypes.FCSIM_WATER:
 				render.addWater(Vector2(cpx[i], cpy[i]), Vector2(pw[i], ph[i]), cpr[i])
-			PieceTypes.FCSIM_SOLID_ROD:
+			PieceTypes.FCSIM_WOOD:
 				render.addWood(Vector2(cpx[i], cpy[i]), Vector2(pw[i], ph[i]), cpr[i])
 
 	# render it!

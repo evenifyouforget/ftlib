@@ -131,8 +131,8 @@ static void generate_joint(b2World* world, joint* j)
 static bool is_goal_object(uint8_t type)
 {
 	switch (type) {
-	case FCSIM_GOAL_RECT:
-	case FCSIM_GOAL_CIRCLE:
+	case FCSIM_GP_RECT:
+	case FCSIM_GP_CIRC:
 		return true;
 	}
 	return false;
@@ -141,10 +141,10 @@ static bool is_goal_object(uint8_t type)
 static bool is_wheel(block* b)
 {
 	switch (b->bdef.type) {
-	case FCSIM_GOAL_CIRCLE:
-	case FCSIM_WHEEL:
-	case FCSIM_CW_WHEEL:
-	case FCSIM_CCW_WHEEL:
+	case FCSIM_GP_CIRC:
+	case FCSIM_UPW:
+	case FCSIM_CW:
+	case FCSIM_CCW:
 		return true;
 	}
 	return false;
@@ -153,10 +153,10 @@ static bool is_wheel(block* b)
 static bool is_player(fcsim_block_def& bdef)
 {
 	switch (bdef.type) {
-	case FCSIM_STAT_RECT:
-	case FCSIM_STAT_CIRCLE:
-	case FCSIM_DYN_RECT:
-	case FCSIM_DYN_CIRCLE:
+	case FCSIM_STATIC_RECT:
+	case FCSIM_STATIC_CIRC:
+	case FCSIM_DYNAMIC_RECT:
+	case FCSIM_DYNAMIC_CIRC:
 		return false;
 	}
 	return true;
@@ -231,8 +231,8 @@ int share_block(std::shared_ptr<ft_sim_state> handle, joint_collection* jc0, joi
 static int joint_type(int block_type)
 {
 	switch (block_type) {
-	case FCSIM_CW_WHEEL:  return JOINT_CW;
-	case FCSIM_CCW_WHEEL: return JOINT_CCW;
+	case FCSIM_CW:  return JOINT_CW;
+	case FCSIM_CCW: return JOINT_CCW;
 	}
 	return JOINT_PIN;
 }
@@ -264,8 +264,8 @@ static joint_collection_list* create_joint(block* b, double x, double y)
 static int joint_type(block* b)
 {
 	switch (b->bdef.type) {
-	case FCSIM_CW_WHEEL:  return JOINT_CW;
-	case FCSIM_CCW_WHEEL: return JOINT_CCW;
+	case FCSIM_CW:  return JOINT_CW;
+	case FCSIM_CCW: return JOINT_CCW;
 	}
 	return JOINT_PIN;
 }
@@ -438,17 +438,17 @@ static void create_goal_rect_joints(block* b)
 static void create_joints(block* b, std::shared_ptr<ft_sim_state> handle)
 {
 	switch (b->bdef.type) {
-	case FCSIM_GOAL_RECT:
+	case FCSIM_GP_RECT:
 		create_goal_rect_joints(b);
 		return;
-	case FCSIM_GOAL_CIRCLE:
-	case FCSIM_WHEEL:
-	case FCSIM_CW_WHEEL:
-	case FCSIM_CCW_WHEEL:
+	case FCSIM_GP_CIRC:
+	case FCSIM_UPW:
+	case FCSIM_CW:
+	case FCSIM_CCW:
 		create_wheel_joints(b, handle);
 		return;
-	case FCSIM_ROD:
-	case FCSIM_SOLID_ROD:
+	case FCSIM_WATER:
+	case FCSIM_WOOD:
 		create_rod_joints(b, handle);
 		return;
 	}
@@ -462,11 +462,11 @@ void add_block(std::shared_ptr<ft_sim_state> handle, fcsim_block_def bdef)
 
 	/* TODO: deal with this somewhere else */
 	/*
-	if (bdef.type == FCSIM_STAT_CIRCLE || bdef.type == FCSIM_DYN_CIRCLE) {
+	if (bdef.type == FCSIM_STATIC_CIRC || bdef.type == FCSIM_DYNAMIC_CIRC) {
 		bdef.w = ft_mul(bdef.w, 2);
 		bdef.h = ft_mul(bdef.h, 2);
 	}
-	if (bdef.type == FCSIM_DYN_CIRCLE) {
+	if (bdef.type == FCSIM_DYNAMIC_CIRC) {
 		bdef.angle = 0;
 	}
 	*/
