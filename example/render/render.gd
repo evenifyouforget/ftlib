@@ -110,8 +110,8 @@ const layerDataSize: Vector2i = Vector2(128, 128)
 	return arr
 ).call()
 @export var aaWidth: float = 0.5
-@export var jointRadius: float = 4
-@export var innerJointThresholdRadius: float = 20
+@export var jointRadius: float = 8
+@export var innerJointThresholdRadius: float = 40
 @export var woodSizePadding: Vector2 = Vector2(-2, 2)
 @export var waterSizePadding: Vector2 = Vector2(-2, 6)
 @export var ghostRodPadding: float = 1
