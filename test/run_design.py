@@ -36,7 +36,7 @@ def run_design(design_struct, max_ticks, command_prepend=None, command_append=No
     command_prepend = command_prepend or []
     command_append = command_append or []
     command = command_prepend + [exec_path] + command_append
-    proc = subprocess.run(command, text=True, input=serialized_input, stdout=subprocess.PIPE)
+    proc = subprocess.run(command, text=True, input=serialized_input, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if proc.returncode != 0:
         debug_command_text = shlex.join(map(str, command))
         raise AssertionError(f'Process {debug_command_text} exited with return code {proc.returncode}')

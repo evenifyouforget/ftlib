@@ -107,4 +107,8 @@ def test_valgrind(design_uid, design_data):
     # calculate additional config
     max_ticks = 100
     # run the design
-    run_result = run_design(design_struct, max_ticks, command_prepend=['valgrind', '--error-exitcode=1'])
+    run_result = run_design(design_struct, max_ticks, command_prepend=['valgrind'])
+    valgrind_report = run_result.proc.stderr
+    if 'All heap blocks were freed -- no leaks are possible' not in valgrind_report:
+        print(valgrind_report)
+        raise AssertionError('Memory leaked when running design (see log)')
