@@ -6,6 +6,15 @@ import subprocess
 # Key will be "file_path::function_name" just like pytest internals
 test_function_results_aggregated = {}
 
+# supported terminal colors, and at what pass rate we apply each color
+pass_rate_colors = [
+    ('red', 0),
+    ('yellow', 0.5),
+    ('green', 0.8),
+    ('cyan', 0.95),
+    ('blue', 1)
+    ]
+
 def pytest_addoption(parser):
     parser.addoption("--all", action="store_true", help="Run all tests. (slow)")
     parser.addoption("--max-ticks", type=int, default=None, help="Override max ticks limit. Has priority over --all")
@@ -79,12 +88,10 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         row.append(f'{pass_rate:.2%}')
         row.append(f'({passed}/{total})')
 
-        if failed == 0:
-            color = 'green'
-        elif pass_rate > 0.5:
-            color = 'yellow'
-        else:
-            color = 'red'
+        color = None
+        for possible_color, required_pass_rate in pass_rate_colors:
+            if pass_rate >= required_pass_rate:
+                color = possible_color
 
         table.append(row)
         colors.append(color)
