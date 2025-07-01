@@ -1,6 +1,6 @@
 #include "register_types.h"
 
-#include "backend_adapter.hpp"
+#include "sim_adapter.hpp"
 #include "render.h"
 
 void initialize_ftlib_module(ModuleInitializationLevel p_level) {

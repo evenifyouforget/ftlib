@@ -65,9 +65,9 @@ void vertex() {
     id = INSTANCE_ID;
 }
 
-const uint SDF_CW = 1u;
-const uint SDF_CCW = 2u;
-const uint SDF_UPW = 3u;
+const uint SDF_UPW = 1u;
+const uint SDF_CW = 2u;
+const uint SDF_CCW = 3u;
 
 instance uniform float aaWidth;
 instance uniform int layerID;
