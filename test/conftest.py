@@ -16,8 +16,8 @@ pass_rate_colors = [
     ]
 
 def pytest_addoption(parser):
-    parser.addoption("--all", action="store_true", help="Run all tests. (slow)")
-    parser.addoption("--max-ticks", type=int, default=None, help="Override max ticks limit. Has priority over --all")
+    parser.addoption("--all", action="store_true", help="Run all tests, and disable global tick limit. (slow)")
+    parser.addoption("--max-ticks", type=int, default=None, help="Override max ticks limit per design. Has priority over --all")
 
 @pytest.fixture(scope='session')
 def global_max_ticks(pytestconfig):
