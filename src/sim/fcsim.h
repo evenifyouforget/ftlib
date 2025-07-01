@@ -92,7 +92,9 @@ struct block {
 
 struct ft_sim_state {
 	b2World* world;
-	std::vector<block> blocks;
+	// TODO: refactor into std::vector ?
+	block* blocks;
+	int block_cnt;
 	int tick = 0;
 	~ft_sim_state();
 };
