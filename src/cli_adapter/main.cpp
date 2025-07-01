@@ -21,6 +21,7 @@ std::istream& operator>>(std::istream& is, ft_design_spec& design) {
     return is;
 }
 
+// extremely low level (not for human use) program to run a single design, and see if it solves
 int main() {
     // read parameters from stdin
     int64_t max_ticks;
@@ -36,6 +37,7 @@ int main() {
     while(handle->tick != max_ticks) {
         fcsim_step(handle, settings);
         if(fcsim_is_solved(handle, design)) {
+            // stop early on solve
             solve_tick = handle->tick;
             break;
         }
