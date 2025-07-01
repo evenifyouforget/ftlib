@@ -4,7 +4,7 @@ import subprocess
 
 RunDesignResult = namedtuple('RunDesignResult', ['proc', 'real_solve_ticks', 'real_end_ticks'])
 
-def run_design(design_struct, max_ticks):
+def run_design(design_struct, max_ticks, command_prepend=None, command_append=None):
     # generate serialized input
     serialized_input = []
     serialized_input.append(max_ticks)
@@ -32,7 +32,10 @@ def run_design(design_struct, max_ticks):
     serialized_input = ' '.join(map(str, serialized_input))
     # run the executable
     exec_path = Path() / 'src' / 'cli_adapter' / 'run_single_design'
-    proc = subprocess.run([exec_path], text=True, input=serialized_input, stdout=subprocess.PIPE)
+    command_prepend = command_prepend or []
+    command_append = command_append or []
+    command = command_prepend + [exec_path] + command_append
+    proc = subprocess.run(command, text=True, input=serialized_input, stdout=subprocess.PIPE)
     assert proc.returncode == 0
     stdout = proc.stdout
     real_solve_ticks, real_end_ticks = map(int, stdout.strip().split())
