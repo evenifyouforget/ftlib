@@ -1,5 +1,6 @@
 from collections import namedtuple
 from pathlib import Path
+import shlex
 import subprocess
 
 RunDesignResult = namedtuple('RunDesignResult', ['proc', 'real_solve_ticks', 'real_end_ticks'])
@@ -36,7 +37,9 @@ def run_design(design_struct, max_ticks, command_prepend=None, command_append=No
     command_append = command_append or []
     command = command_prepend + [exec_path] + command_append
     proc = subprocess.run(command, text=True, input=serialized_input, stdout=subprocess.PIPE)
-    assert proc.returncode == 0
+    if proc.returncode != 0:
+        debug_command_text = shlex.join(map(str, command))
+        raise AssertionError(f'Process {debug_command_text} exited with return code {proc.returncode}')
     stdout = proc.stdout
     real_solve_ticks, real_end_ticks = map(int, stdout.strip().split())
     return RunDesignResult(
