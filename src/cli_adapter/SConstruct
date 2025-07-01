@@ -37,11 +37,16 @@ include_dirs = [
 
 ccflags = ['-O2', '-flto']
 cppflags = ['-std=c++17']
+cppdefines = [
+    'HARDFLOAT_TOGGLE', # use hard float
+    'S794',
+    ]
 
 env.Append(
     CPPPATH=include_dirs,
     CCFLAGS=ccflags,
     CPPFLAGS=cppflags,
+    CPPDEFINES=cppdefines,
     )
 env.Program(
     target='run_single_design',
