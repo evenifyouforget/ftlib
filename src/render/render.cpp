@@ -184,23 +184,23 @@ void FTRender::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("render", "scale", "shift"), &FTRender::render);
 
 	ClassDB::bind_method(D_METHOD("addStaticRect", "pos", "size", "rotation"), &FTRender::addStaticRect);
-	ClassDB::bind_method(D_METHOD("addStaticCirc", "pos", "radius", "rotation"), &FTRender::addStaticCirc);
+	ClassDB::bind_method(D_METHOD("addStaticCirc", "pos", "diameter", "rotation"), &FTRender::addStaticCirc);
 	ClassDB::bind_method(D_METHOD("addDynamicRect", "pos", "size", "rotation"), &FTRender::addDynamicRect);
-	ClassDB::bind_method(D_METHOD("addDynamicCirc", "pos", "radius", "rotation"), &FTRender::addDynamicCirc);
+	ClassDB::bind_method(D_METHOD("addDynamicCirc", "pos", "diameter", "rotation"), &FTRender::addDynamicCirc);
 	ClassDB::bind_method(D_METHOD("addGPRect", "pos", "size", "rotation"), &FTRender::addGPRect);
-	ClassDB::bind_method(D_METHOD("addGPCirc", "pos", "radius", "rotation"), &FTRender::addGPCirc);
+	ClassDB::bind_method(D_METHOD("addGPCirc", "pos", "diameter", "rotation"), &FTRender::addGPCirc);
 	ClassDB::bind_method(D_METHOD("addWood", "pos", "size", "rotation"), &FTRender::addWood);
 	ClassDB::bind_method(D_METHOD("addWater", "pos", "size", "rotation"), &FTRender::addWater);
-	ClassDB::bind_method(D_METHOD("addCW", "pos", "radius", "rotation"), &FTRender::addCW);
-	ClassDB::bind_method(D_METHOD("addCCW", "pos", "radius", "rotation"), &FTRender::addCCW);
-	ClassDB::bind_method(D_METHOD("addUPW", "pos", "radius", "rotation"), &FTRender::addUPW);
+	ClassDB::bind_method(D_METHOD("addCW", "pos", "diameter", "rotation"), &FTRender::addCW);
+	ClassDB::bind_method(D_METHOD("addCCW", "pos", "diameter", "rotation"), &FTRender::addCCW);
+	ClassDB::bind_method(D_METHOD("addUPW", "pos", "diameter", "rotation"), &FTRender::addUPW);
 	ClassDB::bind_method(D_METHOD("addBuildArea", "pos", "size", "rotation"), &FTRender::addBuildArea);
 	ClassDB::bind_method(D_METHOD("addGoalArea", "pos", "size", "rotation"), &FTRender::addGoalArea);
 
 	ClassDB::bind_method(D_METHOD("initLayers", "layerMultimeshInstanceCount", "layerDataImageSize"), &FTRender::initLayers);
 	ClassDB::bind_method(D_METHOD("initResources", "shaderMaterial", "mmiAreas", "mmiBorders", "mmiInsides"), &FTRender::initResources);
 	ClassDB::bind_method(D_METHOD("initVisuals", "colors", "cornerRadii", "borderThicknesses", "aaWidth",
-		"jointRadius", "innerJointThresholdRadius", "woodSizePadding", "waterSizePadding", "ghostRodPadding"), &FTRender::initVisuals);
+		"jointDiameter", "innerJointThresholdDiameter", "woodSizePadding", "waterSizePadding", "ghostRodPadding"), &FTRender::initVisuals);
 }
 
 PackedColorArray FTRender::getDefaultColors() {
@@ -488,12 +488,12 @@ void FTRender::addArea(Vector2 pos, Vector2 size, float rotation, PieceType::Typ
 	addRoundedRect(pos, size, rotation, type, layers[0], layers[0]);
 }
 
-void FTRender::addCirclePiece(Vector2 pos, float radius, float rotation, PieceType::Type type) {
-	addRoundedRect(pos, Vector2{ radius, radius } *2, rotation, type, layers[1], layers[2]);
+void FTRender::addCirclePiece(Vector2 pos, float diameter, float rotation, PieceType::Type type) {
+	addRoundedRect(pos, Vector2{ diameter, diameter }, rotation, type, layers[1], layers[2]);
 }
 
 void FTRender::addJoint(Vector2 pos, float rotation, ObjType::Type type) {
-	static const Vector2 size = Vector2{ jointRadius, jointRadius } *2;
+	static const Vector2 size = Vector2{ jointDiameter, jointDiameter };
 	layers[2].addRenderObject(pos, size, rotation, type, layerMultimeshInstanceCount);
 }
 
@@ -520,58 +520,58 @@ void FTRender::addJointedRod(Vector2 pos, Vector2 size, float rotation, PieceTyp
 	addRodJoints(pos, size, rotation);
 }
 
-void FTRender::addCircleJoints(Vector2 pos, float radius, float rotation, PieceType::Type type) {
+void FTRender::addCircleJoints(Vector2 pos, float diameter, float rotation, PieceType::Type type) {
 	addJoint(pos, 0, ObjType::JOINT_WHEEL_CENTER);
-	addJoint(Vector2(radius, 0).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
-	addJoint(Vector2(-radius, 0).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
-	addJoint(Vector2(0, radius).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
-	addJoint(Vector2(0, -radius).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
-	if (radius > innerJointThresholdRadius) {
-		addJoint(Vector2(innerJointThresholdRadius, 0).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
-		addJoint(Vector2(-innerJointThresholdRadius, 0).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
-		addJoint(Vector2(0, innerJointThresholdRadius).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
-		addJoint(Vector2(0, -innerJointThresholdRadius).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
+	addJoint(Vector2(diameter, 0).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
+	addJoint(Vector2(-diameter, 0).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
+	addJoint(Vector2(0, diameter).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
+	addJoint(Vector2(0, -diameter).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
+	if (diameter > innerJointThresholdDiameter) {
+		addJoint(Vector2(innerJointThresholdDiameter, 0).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
+		addJoint(Vector2(-innerJointThresholdDiameter, 0).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
+		addJoint(Vector2(0, innerJointThresholdDiameter).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
+		addJoint(Vector2(0, -innerJointThresholdDiameter).rotated(rotation) + pos, 0, ObjType::JOINT_NORMAL);
 	}
 }
 
-void FTRender::addJointedCircle(Vector2 pos, float radius, float rotation, PieceType::Type type) {
-	addCirclePiece(pos, radius, rotation, type);
-	addCircleJoints(pos, radius, rotation, type);
+void FTRender::addJointedCircle(Vector2 pos, float diameter, float rotation, PieceType::Type type) {
+	addCirclePiece(pos, diameter, rotation, type);
+	addCircleJoints(pos, diameter, rotation, type);
 }
 
-void FTRender::addDecalCircle(Vector2 pos, float radius, float rotation, PieceType::Type type) {
-	addCirclePiece(pos, radius, rotation, type);
+void FTRender::addDecalCircle(Vector2 pos, float diameter, float rotation, PieceType::Type type) {
+	addCirclePiece(pos, diameter, rotation, type);
 	ObjType::Type borderType = FTRender::getPieceBorder(type);
 	ObjType::Type decalType = FTRender::getPieceDecal(type);
 	float borderThickness = borderThicknesses[borderType];
-	float insideDiameter = getRealInsideSize(radius * 2, borderThickness);
+	float insideDiameter = getRealInsideSize(diameter, borderThickness);
 	Vector2 insideSize{ insideDiameter, insideDiameter };
 	layers[2].addRenderObject(pos, insideSize, rotation, decalType, layerMultimeshInstanceCount);
-	addCircleJoints(pos, radius, rotation, type);
+	addCircleJoints(pos, diameter, rotation, type);
 }
 
 void FTRender::addStaticRect(Vector2 pos, Vector2 size, float rotation) {
 	addRoundedRectPiece(pos, size, rotation, PieceType::STATIC_RECT);
 }
 
-void FTRender::addStaticCirc(Vector2 pos, float radius, float rotation) {
-	addCirclePiece(pos, radius, rotation, PieceType::STATIC_CIRC);
+void FTRender::addStaticCirc(Vector2 pos, float diameter, float rotation) {
+	addCirclePiece(pos, diameter, rotation, PieceType::STATIC_CIRC);
 }
 
 void FTRender::addDynamicRect(Vector2 pos, Vector2 size, float rotation) {
 	addRoundedRectPiece(pos, size, rotation, PieceType::DYNAMIC_RECT);
 }
 
-void FTRender::addDynamicCirc(Vector2 pos, float radius, float rotation) {
-	addCirclePiece(pos, radius, rotation, PieceType::DYNAMIC_CIRC);
+void FTRender::addDynamicCirc(Vector2 pos, float diameter, float rotation) {
+	addCirclePiece(pos, diameter, rotation, PieceType::DYNAMIC_CIRC);
 }
 
 void FTRender::addGPRect(Vector2 pos, Vector2 size, float rotation) {
 	addJointedRect(pos, size, rotation, PieceType::GP_RECT);
 }
 
-void FTRender::addGPCirc(Vector2 pos, float radius, float rotation) {
-	addJointedCircle(pos, radius, rotation, PieceType::GP_CIRC);
+void FTRender::addGPCirc(Vector2 pos, float diameter, float rotation) {
+	addJointedCircle(pos, diameter, rotation, PieceType::GP_CIRC);
 }
 
 void FTRender::addWood(Vector2 pos, Vector2 size, float rotation) {
@@ -584,16 +584,16 @@ void FTRender::addWater(Vector2 pos, Vector2 size, float rotation) {
 	addRodJoints(pos, size, rotation);
 }
 
-void FTRender::addCW(Vector2 pos, float radius, float rotation) {
-	addDecalCircle(pos, radius, rotation, PieceType::CW);
+void FTRender::addCW(Vector2 pos, float diameter, float rotation) {
+	addDecalCircle(pos, diameter, rotation, PieceType::CW);
 }
 
-void FTRender::addCCW(Vector2 pos, float radius, float rotation) {
-	addDecalCircle(pos, radius, rotation, PieceType::CCW);
+void FTRender::addCCW(Vector2 pos, float diameter, float rotation) {
+	addDecalCircle(pos, diameter, rotation, PieceType::CCW);
 }
 
-void FTRender::addUPW(Vector2 pos, float radius, float rotation) {
-	addDecalCircle(pos, radius, rotation, PieceType::UPW);
+void FTRender::addUPW(Vector2 pos, float diameter, float rotation) {
+	addDecalCircle(pos, diameter, rotation, PieceType::UPW);
 }
 
 void FTRender::addBuildArea(Vector2 pos, Vector2 size, float rotation) {
@@ -625,14 +625,14 @@ void FTRender::initResources(Ref<ShaderMaterial> shaderMaterial_, MultiMeshInsta
 }
 
 void FTRender::initVisuals(PackedColorArray colors_, PackedFloat32Array cornerRadii_, PackedFloat32Array borderThicknesses_,
-	float aaWidth_, float jointRadius_, float innerJointThresholdRadius_, Vector2 woodSizePadding_,
+	float aaWidth_, float jointDiameter_, float innerJointThresholdDiameter_, Vector2 woodSizePadding_,
 	Vector2 waterSizePadding_, float ghostRodPadding_) {
 	colors = colors_;
 	cornerRadii = cornerRadii_;
 	borderThicknesses = borderThicknesses_;
 	aaWidth = aaWidth_;
-	jointRadius = jointRadius_;
-	innerJointThresholdRadius = innerJointThresholdRadius_;
+	jointDiameter = jointDiameter_;
+	innerJointThresholdDiameter = innerJointThresholdDiameter_;
 	woodSizePadding = woodSizePadding_;
 	waterSizePadding = waterSizePadding_;
 	ghostRodPadding = ghostRodPadding_;

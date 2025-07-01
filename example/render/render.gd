@@ -148,21 +148,21 @@ func _process(_delta: float) -> void:
 			PieceTypes.FCSIM_STATIC_RECT:
 				render.addStaticRect(Vector2(cpx[i], cpy[i]), Vector2(pw[i], ph[i]), cpr[i])
 			PieceTypes.FCSIM_STATIC_CIRC:
-				render.addStaticCirc(Vector2(cpx[i], cpy[i]), pw[i]/2, cpr[i])
+				render.addStaticCirc(Vector2(cpx[i], cpy[i]), pw[i], cpr[i])
 			PieceTypes.FCSIM_DYNAMIC_RECT:
 				render.addDynamicRect(Vector2(cpx[i], cpy[i]), Vector2(pw[i], ph[i]), cpr[i])
 			PieceTypes.FCSIM_DYNAMIC_CIRC:
-				render.addDynamicCirc(Vector2(cpx[i], cpy[i]), pw[i]/2, cpr[i])
+				render.addDynamicCirc(Vector2(cpx[i], cpy[i]), pw[i], cpr[i])
 			PieceTypes.FCSIM_GP_RECT:
 				render.addGPRect(Vector2(cpx[i], cpy[i]), Vector2(pw[i], ph[i]), cpr[i])
 			PieceTypes.FCSIM_GP_CIRC:
-				render.addGPCirc(Vector2(cpx[i], cpy[i]), pw[i]/2, cpr[i])
+				render.addGPCirc(Vector2(cpx[i], cpy[i]), pw[i], cpr[i])
 			PieceTypes.FCSIM_UPW:
-				render.addUPW(Vector2(cpx[i], cpy[i]), pw[i]/2, cpr[i])
+				render.addUPW(Vector2(cpx[i], cpy[i]), pw[i], cpr[i])
 			PieceTypes.FCSIM_CW:
-				render.addCW(Vector2(cpx[i], cpy[i]), pw[i]/2, cpr[i])
+				render.addCW(Vector2(cpx[i], cpy[i]), pw[i], cpr[i])
 			PieceTypes.FCSIM_CCW:
-				render.addCCW(Vector2(cpx[i], cpy[i]), pw[i]/2, cpr[i])
+				render.addCCW(Vector2(cpx[i], cpy[i]), pw[i], cpr[i])
 			PieceTypes.FCSIM_WATER:
 				render.addWater(Vector2(cpx[i], cpy[i]), Vector2(pw[i], ph[i]), cpr[i])
 			PieceTypes.FCSIM_WOOD:

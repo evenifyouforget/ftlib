@@ -82,8 +82,8 @@ private:
     PackedFloat32Array borderThicknesses;
 
     float aaWidth;
-    float jointRadius;
-    float innerJointThresholdRadius;
+    float jointDiameter;
+    float innerJointThresholdDiameter;
     Vector2 woodSizePadding;
     Vector2 waterSizePadding;
     float ghostRodPadding;
@@ -134,35 +134,35 @@ private:
         RenderLayer& borderLayer, RenderLayer& insideLayer);
     void addRoundedRectPiece(Vector2 pos, Vector2 size, float rotation, PieceType::Type type);
     void addArea(Vector2 pos, Vector2 size, float rotation, PieceType::Type type);
-    void addCirclePiece(Vector2 pos, float radius, float rotation, PieceType::Type type);
+    void addCirclePiece(Vector2 pos, float diameter, float rotation, PieceType::Type type);
     void addJoint(Vector2 pos, float rotation, ObjType::Type type);
     void addRectJoints(Vector2 pos, Vector2 size, float rotation);
     void addJointedRect(Vector2 pos, Vector2 size, float rotation, PieceType::Type type);
     void addRodJoints(Vector2 pos, Vector2 size, float rotation);
     void addJointedRod(Vector2 pos, Vector2 size, float rotation, PieceType::Type type);
-    void addCircleJoints(Vector2 pos, float radius, float rotation, PieceType::Type type);
-    void addJointedCircle(Vector2 pos, float radius, float rotation, PieceType::Type type);
-    void addDecalCircle(Vector2 pos, float radius, float rotation, PieceType::Type type);
+    void addCircleJoints(Vector2 pos, float diameter, float rotation, PieceType::Type type);
+    void addJointedCircle(Vector2 pos, float diameter, float rotation, PieceType::Type type);
+    void addDecalCircle(Vector2 pos, float diameter, float rotation, PieceType::Type type);
 
 public:
     void addStaticRect(Vector2 pos, Vector2 size, float rotation);
-    void addStaticCirc(Vector2 pos, float radius, float rotation);
+    void addStaticCirc(Vector2 pos, float diameter, float rotation);
     void addDynamicRect(Vector2 pos, Vector2 size, float rotation);
-    void addDynamicCirc(Vector2 pos, float radius, float rotation);
+    void addDynamicCirc(Vector2 pos, float diameter, float rotation);
     void addGPRect(Vector2 pos, Vector2 size, float rotation);
-    void addGPCirc(Vector2 pos, float radius, float rotation);
+    void addGPCirc(Vector2 pos, float diameter, float rotation);
     void addWood(Vector2 pos, Vector2 size, float rotation);
     void addWater(Vector2 pos, Vector2 size, float rotation);
-    void addCW(Vector2 pos, float radius, float rotation);
-    void addCCW(Vector2 pos, float radius, float rotation);
-    void addUPW(Vector2 pos, float radius, float rotation);
+    void addCW(Vector2 pos, float diameter, float rotation);
+    void addCCW(Vector2 pos, float diameter, float rotation);
+    void addUPW(Vector2 pos, float diameter, float rotation);
     void addBuildArea(Vector2 pos, Vector2 size, float rotation);
     void addGoalArea(Vector2 pos, Vector2 size, float rotation);
 
     void initLayers(int32_t layerMultimeshInstanceCount_, Vector2i layerDataImageSize);
     void initResources(Ref<ShaderMaterial> shaderMaterial_, MultiMeshInstance2D* mmiAreas, MultiMeshInstance2D* mmiBorders, MultiMeshInstance2D* mmiInsides);
     void initVisuals(PackedColorArray colors_, PackedFloat32Array cornerRadii_, PackedFloat32Array borderThicknesses,
-        float aaWidth, float jointRadius_, float innerJointThresholdRadius_, Vector2 woodSizePadding,
+        float aaWidth, float jointDiameter_, float innerJointThresholdDiameter_, Vector2 woodSizePadding,
         Vector2 waterSizePadding, float ghostRodPadding);
 };
 

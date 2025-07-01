@@ -6,6 +6,7 @@
 #include <vector>
 #include "box2d/Include/Box2D.h"
 
+//intentionally in the same order as the render enum, so they can be converted back and forth, and the render bindings can be used for this
 enum fcsim_piece_type : uint16_t {
 	FCSIM_STATIC_RECT,
 	FCSIM_STATIC_CIRC,
