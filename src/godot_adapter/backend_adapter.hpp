@@ -14,9 +14,9 @@ String to_gd(std::string);
 std::string from_gd(String);
 
 struct ftb_slot {
-  ft_design_spec spec;
-  std::shared_ptr<ft_sim_state> sim;
-  ft_sim_settings settings;
+    ft_design_spec spec;
+    std::shared_ptr<ft_sim_state> sim;
+    ft_sim_settings settings;
 };
 
 // Doesn't actually contain any data. Every FTBackend instance will access the same shared slots.

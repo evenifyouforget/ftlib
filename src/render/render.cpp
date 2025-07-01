@@ -47,7 +47,7 @@ Color packDataToColor(Color color, Vector2 size, float cornerRadius, float borde
 }
 
 void RenderLayer::addRenderObject(Vector2 pos, Vector2 size, float rotation, ObjType::Type type,
-        int32_t multimeshInstanceCount) {
+	int32_t multimeshInstanceCount) {
 	ERR_FAIL_COND_MSG(renderCount >= multimeshInstanceCount, "Too many objects to render!");
 
 	sizes.set(renderCount, size);
@@ -63,17 +63,17 @@ void RenderLayer::resetRender() {
 }
 
 void RenderLayer::renderPartial(float scale, Vector2 shift, float aaWidth,
-		PackedColorArray colors, PackedFloat32Array cornerRadii, PackedFloat32Array borderThicknesses,
-		bool (*getObjIsCircle)(ObjType::Type), SdfType::Type (*getObjSdfType)(ObjType::Type), Ref<Image> &renderImg,
-        Vector2i dataImageSize) {
+	PackedColorArray colors, PackedFloat32Array cornerRadii, PackedFloat32Array borderThicknesses,
+	bool (*getObjIsCircle)(ObjType::Type), SdfType::Type(*getObjSdfType)(ObjType::Type), Ref<Image>& renderImg,
+	Vector2i dataImageSize) {
 	Ref<MultiMesh> mm = mmi->get_multimesh();
 	mmi->set_instance_shader_parameter("aaWidth", aaWidth);
 	mm->set_visible_instance_count(renderCount);
 	for (int i = 0; i < renderCount; i++) {
 		Transform2D transform(rotations[i],
-				(sizes[i] + Vector2{ aaWidth, aaWidth }) * scale,
-				0,
-				poses[i] * scale + shift);
+			(sizes[i] + Vector2{ aaWidth, aaWidth }) * scale,
+			0,
+			poses[i] * scale + shift);
 		mm->set_instance_transform_2d(i, transform);
 
 		ObjType::Type type = objTypes[i];
@@ -81,8 +81,8 @@ void RenderLayer::renderPartial(float scale, Vector2 shift, float aaWidth,
 		Vector2 size = sizes[i] * scale;
 		float cornerRadius = getObjIsCircle(type) ? size.x * 0.5 : cornerRadii[type] * scale;
 		float borderThickness = type == ObjType::JOINT_NORMAL || type == ObjType::JOINT_WHEEL_CENTER
-				? borderThicknesses[type] * scale
-				: INFINITY;
+			? borderThicknesses[type] * scale
+			: INFINITY;
 		SdfType::Type sdfType = getObjSdfType(type);
 
 		Color data = packDataToColor(color, size, cornerRadius, borderThickness, sdfType);
@@ -90,7 +90,7 @@ void RenderLayer::renderPartial(float scale, Vector2 shift, float aaWidth,
 	}
 }
 
-void RenderLayer::init(MultiMeshInstance2D *mmi_, uint32_t layerID_, int32_t multimeshInstanceCount) {
+void RenderLayer::init(MultiMeshInstance2D* mmi_, uint32_t layerID_, int32_t multimeshInstanceCount) {
 	layerID = layerID_;
 	mmi = mmi_;
 	mmi->set_instance_shader_parameter("layerID", layerID_);
@@ -153,11 +153,11 @@ void FTRender::_bind_methods() {
 	BIND_ENUM_CLASS_CONSTANT(PieceType, GOAL);
 	BIND_ENUM_CLASS_CONSTANT(PieceType, PIECE_TYPE_SIZE);
 
-    BIND_ENUM_CLASS_CONSTANT(SdfType, ROUNDED_RECT);
-    BIND_ENUM_CLASS_CONSTANT(SdfType, CW);
-    BIND_ENUM_CLASS_CONSTANT(SdfType, CCW);
-    BIND_ENUM_CLASS_CONSTANT(SdfType, UPW);
-    BIND_ENUM_CLASS_CONSTANT(SdfType, SDF_TYPE_SIZE);
+	BIND_ENUM_CLASS_CONSTANT(SdfType, ROUNDED_RECT);
+	BIND_ENUM_CLASS_CONSTANT(SdfType, CW);
+	BIND_ENUM_CLASS_CONSTANT(SdfType, CCW);
+	BIND_ENUM_CLASS_CONSTANT(SdfType, UPW);
+	BIND_ENUM_CLASS_CONSTANT(SdfType, SDF_TYPE_SIZE);
 
 	BIND_CONSTANT(LAYER_COUNT);
 
@@ -197,10 +197,10 @@ void FTRender::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("addBuildArea", "pos", "size", "rotation"), &FTRender::addBuildArea);
 	ClassDB::bind_method(D_METHOD("addGoalArea", "pos", "size", "rotation"), &FTRender::addGoalArea);
 
-    ClassDB::bind_method(D_METHOD("initLayers", "layerMultimeshInstanceCount", "layerDataImageSize"), &FTRender::initLayers);
+	ClassDB::bind_method(D_METHOD("initLayers", "layerMultimeshInstanceCount", "layerDataImageSize"), &FTRender::initLayers);
 	ClassDB::bind_method(D_METHOD("initResources", "shaderMaterial", "mmiAreas", "mmiBorders", "mmiInsides"), &FTRender::initResources);
-    ClassDB::bind_method(D_METHOD("initVisuals", "colors", "cornerRadii", "borderThicknesses", "aaWidth",
-            "jointRadius", "innerJointThresholdRadius", "woodSizePadding", "waterSizePadding", "ghostRodPadding"), &FTRender::initVisuals);
+	ClassDB::bind_method(D_METHOD("initVisuals", "colors", "cornerRadii", "borderThicknesses", "aaWidth",
+		"jointRadius", "innerJointThresholdRadius", "woodSizePadding", "waterSizePadding", "ghostRodPadding"), &FTRender::initVisuals);
 }
 
 PackedColorArray FTRender::getDefaultColors() {
@@ -324,137 +324,137 @@ double FTRender::getBorderThickness(ObjType::Type objType) {
 
 ObjType::Type FTRender::getPieceBorder(PieceType::Type piece) {
 	switch (piece) {
-		case PieceType::STATIC_RECT:
-			return ObjType::STATIC_RECT_BORDER;
-		case PieceType::STATIC_CIRC:
-			return ObjType::STATIC_CIRC_BORDER;
-		case PieceType::DYNAMIC_RECT:
-			return ObjType::DYNAMIC_RECT_BORDER;
-		case PieceType::DYNAMIC_CIRC:
-			return ObjType::DYNAMIC_CIRC_BORDER;
-		case PieceType::GP_RECT:
-			return ObjType::GP_RECT_BORDER;
-		case PieceType::GP_CIRC:
-			return ObjType::GP_CIRC_BORDER;
-		case PieceType::WOOD:
-			return ObjType::WOOD_BORDER;
-		case PieceType::WATER:
-			return ObjType::WATER_BORDER;
-		case PieceType::CW:
-			return ObjType::CW_BORDER;
-		case PieceType::CCW:
-			return ObjType::CCW_BORDER;
-		case PieceType::UPW:
-			return ObjType::UPW_BORDER;
-		case PieceType::BUILD:
-			return ObjType::BUILD_BORDER;
-		case PieceType::GOAL:
-			return ObjType::GOAL_BORDER;
-		default:
-			ERR_FAIL_V_MSG(ObjType::OBJ_TYPE_SIZE, "Invalid piece type!");
+	case PieceType::STATIC_RECT:
+		return ObjType::STATIC_RECT_BORDER;
+	case PieceType::STATIC_CIRC:
+		return ObjType::STATIC_CIRC_BORDER;
+	case PieceType::DYNAMIC_RECT:
+		return ObjType::DYNAMIC_RECT_BORDER;
+	case PieceType::DYNAMIC_CIRC:
+		return ObjType::DYNAMIC_CIRC_BORDER;
+	case PieceType::GP_RECT:
+		return ObjType::GP_RECT_BORDER;
+	case PieceType::GP_CIRC:
+		return ObjType::GP_CIRC_BORDER;
+	case PieceType::WOOD:
+		return ObjType::WOOD_BORDER;
+	case PieceType::WATER:
+		return ObjType::WATER_BORDER;
+	case PieceType::CW:
+		return ObjType::CW_BORDER;
+	case PieceType::CCW:
+		return ObjType::CCW_BORDER;
+	case PieceType::UPW:
+		return ObjType::UPW_BORDER;
+	case PieceType::BUILD:
+		return ObjType::BUILD_BORDER;
+	case PieceType::GOAL:
+		return ObjType::GOAL_BORDER;
+	default:
+		ERR_FAIL_V_MSG(ObjType::OBJ_TYPE_SIZE, "Invalid piece type!");
 	}
 }
 
 ObjType::Type FTRender::getPieceInside(PieceType::Type piece) {
 	switch (piece) {
-		case PieceType::STATIC_RECT:
-			return ObjType::STATIC_RECT_INSIDE;
-		case PieceType::STATIC_CIRC:
-			return ObjType::STATIC_CIRC_INSIDE;
-		case PieceType::DYNAMIC_RECT:
-			return ObjType::DYNAMIC_RECT_INSIDE;
-		case PieceType::DYNAMIC_CIRC:
-			return ObjType::DYNAMIC_CIRC_INSIDE;
-		case PieceType::GP_RECT:
-			return ObjType::GP_RECT_INSIDE;
-		case PieceType::GP_CIRC:
-			return ObjType::GP_CIRC_INSIDE;
-		case PieceType::WOOD:
-			return ObjType::WOOD_INSIDE;
-		case PieceType::WATER:
-			return ObjType::WATER_INSIDE;
-		case PieceType::CW:
-			return ObjType::CW_INSIDE;
-		case PieceType::CCW:
-			return ObjType::CCW_INSIDE;
-		case PieceType::UPW:
-			return ObjType::UPW_INSIDE;
-		case PieceType::BUILD:
-			return ObjType::BUILD_INSIDE;
-		case PieceType::GOAL:
-			return ObjType::GOAL_INSIDE;
-		default:
-			ERR_FAIL_V_MSG(ObjType::OBJ_TYPE_SIZE, "Invalid piece type!");
+	case PieceType::STATIC_RECT:
+		return ObjType::STATIC_RECT_INSIDE;
+	case PieceType::STATIC_CIRC:
+		return ObjType::STATIC_CIRC_INSIDE;
+	case PieceType::DYNAMIC_RECT:
+		return ObjType::DYNAMIC_RECT_INSIDE;
+	case PieceType::DYNAMIC_CIRC:
+		return ObjType::DYNAMIC_CIRC_INSIDE;
+	case PieceType::GP_RECT:
+		return ObjType::GP_RECT_INSIDE;
+	case PieceType::GP_CIRC:
+		return ObjType::GP_CIRC_INSIDE;
+	case PieceType::WOOD:
+		return ObjType::WOOD_INSIDE;
+	case PieceType::WATER:
+		return ObjType::WATER_INSIDE;
+	case PieceType::CW:
+		return ObjType::CW_INSIDE;
+	case PieceType::CCW:
+		return ObjType::CCW_INSIDE;
+	case PieceType::UPW:
+		return ObjType::UPW_INSIDE;
+	case PieceType::BUILD:
+		return ObjType::BUILD_INSIDE;
+	case PieceType::GOAL:
+		return ObjType::GOAL_INSIDE;
+	default:
+		ERR_FAIL_V_MSG(ObjType::OBJ_TYPE_SIZE, "Invalid piece type!");
 	}
 }
 
 ObjType::Type FTRender::getPieceDecal(PieceType::Type piece) {
 	switch (piece) {
-		case PieceType::CW:
-			return ObjType::CW_DECAL;
-		case PieceType::CCW:
-			return ObjType::CCW_DECAL;
-		case PieceType::UPW:
-			return ObjType::UPW_DECAL;
-		default:
-			ERR_FAIL_V_MSG(ObjType::OBJ_TYPE_SIZE, "This piece type doesn't have a decal!");
+	case PieceType::CW:
+		return ObjType::CW_DECAL;
+	case PieceType::CCW:
+		return ObjType::CCW_DECAL;
+	case PieceType::UPW:
+		return ObjType::UPW_DECAL;
+	default:
+		ERR_FAIL_V_MSG(ObjType::OBJ_TYPE_SIZE, "This piece type doesn't have a decal!");
 	}
 }
 
 bool FTRender::getObjIsCircle(ObjType::Type obj) {
 	switch (obj) {
-		case ObjType::STATIC_CIRC_BORDER:
-		case ObjType::STATIC_CIRC_INSIDE:
-		case ObjType::DYNAMIC_CIRC_BORDER:
-		case ObjType::DYNAMIC_CIRC_INSIDE:
-		case ObjType::GP_CIRC_BORDER:
-		case ObjType::GP_CIRC_INSIDE:
-		case ObjType::CW_BORDER:
-		case ObjType::CW_INSIDE:
-		case ObjType::CW_DECAL:
-		case ObjType::CCW_BORDER:
-		case ObjType::CCW_INSIDE:
-		case ObjType::CCW_DECAL:
-		case ObjType::UPW_BORDER:
-		case ObjType::UPW_INSIDE:
-		case ObjType::UPW_DECAL:
-		case ObjType::JOINT_NORMAL:
-		case ObjType::JOINT_WHEEL_CENTER:
-			return true;
-		default:
-			return false;
+	case ObjType::STATIC_CIRC_BORDER:
+	case ObjType::STATIC_CIRC_INSIDE:
+	case ObjType::DYNAMIC_CIRC_BORDER:
+	case ObjType::DYNAMIC_CIRC_INSIDE:
+	case ObjType::GP_CIRC_BORDER:
+	case ObjType::GP_CIRC_INSIDE:
+	case ObjType::CW_BORDER:
+	case ObjType::CW_INSIDE:
+	case ObjType::CW_DECAL:
+	case ObjType::CCW_BORDER:
+	case ObjType::CCW_INSIDE:
+	case ObjType::CCW_DECAL:
+	case ObjType::UPW_BORDER:
+	case ObjType::UPW_INSIDE:
+	case ObjType::UPW_DECAL:
+	case ObjType::JOINT_NORMAL:
+	case ObjType::JOINT_WHEEL_CENTER:
+		return true;
+	default:
+		return false;
 	}
 }
 
 SdfType::Type FTRender::getObjSdfType(ObjType::Type obj) {
 	switch (obj) {
-		case ObjType::CW_DECAL:
-			return SdfType::CW;
-		case ObjType::CCW_DECAL:
-			return SdfType::CCW;
-		case ObjType::UPW_DECAL:
-			return SdfType::UPW;
-		default:
-			return SdfType::ROUNDED_RECT;
+	case ObjType::CW_DECAL:
+		return SdfType::CW;
+	case ObjType::CCW_DECAL:
+		return SdfType::CCW;
+	case ObjType::UPW_DECAL:
+		return SdfType::UPW;
+	default:
+		return SdfType::ROUNDED_RECT;
 	}
 }
 
 void FTRender::setupRenderData() {
 	renderImg = Image::create_empty(layerDataImageSize.x * LAYER_COUNT, layerDataImageSize.y,
-			false, Image::FORMAT_RGBAF);
+		false, Image::FORMAT_RGBAF);
 	renderTex = ImageTexture::create_from_image(renderImg);
 }
 
 void FTRender::resetRender() {
-	for (auto &layer : layers) {
+	for (auto& layer : layers) {
 		layer.resetRender();
 	}
 }
 
 void FTRender::render(float scale, Vector2 shift) {
 	for (int i = 0; i < LAYER_COUNT; i++) {
-		layers[i].renderPartial(scale, shift, aaWidth, colors, cornerRadii, borderThicknesses, 
-                &FTRender::getObjIsCircle, &FTRender::getObjSdfType, renderImg, layerDataImageSize);
+		layers[i].renderPartial(scale, shift, aaWidth, colors, cornerRadii, borderThicknesses,
+			&FTRender::getObjIsCircle, &FTRender::getObjSdfType, renderImg, layerDataImageSize);
 	}
 	renderTex->update(renderImg);
 	shaderMaterial->set_shader_parameter("dataLayerSize", layerDataImageSize);
@@ -470,7 +470,7 @@ float getRealBorderSize(float size, float insideSize, float ghostRodPadding) {
 }
 
 void FTRender::addRoundedRect(Vector2 pos, Vector2 size, float rotation, PieceType::Type type,
-		RenderLayer &borderLayer, RenderLayer &insideLayer) {
+	RenderLayer& borderLayer, RenderLayer& insideLayer) {
 	ObjType::Type borderType = FTRender::getPieceBorder(type);
 	ObjType::Type insideType = FTRender::getPieceInside(type);
 	Vector2 borderThickness{ borderThicknesses[borderType], borderThicknesses[borderType] };
@@ -489,11 +489,11 @@ void FTRender::addArea(Vector2 pos, Vector2 size, float rotation, PieceType::Typ
 }
 
 void FTRender::addCirclePiece(Vector2 pos, float radius, float rotation, PieceType::Type type) {
-	addRoundedRect(pos, Vector2{ radius, radius } * 2, rotation, type, layers[1], layers[2]);
+	addRoundedRect(pos, Vector2{ radius, radius } *2, rotation, type, layers[1], layers[2]);
 }
 
 void FTRender::addJoint(Vector2 pos, float rotation, ObjType::Type type) {
-	static const Vector2 size = Vector2{ jointRadius, jointRadius } * 2;
+	static const Vector2 size = Vector2{ jointRadius, jointRadius } *2;
 	layers[2].addRenderObject(pos, size, rotation, type, layerMultimeshInstanceCount);
 }
 
@@ -605,12 +605,12 @@ void FTRender::addGoalArea(Vector2 pos, Vector2 size, float rotation) {
 }
 
 void FTRender::initLayers(int32_t layerMultimeshInstanceCount_, Vector2i layerDataImageSize_) {
-    layerMultimeshInstanceCount = layerMultimeshInstanceCount_;
-    layerDataImageSize = layerDataImageSize_;
+	layerMultimeshInstanceCount = layerMultimeshInstanceCount_;
+	layerDataImageSize = layerDataImageSize_;
 }
 
-void FTRender::initResources(Ref<ShaderMaterial> shaderMaterial_, MultiMeshInstance2D *mmiAreas, 
-MultiMeshInstance2D *mmiBorders, MultiMeshInstance2D *mmiInsides) {
+void FTRender::initResources(Ref<ShaderMaterial> shaderMaterial_, MultiMeshInstance2D* mmiAreas,
+	MultiMeshInstance2D* mmiBorders, MultiMeshInstance2D* mmiInsides) {
 	colors = getDefaultColors();
 	cornerRadii = getDefaultCornerRadii();
 	borderThicknesses = getDefaultBorderThicknesses();
@@ -624,16 +624,16 @@ MultiMeshInstance2D *mmiBorders, MultiMeshInstance2D *mmiInsides) {
 	setupRenderData();
 }
 
-void FTRender::initVisuals(PackedColorArray colors_, PackedFloat32Array cornerRadii_, PackedFloat32Array borderThicknesses_, 
-        float aaWidth_, float jointRadius_, float innerJointThresholdRadius_, Vector2 woodSizePadding_, 
-        Vector2 waterSizePadding_, float ghostRodPadding_) {
-    colors = colors_;
-    cornerRadii = cornerRadii_;
-    borderThicknesses = borderThicknesses_;
-    aaWidth = aaWidth_;
-    jointRadius = jointRadius_;
-    innerJointThresholdRadius = innerJointThresholdRadius_;
-    woodSizePadding = woodSizePadding_;
-    waterSizePadding = waterSizePadding_;
-    ghostRodPadding = ghostRodPadding_;
+void FTRender::initVisuals(PackedColorArray colors_, PackedFloat32Array cornerRadii_, PackedFloat32Array borderThicknesses_,
+	float aaWidth_, float jointRadius_, float innerJointThresholdRadius_, Vector2 woodSizePadding_,
+	Vector2 waterSizePadding_, float ghostRodPadding_) {
+	colors = colors_;
+	cornerRadii = cornerRadii_;
+	borderThicknesses = borderThicknesses_;
+	aaWidth = aaWidth_;
+	jointRadius = jointRadius_;
+	innerJointThresholdRadius = innerJointThresholdRadius_;
+	woodSizePadding = woodSizePadding_;
+	waterSizePadding = waterSizePadding_;
+	ghostRodPadding = ghostRodPadding_;
 }

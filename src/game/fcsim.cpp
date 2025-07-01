@@ -9,11 +9,11 @@ ft_sim_state::~ft_sim_state() {
 	std::vector<joint*> uj0;
 	// clean up joints
 	for (int i = 0; i < block_cnt; i++) {
-		block *b = &(blocks[i]);
-		for (joint_collection_list *l = b->jcs_head; l; l = l->next) {
+		block* b = &(blocks[i]);
+		for (joint_collection_list* l = b->jcs_head; l; l = l->next) {
 			add_unique(uj2, l);
 			add_unique(uj1, l->jc);
-			for (joint *j = l->jc->joints_head; j; j = j->next) {
+			for (joint* j = l->jc->joints_head; j; j = j->next) {
 				add_unique(uj0, j);
 			}
 		}
@@ -28,15 +28,15 @@ ft_sim_state::~ft_sim_state() {
 }
 
 class collision_filter : public b2CollisionFilter {
-	bool ShouldCollide(b2Shape *s1, b2Shape *s2)
+	bool ShouldCollide(b2Shape* s1, b2Shape* s2)
 	{
 		if (!b2_defaultFilter.ShouldCollide(s1, s2))
 			return false;
 
-		block *b1 = (block *)s1->GetUserData();
-		block *b2 = (block *)s2->GetUserData();
+		block* b1 = (block*)s1->GetUserData();
+		block* b2 = (block*)s2->GetUserData();
 
-		joint_collection_list *j1, *j2;
+		joint_collection_list* j1, * j2;
 		for (j1 = b1->jcs_head; j1; j1 = j1->next) {
 			for (j2 = b2->jcs_head; j2; j2 = j2->next) {
 				if (j1->jc == j2->jc)
@@ -78,13 +78,13 @@ static struct block_physics block_physics_tbl[] = {
 	{  0, 1.0, 0.7, 0.2, 256, -17, 0.009, 0.2 }, /* SOLID_ROD */
 };
 
-static void generate_body(b2World *world, block *b)
+static void generate_body(b2World* world, block* b)
 {
 	fcsim_block_def bdef = b->bdef;
 	block_physics phys = block_physics_tbl[bdef.type];
 	b2BoxDef box_def;
 	b2CircleDef circle_def;
-	b2ShapeDef *shape_def;
+	b2ShapeDef* shape_def;
 	b2BodyDef body_def;
 
 	if (phys.circle) {
@@ -108,7 +108,7 @@ static void generate_body(b2World *world, block *b)
 	b->body = world->CreateBody(&body_def);
 }
 
-static void generate_joint(b2World *world, joint *j)
+static void generate_joint(b2World* world, joint* j)
 {
 	if (j->generated)
 		return;
@@ -138,7 +138,7 @@ static bool is_goal_object(uint8_t type)
 	return false;
 }
 
-static bool is_wheel(block *b)
+static bool is_wheel(block* b)
 {
 	switch (b->bdef.type) {
 	case FCSIM_GOAL_CIRCLE:
@@ -164,7 +164,7 @@ static bool is_player(fcsim_block_def& bdef)
 
 
 
-static block *find_block_by_id(std::shared_ptr<ft_sim_state> handle, int id)
+static block* find_block_by_id(std::shared_ptr<ft_sim_state> handle, int id)
 {
 	for (int i = 0; i < handle->block_cnt; i++) {
 		if (handle->blocks[i].bdef.id == id)
@@ -181,18 +181,18 @@ static double distance(double x1, double y1, double x2, double y2)
 	return ft_sqrt(ft_add(ft_mul(dx, dx), ft_mul(dy, dy)));
 }
 
-static joint_collection *get_closest_jc(std::shared_ptr<ft_sim_state> handle, double x, double y, fcsim_block_def bdef)
+static joint_collection* get_closest_jc(std::shared_ptr<ft_sim_state> handle, double x, double y, fcsim_block_def bdef)
 {
 	//double best_dist = 10000000.0;
 	double best_dist = 10.0;
-	joint_collection *res = NULL;
+	joint_collection* res = NULL;
 
 	for (int i = 0; i < 2; i++) {
-		if(bdef.joints[i] == FCSIM_NO_JOINT)break;
-		block *b = find_block_by_id(handle, bdef.joints[i]);
+		if (bdef.joints[i] == FCSIM_NO_JOINT)break;
+		block* b = find_block_by_id(handle, bdef.joints[i]);
 		if (!b)
 			continue;
-		for (joint_collection_list *j = b->jcs_head; j; j = j->next) {
+		for (joint_collection_list* j = b->jcs_head; j; j = j->next) {
 			double dist = distance(x, y, j->jc->x, j->jc->y);
 			if (dist < best_dist) {
 				best_dist = dist;
@@ -204,7 +204,7 @@ static joint_collection *get_closest_jc(std::shared_ptr<ft_sim_state> handle, do
 	return res;
 }
 
-void get_rod_endpoints(fcsim_block_def bdef, double *x0, double *y0, double *x1, double *y1)
+void get_rod_endpoints(fcsim_block_def bdef, double* x0, double* y0, double* x1, double* y1)
 {
 	double cw = ft_mul(ft_cos(bdef.angle), ft_div(bdef.w, 2));
 	double sw = ft_mul(ft_sin(bdef.angle), ft_div(bdef.w, 2));
@@ -215,11 +215,11 @@ void get_rod_endpoints(fcsim_block_def bdef, double *x0, double *y0, double *x1,
 	*y1 = ft_add(bdef.y, sw);
 }
 
-int share_block(std::shared_ptr<ft_sim_state> handle, joint_collection *jc0, joint_collection *jc1)
+int share_block(std::shared_ptr<ft_sim_state> handle, joint_collection* jc0, joint_collection* jc1)
 {
 	for (int i = 0; i < handle->block_cnt; i++) {
 		bool f0 = false, f1 = false;
-		for (joint_collection_list *j = handle->blocks[i].jcs_head; j; j = j->next) {
+		for (joint_collection_list* j = handle->blocks[i].jcs_head; j; j = j->next) {
 			if (j->jc == jc0) f0 = true;
 			if (j->jc == jc1) f1 = true;
 		}
@@ -231,22 +231,22 @@ int share_block(std::shared_ptr<ft_sim_state> handle, joint_collection *jc0, joi
 static int joint_type(int block_type)
 {
 	switch (block_type) {
-		case FCSIM_CW_WHEEL:  return JOINT_CW;
-		case FCSIM_CCW_WHEEL: return JOINT_CCW;
+	case FCSIM_CW_WHEEL:  return JOINT_CW;
+	case FCSIM_CCW_WHEEL: return JOINT_CCW;
 	}
 	return JOINT_PIN;
 }
 
-static joint_collection_list *create_joint(block *b, double x, double y)
+static joint_collection_list* create_joint(block* b, double x, double y)
 {
-	joint_collection *jc = new joint_collection;
+	joint_collection* jc = new joint_collection;
 	jc->x = x;
 	jc->y = y;
 	jc->top_block = b;
 	jc->joints_head = NULL;
 	jc->joints_tail = NULL;
 
-	joint_collection_list *jcl = new joint_collection_list;
+	joint_collection_list* jcl = new joint_collection_list;
 	jcl->jc = jc;
 	jcl->next = NULL;
 
@@ -261,16 +261,16 @@ static joint_collection_list *create_joint(block *b, double x, double y)
 	return jcl;
 }
 
-static int joint_type(block *b)
+static int joint_type(block* b)
 {
 	switch (b->bdef.type) {
-		case FCSIM_CW_WHEEL:  return JOINT_CW;
-		case FCSIM_CCW_WHEEL: return JOINT_CCW;
+	case FCSIM_CW_WHEEL:  return JOINT_CW;
+	case FCSIM_CCW_WHEEL: return JOINT_CCW;
 	}
 	return JOINT_PIN;
 }
 
-static bool is_singular_wheel_center(joint_collection *jc)
+static bool is_singular_wheel_center(joint_collection* jc)
 {
 	if (jc->joints_head)
 		return false;
@@ -279,12 +279,12 @@ static bool is_singular_wheel_center(joint_collection *jc)
 		return false;
 
 	return jc->x == jc->top_block->bdef.x &&
-	       jc->y == jc->top_block->bdef.y;
+		jc->y == jc->top_block->bdef.y;
 }
 
-static int get_joint_type(block *b, joint_collection *jc)
+static int get_joint_type(block* b, joint_collection* jc)
 {
-	block *top = jc->top_block;
+	block* top = jc->top_block;
 	int type;
 
 	if (is_singular_wheel_center(jc))
@@ -298,9 +298,9 @@ static int get_joint_type(block *b, joint_collection *jc)
 	return type;
 }
 
-static joint_collection_list *jcl_swap(joint_collection_list *jcl)
+static joint_collection_list* jcl_swap(joint_collection_list* jcl)
 {
-	joint_collection_list *new_jcl = jcl->next;
+	joint_collection_list* new_jcl = jcl->next;
 
 	if (!new_jcl)
 		return jcl;
@@ -311,7 +311,7 @@ static joint_collection_list *jcl_swap(joint_collection_list *jcl)
 	return new_jcl;
 }
 
-static void replace_joint(block *b, joint_collection_list *jcl, joint_collection *jc)
+static void replace_joint(block* b, joint_collection_list* jcl, joint_collection* jc)
 {
 	delete jcl->jc;
 	jcl->jc = jc;
@@ -319,7 +319,7 @@ static void replace_joint(block *b, joint_collection_list *jcl, joint_collection
 	if (b->jcs_head == jcl) {
 		b->jcs_head = jcl_swap(b->jcs_head);
 	} else {
-		for (joint_collection_list *l = b->jcs_head; l; l = l->next) {
+		for (joint_collection_list* l = b->jcs_head; l; l = l->next) {
 			if (l->next == jcl) {
 				l->next = jcl_swap(l->next);
 				break;
@@ -327,7 +327,7 @@ static void replace_joint(block *b, joint_collection_list *jcl, joint_collection
 		}
 	}
 
-	joint *j = new joint;
+	joint* j = new joint;
 	j->x = jc->x;
 	j->y = jc->y;
 	j->type = get_joint_type(b, jc);
@@ -346,14 +346,14 @@ static void replace_joint(block *b, joint_collection_list *jcl, joint_collection
 	}
 }
 
-static void create_rod_joints(block *b, std::shared_ptr<ft_sim_state> handle)
+static void create_rod_joints(block* b, std::shared_ptr<ft_sim_state> handle)
 {
 	fcsim_block_def bdef = b->bdef;
 	double x0, y0, x1, y1;
 
 	get_rod_endpoints(bdef, &x0, &y0, &x1, &y1);
-	joint_collection *jc0 = get_closest_jc(handle, x0, y0, bdef);
-	joint_collection *jc1 = get_closest_jc(handle, x1, y1, bdef);
+	joint_collection* jc0 = get_closest_jc(handle, x0, y0, bdef);
+	joint_collection* jc1 = get_closest_jc(handle, x1, y1, bdef);
 
 	if (jc0 && jc1 && share_block(handle, jc0, jc1))
 		jc1 = NULL;
@@ -373,8 +373,8 @@ static void create_rod_joints(block *b, std::shared_ptr<ft_sim_state> handle)
 	bdef.x = ft_add(x0, ft_div(ft_sub(x1, x0), 2.0));
 	bdef.y = ft_add(y0, ft_div(ft_sub(y1, y0), 2.0));
 
-	joint_collection_list *jcl0 = create_joint(b, x0, y0);
-	joint_collection_list *jcl1 = create_joint(b, x1, y1);
+	joint_collection_list* jcl0 = create_joint(b, x0, y0);
+	joint_collection_list* jcl1 = create_joint(b, x1, y1);
 
 	if (jc0)
 		replace_joint(b, jcl0, jc0);
@@ -385,14 +385,14 @@ static void create_rod_joints(block *b, std::shared_ptr<ft_sim_state> handle)
 
 
 
-static void create_wheel_joints(block *b, std::shared_ptr<ft_sim_state> handle)
+static void create_wheel_joints(block* b, std::shared_ptr<ft_sim_state> handle)
 {
 	fcsim_block_def bdef = b->bdef;
 	double x = bdef.x;
 	double y = bdef.y;
 	double r = ft_div(bdef.w, 2);
 
-	joint_collection *jc = get_closest_jc(handle, x, y, bdef);
+	joint_collection* jc = get_closest_jc(handle, x, y, bdef);
 	if (jc) {
 		x = bdef.x = jc->x;
 		y = bdef.y = jc->y;
@@ -405,17 +405,17 @@ static void create_wheel_joints(block *b, std::shared_ptr<ft_sim_state> handle)
 		4.71238898038469,
 	};
 
-	joint_collection_list *jcl = create_joint(b, bdef.x, bdef.y);
+	joint_collection_list* jcl = create_joint(b, bdef.x, bdef.y);
 	for (int i = 0; i < 4; i++) {
 		create_joint(b, ft_add(x, ft_mul(ft_cos(ft_add(bdef.angle, a[i])), r)),
-		                ft_add(y, ft_mul(ft_sin(ft_add(bdef.angle, a[i])), r)));
+			ft_add(y, ft_mul(ft_sin(ft_add(bdef.angle, a[i])), r)));
 	}
 
 	if (jc)
 		replace_joint(b, jcl, jc);
 }
 
-static void create_goal_rect_joints(block *b)
+static void create_goal_rect_joints(block* b)
 {
 	fcsim_block_def bdef = b->bdef;
 	double x = bdef.x;
@@ -423,9 +423,9 @@ static void create_goal_rect_joints(block *b)
 	double w_half = ft_div(bdef.w, 2);
 	double h_half = ft_div(bdef.h, 2);
 
-	double x0 =  ft_mul(ft_cos(bdef.angle), w_half);
-	double y0 =  ft_mul(ft_sin(bdef.angle), w_half);
-	double x1 =  ft_mul(ft_sin(bdef.angle), h_half);
+	double x0 = ft_mul(ft_cos(bdef.angle), w_half);
+	double y0 = ft_mul(ft_sin(bdef.angle), w_half);
+	double x1 = ft_mul(ft_sin(bdef.angle), h_half);
 	double y1 = ft_mul(-ft_cos(bdef.angle), h_half);
 
 	create_joint(b, x, y);
@@ -435,7 +435,7 @@ static void create_goal_rect_joints(block *b)
 	create_joint(b, ft_sub(ft_sub(x, x0), x1), ft_sub(ft_sub(y, y0), y1));
 }
 
-static void create_joints(block *b, std::shared_ptr<ft_sim_state> handle)
+static void create_joints(block* b, std::shared_ptr<ft_sim_state> handle)
 {
 	switch (b->bdef.type) {
 	case FCSIM_GOAL_RECT:
@@ -456,7 +456,7 @@ static void create_joints(block *b, std::shared_ptr<ft_sim_state> handle)
 
 void add_block(std::shared_ptr<ft_sim_state> handle, fcsim_block_def bdef)
 {
-	block *block = &handle->blocks[handle->block_cnt++];
+	block* block = &handle->blocks[handle->block_cnt++];
 
 	memset(block, 0, sizeof(*block));
 
@@ -477,14 +477,14 @@ void add_block(std::shared_ptr<ft_sim_state> handle, fcsim_block_def bdef)
 
 std::shared_ptr<ft_sim_state> fcsim_new(std::shared_ptr<ft_sim_state> handle, ft_design_spec& arena, const ft_sim_settings&)
 {
-	if(!handle) {
+	if (!handle) {
 		handle = std::make_shared<ft_sim_state>();
 	}
 
 	b2Vec2 gravity(0, 300);
 	b2AABB aabb;
 	aabb.minVertex.Set(-ARENA_WIDTH, -ARENA_HEIGHT);
-	aabb.maxVertex.Set( ARENA_WIDTH,  ARENA_HEIGHT);
+	aabb.maxVertex.Set(ARENA_WIDTH, ARENA_HEIGHT);
 	handle->world = new b2World(aabb, gravity, true);
 	handle->world->SetFilter(&fcsim_collision_filter);
 
@@ -505,9 +505,9 @@ std::shared_ptr<ft_sim_state> fcsim_new(std::shared_ptr<ft_sim_state> handle, ft
 		generate_body(handle->world, &handle->blocks[i]);
 
 	for (int i = 0; i < handle->block_cnt; i++) {
-		block *b = &handle->blocks[i];
-		for (joint_collection_list *l = b->jcs_head; l; l = l->next) {
-			for (joint *j = l->jc->joints_head; j; j = j->next)
+		block* b = &handle->blocks[i];
+		for (joint_collection_list* l = b->jcs_head; l; l = l->next) {
+			for (joint* j = l->jc->joints_head; j; j = j->next)
 				generate_joint(handle->world, j);
 		}
 	}
@@ -520,9 +520,9 @@ void fcsim_step(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings&)
 	handle->world->Step(TIME_STEP, ITERATIONS);
 
 	// joint breaking
-	b2Joint *joint = handle->world->GetJointList();
+	b2Joint* joint = handle->world->GetJointList();
 	while (joint) {
-		b2Joint *next = joint->GetNext();
+		b2Joint* next = joint->GetNext();
 		b2Vec2 a1 = joint->GetAnchor1();
 		b2Vec2 a2 = joint->GetAnchor2();
 		b2Vec2 d = a1 - a2;
@@ -532,8 +532,8 @@ void fcsim_step(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings&)
 	}
 
 	for (int i = 0; i < handle->block_cnt; i++) {
-		block *b = &handle->blocks[i];
-		b2Vec2 pos   = b->body->GetOriginPosition();
+		block* b = &handle->blocks[i];
+		b2Vec2 pos = b->body->GetOriginPosition();
 		double angle = b->body->GetRotation()._v;
 
 		b->bdef.x = pos.x._v;
@@ -555,14 +555,14 @@ bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
 	double area_xb = ft_add(area.x, area_ex);
 	double area_ya = ft_sub(area.y, area_ey);
 	double area_yb = ft_add(area.y, area_ey);
-	if(is_circle) {
+	if (is_circle) {
 		return ft_sub(bdef.x, bex) >= area_xa && ft_add(bdef.x, bex) <= area_xb && ft_sub(bdef.y, bey) >= area_ya & ft_add(bdef.y, bey) <= area_yb;
 	}
 	double x = bdef.x;
 	double y = bdef.y;
-	double x0 =  ft_mul(ft_cos(bdef.angle), bex);
-	double y0 =  ft_mul(ft_sin(bdef.angle), bex);
-	double x1 =  ft_mul(ft_sin(bdef.angle), bey);
+	double x0 = ft_mul(ft_cos(bdef.angle), bex);
+	double y0 = ft_mul(ft_sin(bdef.angle), bex);
+	double x1 = ft_mul(ft_sin(bdef.angle), bey);
 	double y1 = ft_mul(-ft_cos(bdef.angle), bey);
 	CHECK_CORNER(ft_add(ft_add(x, x0), x1), ft_add(ft_add(y, y0), y1));
 	CHECK_CORNER(ft_add(ft_sub(x, x0), x1), ft_add(ft_sub(y, y0), y1));
@@ -573,11 +573,11 @@ bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
 
 bool fcsim_is_solved(std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec) {
 	bool goal_exist = false;
-	for(int i = 0; i < sim->block_cnt; ++i) {
+	for (int i = 0; i < sim->block_cnt; ++i) {
 		fcsim_block_def& bdef = sim->blocks[i].bdef;
-		if(!is_goal_object(bdef.type))continue;
+		if (!is_goal_object(bdef.type))continue;
 		goal_exist = true;
-		if(!fcsim_in_area(bdef, spec.goal))return false;
+		if (!fcsim_in_area(bdef, spec.goal))return false;
 	}
 	return goal_exist;
 }

@@ -35,11 +35,11 @@ double ft_cos(double x) {
 
 #ifdef HARDFLOAT_TOGGLE
 
-double ft_add(double x, double y) {return x + y;}
-double ft_sub(double x, double y) {return x - y;}
-double ft_mul(double x, double y) {return x * y;}
-double ft_div(double x, double y) {return x / y;}
-double ft_rem(double x, double y) {return std::remainder(x, y);}
+double ft_add(double x, double y) { return x + y; }
+double ft_sub(double x, double y) { return x - y; }
+double ft_mul(double x, double y) { return x * y; }
+double ft_div(double x, double y) { return x / y; }
+double ft_rem(double x, double y) { return std::remainder(x, y); }
 
 #else
 
@@ -106,7 +106,7 @@ uint64_t _as_int(double f) {
 }
 
 static inline uint64_t rotl(const uint64_t x, int k) {
-	return (x << k) | (x >> (64 - k));
+  return (x << k) | (x >> (64 - k));
 }
 
 static uint64_t _xs_s[2];
@@ -117,15 +117,15 @@ void xs_reset() {
 }
 
 uint64_t xs_next() {
-	const uint64_t s0 = _xs_s[0];
-	uint64_t s1 = _xs_s[1];
-	const uint64_t result = s0 + s1;
+  const uint64_t s0 = _xs_s[0];
+  uint64_t s1 = _xs_s[1];
+  const uint64_t result = s0 + s1;
 
-	s1 ^= s0;
-	_xs_s[0] = rotl(s0, 24) ^ s1 ^ (s1 << 16); // a, b
-	_xs_s[1] = rotl(s1, 37); // c
+  s1 ^= s0;
+  _xs_s[0] = rotl(s0, 24) ^ s1 ^ (s1 << 16); // a, b
+  _xs_s[1] = rotl(s1, 37); // c
 
-	return result;
+  return result;
 }
 
 void hash_combine(uint64_t& h, const uint64_t& v) {
@@ -137,15 +137,15 @@ void hash_combine(uint64_t& h, const uint64_t& v) {
 
 void hash_combine(uint64_t& h, const std::string& v) {
   hash_combine(h, v.size());
-  for(auto it = v.begin(); it != v.end(); ++it) {
+  for (auto it = v.begin(); it != v.end(); ++it) {
     hash_combine(h, *it);
   }
 }
 
 void hash_flush(std::string& result, uint64_t x) {
-  for(int i = 0; i < 3; ++i) {
+  for (int i = 0; i < 3; ++i) {
     char c = x & 0x1f;
-    if(c < 10) {c += '0';} else {c += 'A' - 10;}
+    if (c < 10) { c += '0'; } else { c += 'A' - 10; }
     x >>= 5;
     result += c;
   }
@@ -154,7 +154,7 @@ void hash_flush(std::string& result, uint64_t x) {
 
 void check_dtostrtod(uint64_t& h, double v) {
   double u = ft_strtod(ft_dtostr(v));
-  if(std::isnan(v) || u == v) {return;}
+  if (std::isnan(v) || u == v) { return; }
   h++;
 }
 
@@ -169,7 +169,7 @@ std::string ft_math_hash() {
   {
     xs_reset();
     uint64_t h = 0;
-    for(int i = 0; i < MH_ITERATIONS; ++i) {
+    for (int i = 0; i < MH_ITERATIONS; ++i) {
       uint64_t ui = xs_next();
       uint64_t vi = xs_next();
       double u = _as_double(ui);
@@ -195,7 +195,7 @@ std::string ft_math_hash() {
   {
     xs_reset();
     uint64_t h = 0;
-    for(int i = 0; i < MH_ITERATIONS; ++i) {
+    for (int i = 0; i < MH_ITERATIONS; ++i) {
       uint64_t ui = xs_next();
       uint64_t vi = xs_next();
       double u = _as_double(ui);
@@ -217,7 +217,7 @@ std::string ft_math_hash() {
   {
     xs_reset();
     uint64_t h = 0;
-    for(int i = 0; i < MH_ITERATIONS; ++i) {
+    for (int i = 0; i < MH_ITERATIONS; ++i) {
       uint64_t ui = xs_next();
       uint64_t vi = xs_next();
       double u = _as_double(ui);
@@ -239,7 +239,7 @@ std::string ft_math_hash() {
   {
     xs_reset();
     uint64_t h = 0;
-    for(int i = 0; i < MH_ITERATIONS; ++i) {
+    for (int i = 0; i < MH_ITERATIONS; ++i) {
       uint64_t ui = xs_next();
       uint64_t vi = xs_next();
       double u = _as_double(ui);
@@ -261,7 +261,7 @@ std::string ft_math_hash() {
   {
     xs_reset();
     uint64_t h = 0;
-    for(int i = 0; i < MH_ITERATIONS; ++i) {
+    for (int i = 0; i < MH_ITERATIONS; ++i) {
       uint64_t vi = xs_next();
       double v = _as_double(vi);
       hash_combine(h, _as_int(ft_sqrt(v)));
@@ -278,7 +278,7 @@ std::string ft_math_hash() {
   {
     xs_reset();
     uint64_t h = 0;
-    for(int i = 0; i < MH_ITERATIONS; ++i) {
+    for (int i = 0; i < MH_ITERATIONS; ++i) {
       uint64_t vi = xs_next();
       double v = _as_double(vi);
       hash_combine(h, _as_int(ft_sin(v)));
@@ -299,7 +299,7 @@ std::string ft_math_hash() {
   {
     xs_reset();
     uint64_t h = 0;
-    for(int i = 0; i < MH_ITERATIONS; ++i) {
+    for (int i = 0; i < MH_ITERATIONS; ++i) {
       uint64_t vi = xs_next();
       double v = _as_double(vi);
       hash_combine(h, _as_int(ft_sin(v)));
@@ -316,7 +316,7 @@ std::string ft_math_hash() {
   {
     xs_reset();
     uint64_t h = 0;
-    for(int i = 0; i < MH_ITERATIONS; ++i) {
+    for (int i = 0; i < MH_ITERATIONS; ++i) {
       uint64_t vi = xs_next();
       double v = _as_double(vi);
       hash_combine(h, _as_int(ft_cos(v)));
@@ -333,7 +333,7 @@ std::string ft_math_hash() {
   {
     xs_reset();
     uint64_t h = 0;
-    for(int i = 0; i < MH_ITERATIONS; ++i) {
+    for (int i = 0; i < MH_ITERATIONS; ++i) {
       uint64_t ui = xs_next();
       uint64_t vi = xs_next();
       double u = _as_double(ui);
@@ -355,7 +355,7 @@ std::string ft_math_hash() {
   {
     xs_reset();
     uint64_t h = 0;
-    for(int i = 0; i < MH_ITERATIONS; ++i) {
+    for (int i = 0; i < MH_ITERATIONS; ++i) {
       uint64_t vi = xs_next();
       double v = _as_double(vi);
       hash_combine(h, ft_dtostr(v));
@@ -372,7 +372,7 @@ std::string ft_math_hash() {
   {
     xs_reset();
     uint64_t h = 0;
-    for(int i = 0; i < MH_ITERATIONS; ++i) {
+    for (int i = 0; i < MH_ITERATIONS; ++i) {
       uint64_t vi = xs_next();
       double v = _as_double(vi);
       check_dtostrtod(h, v);

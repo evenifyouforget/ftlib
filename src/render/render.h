@@ -60,18 +60,18 @@ struct RenderLayer {
     void resetRender();
 
     void renderPartial(float scale, Vector2 shift, float aaWidth,
-		PackedColorArray colors, PackedFloat32Array cornerRadii, PackedFloat32Array borderThicknesses,
-		bool (*getObjIsCircle)(ObjType::Type), SdfType::Type (*getObjSdfType)(ObjType::Type), Ref<Image> &renderImg,
+        PackedColorArray colors, PackedFloat32Array cornerRadii, PackedFloat32Array borderThicknesses,
+        bool (*getObjIsCircle)(ObjType::Type), SdfType::Type(*getObjSdfType)(ObjType::Type), Ref<Image>& renderImg,
         Vector2i dataImageSize);
 
     void init(MultiMeshInstance2D* mmi_, uint32_t layerID_, int32_t multimeshInstanceCount);
 };
 
 class FTRender : public Node {
-	GDCLASS(FTRender, Node);
+    GDCLASS(FTRender, Node);
 
 protected:
-	static void _bind_methods();
+    static void _bind_methods();
 
 private:
     int32_t layerMultimeshInstanceCount;
@@ -131,7 +131,7 @@ public:
 
 private:
     void addRoundedRect(Vector2 pos, Vector2 size, float rotation, PieceType::Type type,
-            RenderLayer & borderLayer, RenderLayer & insideLayer);
+        RenderLayer& borderLayer, RenderLayer& insideLayer);
     void addRoundedRectPiece(Vector2 pos, Vector2 size, float rotation, PieceType::Type type);
     void addArea(Vector2 pos, Vector2 size, float rotation, PieceType::Type type);
     void addCirclePiece(Vector2 pos, float radius, float rotation, PieceType::Type type);
@@ -161,8 +161,8 @@ public:
 
     void initLayers(int32_t layerMultimeshInstanceCount_, Vector2i layerDataImageSize);
     void initResources(Ref<ShaderMaterial> shaderMaterial_, MultiMeshInstance2D* mmiAreas, MultiMeshInstance2D* mmiBorders, MultiMeshInstance2D* mmiInsides);
-    void initVisuals(PackedColorArray colors_, PackedFloat32Array cornerRadii_, PackedFloat32Array borderThicknesses, 
-        float aaWidth, float jointRadius_, float innerJointThresholdRadius_, Vector2 woodSizePadding, 
+    void initVisuals(PackedColorArray colors_, PackedFloat32Array cornerRadii_, PackedFloat32Array borderThicknesses,
+        float aaWidth, float jointRadius_, float innerJointThresholdRadius_, Vector2 woodSizePadding,
         Vector2 waterSizePadding, float ghostRodPadding);
 };
 
