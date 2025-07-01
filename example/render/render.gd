@@ -144,29 +144,7 @@ func _process(_delta: float) -> void:
 	render.addBuildArea(Vector2(build_area[0], build_area[1]), Vector2(build_area[2], build_area[3]), 0)
 	render.addGoalArea(Vector2(goal_area[0], goal_area[1]), Vector2(goal_area[2], goal_area[3]), 0)
 	for i in range(npcs):
-		match pt[i]:
-			PieceTypes.FCSIM_STATIC_RECT:
-				render.addStaticRect(Vector2(cpx[i], cpy[i]), Vector2(pw[i], ph[i]), cpr[i])
-			PieceTypes.FCSIM_STATIC_CIRC:
-				render.addStaticCirc(Vector2(cpx[i], cpy[i]), pw[i], cpr[i])
-			PieceTypes.FCSIM_DYNAMIC_RECT:
-				render.addDynamicRect(Vector2(cpx[i], cpy[i]), Vector2(pw[i], ph[i]), cpr[i])
-			PieceTypes.FCSIM_DYNAMIC_CIRC:
-				render.addDynamicCirc(Vector2(cpx[i], cpy[i]), pw[i], cpr[i])
-			PieceTypes.FCSIM_GP_RECT:
-				render.addGPRect(Vector2(cpx[i], cpy[i]), Vector2(pw[i], ph[i]), cpr[i])
-			PieceTypes.FCSIM_GP_CIRC:
-				render.addGPCirc(Vector2(cpx[i], cpy[i]), pw[i], cpr[i])
-			PieceTypes.FCSIM_UPW:
-				render.addUPW(Vector2(cpx[i], cpy[i]), pw[i], cpr[i])
-			PieceTypes.FCSIM_CW:
-				render.addCW(Vector2(cpx[i], cpy[i]), pw[i], cpr[i])
-			PieceTypes.FCSIM_CCW:
-				render.addCCW(Vector2(cpx[i], cpy[i]), pw[i], cpr[i])
-			PieceTypes.FCSIM_WATER:
-				render.addWater(Vector2(cpx[i], cpy[i]), Vector2(pw[i], ph[i]), cpr[i])
-			PieceTypes.FCSIM_WOOD:
-				render.addWood(Vector2(cpx[i], cpy[i]), Vector2(pw[i], ph[i]), cpr[i])
+		render.addPiece(pt[i], Vector2(cpx[i], cpy[i]), Vector2(pw[i], ph[i]), cpr[i])
 
 	# render it!
 	render.render(scale, shift)

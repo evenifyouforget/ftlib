@@ -4,3 +4,5 @@ other error: b2Cross(m_normals[i1], m_normals[i2]) > MIN_VALUE
 other error: b2Cross(m_normals[i1], m_normals[i2]) > MIN_VALUE
 other error: b2Cross(m_normals[i1], m_normals[i2]) > MIN_VALUE
 other error: b2Cross(m_normals[i1], m_normals[i2]) > MIN_VALUE
+other error: b2Cross(m_normals[i1], m_normals[i2]) > MIN_VALUE
+other error: b2Cross(m_normals[i1], m_normals[i2]) > MIN_VALUE

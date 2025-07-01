@@ -196,6 +196,7 @@ void FTRender::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("addUPW", "pos", "diameter", "rotation"), &FTRender::addUPW);
 	ClassDB::bind_method(D_METHOD("addBuildArea", "pos", "size", "rotation"), &FTRender::addBuildArea);
 	ClassDB::bind_method(D_METHOD("addGoalArea", "pos", "size", "rotation"), &FTRender::addGoalArea);
+	ClassDB::bind_method(D_METHOD("addPiece", "type", "pos", "size", "rotation"), &FTRender::addPiece);
 
 	ClassDB::bind_method(D_METHOD("initLayers", "layerMultimeshInstanceCount", "layerDataImageSize"), &FTRender::initLayers);
 	ClassDB::bind_method(D_METHOD("initResources", "shaderMaterial", "mmiAreas", "mmiBorders", "mmiInsides"), &FTRender::initResources);
@@ -602,6 +603,50 @@ void FTRender::addBuildArea(Vector2 pos, Vector2 size, float rotation) {
 
 void FTRender::addGoalArea(Vector2 pos, Vector2 size, float rotation) {
 	addArea(pos, size, rotation, PieceType::GOAL);
+}
+
+void FTRender::addPiece(PieceType::Type type, Vector2 pos, Vector2 size, float rotation) {
+	switch(type) {
+	case PieceType::STATIC_RECT:
+		addStaticRect(pos, size, rotation);
+		break;
+	case PieceType::STATIC_CIRC:
+		addStaticCirc(pos, size.x, rotation);
+		break;
+	case PieceType::DYNAMIC_RECT:
+		addDynamicRect(pos, size, rotation);
+		break;
+	case PieceType::DYNAMIC_CIRC:
+		addDynamicCirc(pos, size.x, rotation);
+		break;
+	case PieceType::GP_RECT:
+		addGPRect(pos, size, rotation);
+		break;
+	case PieceType::GP_CIRC:
+		addGPCirc(pos, size.x, rotation);
+		break;
+	case PieceType::UPW:
+		addUPW(pos, size.x, rotation);
+		break;
+	case PieceType::CW:
+		addCW(pos, size.x, rotation);
+		break;
+	case PieceType::CCW:
+		addCCW(pos, size.x, rotation);
+		break;
+	case PieceType::WATER:
+		addWater(pos, size, rotation);
+		break;
+	case PieceType::WOOD:
+		addWood(pos, size, rotation);
+		break;
+	case PieceType::BUILD:
+		addBuildArea(pos, size, rotation);
+		break;
+	case PieceType::GOAL:
+		addBuildArea(pos, size, rotation);
+		break;
+	}
 }
 
 void FTRender::initLayers(int32_t layerMultimeshInstanceCount_, Vector2i layerDataImageSize_) {

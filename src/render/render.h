@@ -158,6 +158,7 @@ public:
     void addUPW(Vector2 pos, float diameter, float rotation);
     void addBuildArea(Vector2 pos, Vector2 size, float rotation);
     void addGoalArea(Vector2 pos, Vector2 size, float rotation);
+    void addPiece(PieceType::Type type, Vector2 pos, Vector2 size, float rotation); //if circle, pos.x is used as diameter
 
     void initLayers(int32_t layerMultimeshInstanceCount_, Vector2i layerDataImageSize);
     void initResources(Ref<ShaderMaterial> shaderMaterial_, MultiMeshInstance2D* mmiAreas, MultiMeshInstance2D* mmiBorders, MultiMeshInstance2D* mmiInsides);
