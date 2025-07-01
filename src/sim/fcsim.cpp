@@ -127,7 +127,7 @@ static void generate_joint(b2World* world, joint* j)
 }
 
 
-static bool is_goal_object(uint8_t type)
+static bool is_goal_object(uint16_t type)
 {
 	switch (type) {
 	case FCSIM_GP_RECT:

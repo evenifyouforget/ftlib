@@ -28,7 +28,7 @@ inline bool type_is_player(int t) {
 }
 
 struct fcsim_block_def {
-	uint8_t type;
+	uint16_t type;
 	uint16_t id;
 	double x, y;
 	double w, h;
