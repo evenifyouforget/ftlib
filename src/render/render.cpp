@@ -65,7 +65,7 @@ void RenderLayer::resetRender() {
 void RenderLayer::renderPartial(float scale, Vector2 shift, float aaWidth,
 	PackedColorArray colors, PackedFloat32Array cornerRadii, PackedFloat32Array borderThicknesses,
 	bool (*getObjIsCircle)(ObjType::Type), SdfType::Type(*getObjSdfType)(ObjType::Type), Ref<Image>& renderImg,
-	Vector2i dataImageSize) {
+	Vector2i dataImageSize) const {
 	Ref<MultiMesh> mm = mmi->get_multimesh();
 	mmi->set_instance_shader_parameter("aaWidth", aaWidth);
 	mm->set_visible_instance_count(renderCount);
@@ -279,7 +279,7 @@ void FTRender::setColors(PackedColorArray colors_) {
 	colors = colors_;
 }
 
-PackedColorArray FTRender::getColors() {
+PackedColorArray FTRender::getColors() const {
 	return colors;
 }
 
@@ -287,7 +287,7 @@ void FTRender::setColor(ObjType::Type objType, Color color) {
 	colors.set(objType, color);
 }
 
-Color FTRender::getColor(ObjType::Type objType) {
+Color FTRender::getColor(ObjType::Type objType) const {
 	return colors[objType];
 }
 
@@ -295,7 +295,7 @@ void FTRender::setCornerRadii(PackedFloat32Array cornerRadii_) {
 	cornerRadii = cornerRadii_;
 }
 
-PackedFloat32Array FTRender::getCornerRadii() {
+PackedFloat32Array FTRender::getCornerRadii() const {
 	return cornerRadii;
 }
 
@@ -303,7 +303,7 @@ void FTRender::setCornerRadius(ObjType::Type objType, double cornerRadius) {
 	cornerRadii.set(objType, cornerRadius);
 }
 
-double FTRender::getCornerRadius(ObjType::Type objType) {
+double FTRender::getCornerRadius(ObjType::Type objType) const {
 	return cornerRadii[objType];
 }
 
@@ -311,7 +311,7 @@ void FTRender::setBorderThicknesses(PackedFloat32Array borderThicknesses_) {
 	borderThicknesses = borderThicknesses_;
 }
 
-PackedFloat32Array FTRender::getBorderThicknesses() {
+PackedFloat32Array FTRender::getBorderThicknesses() const {
 	return borderThicknesses;
 }
 
@@ -319,7 +319,7 @@ void FTRender::setBorderThickness(ObjType::Type objType, double borderThickness)
 	borderThicknesses.set(objType, borderThickness);
 }
 
-double FTRender::getBorderThickness(ObjType::Type objType) {
+double FTRender::getBorderThickness(ObjType::Type objType) const {
 	return borderThicknesses[objType];
 }
 
