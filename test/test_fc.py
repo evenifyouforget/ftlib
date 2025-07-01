@@ -4,6 +4,7 @@ from collections import namedtuple
 import csv
 from pathlib import Path
 import re
+import subprocess
 
 SingleDesignData = namedtuple('SingleDesignData', ['design_uid', 'serialized_input', 'expect_solve_ticks', 'design_max_ticks'])
 
@@ -85,3 +86,7 @@ def test_addition(test_input, expected_output):
 # test single designs
 def test_single_design(design_uid, serialized_input, global_max_ticks, expect_solve_ticks, design_max_ticks):
     print(design_uid, len(serialized_input), expect_solve_ticks, design_max_ticks)
+    exec_path = Path() / 'src' / 'cli_adapter' / 'run_single_design'
+    proc = subprocess.run([exec_path], text=True, input=serialized_input, stdout=subprocess.PIPE)
+    stdout = proc.stdout
+    print(stdout)
