@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 import subprocess
 from get_design import retrieveLevel, retrieveDesign, designDomToStruct
+from run_design import run_design
 
 SingleDesignData = namedtuple('SingleDesignData', ['design_uid', 'design_struct', 'expect_solve_ticks', 'design_max_ticks'])
 
@@ -97,37 +98,10 @@ def test_single_design(design_uid, design_struct, global_max_ticks, expect_solve
         max_ticks = min(max_ticks, global_max_ticks)
     if max_ticks == math.inf:
         max_ticks = -1 # program treats -1 as infinity
-    # generate serialized input
-    serialized_input = []
-    serialized_input.append(max_ticks)
-    all_pieces = design_struct.goal_pieces + design_struct.design_pieces + design_struct.level_pieces
-    serialized_input.append(len(all_pieces))
-    for i, piece_struct in enumerate(all_pieces):
-        serialized_input.append(piece_struct.type_id)
-        serialized_input.append(i)
-        serialized_input.append(piece_struct.x)
-        serialized_input.append(piece_struct.y)
-        serialized_input.append(piece_struct.w)
-        serialized_input.append(piece_struct.h)
-        serialized_input.append(piece_struct.angle)
-        joints = list(piece_struct.joints)
-        joints += [-1] * (2 - len(joints))
-        serialized_input += joints
-    serialized_input.append(design_struct.build_area.x)
-    serialized_input.append(design_struct.build_area.y)
-    serialized_input.append(design_struct.build_area.w)
-    serialized_input.append(design_struct.build_area.h)
-    serialized_input.append(design_struct.goal_area.x)
-    serialized_input.append(design_struct.goal_area.y)
-    serialized_input.append(design_struct.goal_area.w)
-    serialized_input.append(design_struct.goal_area.h)
-    serialized_input = ' '.join(map(str, serialized_input))
-    # run the executable
-    exec_path = Path() / 'src' / 'cli_adapter' / 'run_single_design'
-    proc = subprocess.run([exec_path], text=True, input=serialized_input, stdout=subprocess.PIPE)
-    assert proc.returncode == 0
-    stdout = proc.stdout
-    real_solve_ticks, real_end_ticks = map(int, stdout.strip().split())
+    # run the design
+    run_result = run_design(design_struct, max_ticks)
+    real_solve_ticks = run_result.real_solve_ticks
+    real_end_ticks = run_result.real_end_ticks
     correct_result_message = f'solves at {expect_solve_ticks}' if expect_solve_ticks is not None else f'still no solve within {design_max_ticks}'
     if expect_solve_ticks is None or expect_solve_ticks > real_end_ticks:
         # should not solve
