@@ -2,12 +2,13 @@ import pytest
 import itertools
 from collections import namedtuple
 import csv
+import math
 from pathlib import Path
 import re
 import subprocess
 from get_design import retrieveLevel, retrieveDesign, designDomToStruct
 
-SingleDesignData = namedtuple('SingleDesignData', ['design_uid', 'serialized_input', 'expect_solve_ticks', 'design_max_ticks'])
+SingleDesignData = namedtuple('SingleDesignData', ['design_uid', 'design_struct', 'expect_solve_ticks', 'design_max_ticks'])
 
 def int_or_none(value):
     if value == '':
@@ -40,15 +41,12 @@ def generate_test_single_design_data():
         # generate basic data
         design_uid = f'D{design_id}' if design_id else f'L{level_id}'
         # placeholder
-        # TODO: download actual data
         design_xml = retrieveDesign(design_id) if design_id else retrieveLevel(level_id)
         design_struct = designDomToStruct(design_xml)
-        print(len(design_struct.level_pieces))
-        serialized_input = '10 0 0 0 100 100 0 0 100 100'
         # build result tuple
         result.append(SingleDesignData(
             design_uid=design_uid,
-            serialized_input=serialized_input,
+            design_struct=design_struct,
             expect_solve_ticks=solve_ticks,
             design_max_ticks=design_max_ticks
             ))
@@ -80,7 +78,7 @@ def pytest_generate_tests(metafunc):
         # Generate test cases based on the test_data list
         metafunc.parametrize('test_input,expected_output', test_data)
     if 'design_uid' in metafunc.fixturenames:
-        metafunc.parametrize('design_uid,serialized_input,expect_solve_ticks,design_max_ticks', generate_test_single_design_data())
+        metafunc.parametrize('design_uid,design_struct,expect_solve_ticks,design_max_ticks', generate_test_single_design_data())
 
 # Define the actual test function
 def test_addition(test_input, expected_output):
@@ -88,10 +86,44 @@ def test_addition(test_input, expected_output):
     assert result == expected_output, f"Expected {expected_output}, but got {result}"
 
 # test single designs
-def test_single_design(design_uid, serialized_input, global_max_ticks, expect_solve_ticks, design_max_ticks):
-    print(design_uid, len(serialized_input), expect_solve_ticks, design_max_ticks)
-    return
+def test_single_design(design_uid, design_struct, global_max_ticks, expect_solve_ticks, design_max_ticks):
+    # calculate additional config
+    max_ticks = math.inf
+    if expect_solve_ticks:
+        max_ticks = min(max_ticks, expect_solve_ticks + 100)
+    if design_max_ticks:
+        max_ticks = min(max_ticks, design_max_ticks)
+    if global_max_ticks and global_max_ticks > 0:
+        max_ticks = min(max_ticks, global_max_ticks)
+    if max_ticks == math.inf:
+        max_ticks = -1 # program treats -1 as infinity
+    # generate serialized input
+    serialized_input = []
+    serialized_input.append(max_ticks)
+    all_pieces = design_struct.goal_pieces + design_struct.design_pieces + design_struct.level_pieces
+    serialized_input.append(len(all_pieces))
+    for i, piece_struct in enumerate(all_pieces):
+        serialized_input.append(piece_struct.type_id)
+        serialized_input.append(i)
+        serialized_input.append(piece_struct.x)
+        serialized_input.append(piece_struct.y)
+        serialized_input.append(piece_struct.w)
+        serialized_input.append(piece_struct.h)
+        serialized_input.append(piece_struct.angle)
+        joints = list(piece_struct.joints)
+        joints += [-1] * (2 - len(joints))
+        serialized_input += joints
+    serialized_input.append(design_struct.build_area.x)
+    serialized_input.append(design_struct.build_area.y)
+    serialized_input.append(design_struct.build_area.w)
+    serialized_input.append(design_struct.build_area.h)
+    serialized_input.append(design_struct.goal_area.x)
+    serialized_input.append(design_struct.goal_area.y)
+    serialized_input.append(design_struct.goal_area.w)
+    serialized_input.append(design_struct.goal_area.h)
+    serialized_input = ' '.join(map(str, serialized_input))
+    # run the executable
     exec_path = Path() / 'src' / 'cli_adapter' / 'run_single_design'
     proc = subprocess.run([exec_path], text=True, input=serialized_input, stdout=subprocess.PIPE)
+    assert proc.returncode == 0
     stdout = proc.stdout
-    print(stdout)
