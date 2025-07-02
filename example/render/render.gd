@@ -122,7 +122,7 @@ func _ready() -> void:
 	var blocks: Array[FTBlock]
 	var j = 0
 	for i in range(npcs):
-		var block: FTBlock = FTBlock.init(pt[i], 65535, px[i], py[i], pw[i], ph[i], pr[i], pj1[i], pj2[i])
+		var block: FTBlock = FTBlock.init(pt[i], FTBackend.FCSIM_NO_JOINT, px[i], py[i], pw[i], ph[i], pr[i], pj1[i], pj2[i])
 		if FTBackend.type_is_player(block.type):
 			block.id = j
 			j += 1

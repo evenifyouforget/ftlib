@@ -35,13 +35,13 @@ void FTBlock::_bind_methods() {
 Ref<FTBlock> FTBlock::init(uint16_t type, uint16_t id, double x, double y, double w, double h, double angle, uint16_t j1, uint16_t j2) {
     Ref<FTBlock> block;
     block.instantiate();
-    fcsim_block_def bdef{type, id, x, y, w, h, angle, {j1, j2}};
+    fcsim_block_def bdef{static_cast<fcsim_piece_type::type>(type), id, x, y, w, h, angle, {j1, j2}};
     block->bdef = bdef;
     return block;
 }
 
 void FTBlock::set_type(uint16_t type) {
-    bdef.type = type;
+    bdef.type = static_cast<fcsim_piece_type::type>(type);
 }
 
 uint16_t FTBlock::get_type() const {
@@ -125,6 +125,8 @@ std::string from_gd(String s) {
 }
 
 void FTBackend::_bind_methods() {
+    BIND_CONSTANT(FCSIM_NO_JOINT)
+
     ClassDB::bind_static_method("FTBackend", D_METHOD("math_hash"), &FTBackend::math_hash);
     ClassDB::bind_static_method("FTBackend", D_METHOD("dtostr", "value"), &FTBackend::dtostr);
     ClassDB::bind_static_method("FTBackend", D_METHOD("strtod", "value"), &FTBackend::strtod);
@@ -181,7 +183,8 @@ void FTDesign::set_blocks_packed(const PackedByteArray t, const PackedFloat64Arr
     spec.blocks = std::vector<fcsim_block_def>();
     int j = 0;
     for (int i = 0; i < t.size(); ++i) {
-        fcsim_block_def bdef = { static_cast<uint8_t>(t[i]), FCSIM_NO_JOINT, x[i], y[i], w[i], h[i], r[i], static_cast<uint16_t>(j1[i]), static_cast<uint16_t>(j2[i]) };
+        fcsim_block_def bdef = { static_cast<fcsim_piece_type::type>(t[i]), FCSIM_NO_JOINT, x[i], y[i], 
+            w[i], h[i], r[i], static_cast<uint16_t>(j1[i]), static_cast<uint16_t>(j2[i]) };
         if (type_is_player(bdef.type)) {
             bdef.id = j;
             ++j;

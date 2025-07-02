@@ -14,6 +14,7 @@ protected:
 public:
     fcsim_block_def bdef;
 
+    //TODO: Replace uint16_t with proper enum for piece type. the enum already exists, it's just not bound
     static Ref<FTBlock> init(uint16_t type, uint16_t id, double x, double y, double w, double h, double angle, uint16_t j1, uint16_t j2);
 
     void set_type(uint16_t type);
