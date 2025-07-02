@@ -163,6 +163,7 @@ const uint64_t F1 = 0x3ff0000000000000;
 const uint64_t A1 = -1;
 const uint64_t MH_ITERATIONS = 10000000;
 
+//TODO: make this run in a reasonable amount of time (it takes forever)
 std::string ft_math_hash() {
     std::string result;
     // test add, sub
