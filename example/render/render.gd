@@ -122,14 +122,13 @@ func _ready() -> void:
 	var blocks: Array[FTBlock]
 	var j = 0
 	for i in range(npcs):
-		var block: FTBlock = FTBlock.init(pt[i], 0, px[i], py[i], pw[i], ph[i], pr[i], pj1[i], pj2[i])
-		if FTBackend.type_is_player(pt[i]):
-			j += 1
+		var block: FTBlock = FTBlock.init(pt[i], 65535, px[i], py[i], pw[i], ph[i], pr[i], pj1[i], pj2[i])
+		if FTBackend.type_is_player(block.type):
 			block.id = j
+			j += 1
 		blocks.append(block)
 	
 	# init simulation
-	#ft.set_blocks_packed(pt, px, py, pw, ph, pr, pj1, pj2)
 	ft.set_blocks(blocks)
 	ft.set_build(build_area[0], build_area[1], build_area[2], build_area[3])
 	ft.set_goal(goal_area[0], goal_area[1], goal_area[2], goal_area[3])

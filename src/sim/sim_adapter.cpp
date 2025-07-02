@@ -169,14 +169,9 @@ void FTDesign::_bind_methods() {
 
 void FTDesign::set_blocks(const TypedArray<FTBlock> blocks) {
     spec.blocks = std::vector<fcsim_block_def>();
-    int j = 0;
     for (int i = 0; i < blocks.size(); ++i) {
         Ref<FTBlock> block = blocks[i];
         fcsim_block_def bdef = block->bdef;
-        if (type_is_player(bdef.type)) {
-            bdef.id = j;
-            ++j;
-        }
         spec.blocks.push_back(bdef);
     }
 }
