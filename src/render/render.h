@@ -89,10 +89,6 @@ private:
     float ghostRodPadding;
 
 public:
-    static PackedColorArray getDefaultColors();
-    static PackedFloat32Array getDefaultCornerRadii();
-    static PackedFloat32Array getDefaultBorderThicknesses();
-
     void setColors(const PackedColorArray colors_);
     PackedColorArray getColors() const;
 

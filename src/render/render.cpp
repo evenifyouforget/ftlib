@@ -204,77 +204,6 @@ void FTRender::_bind_methods() {
 		"jointDiameter", "innerJointThresholdDiameter", "woodSizePadding", "waterSizePadding", "ghostRodPadding"), &FTRender::initVisuals);
 }
 
-PackedColorArray FTRender::getDefaultColors() {
-	PackedColorArray colors;
-	colors.resize(ObjType::OBJ_TYPE_SIZE);
-	colors.set(ObjType::STATIC_RECT_BORDER, Color("#008009"));
-	colors.set(ObjType::STATIC_RECT_INSIDE, Color("#00be01"));
-	colors.set(ObjType::STATIC_CIRC_BORDER, Color("#008009"));
-	colors.set(ObjType::STATIC_CIRC_INSIDE, Color("#00be01"));
-	colors.set(ObjType::DYNAMIC_RECT_BORDER, Color("#c6560c"));
-	colors.set(ObjType::DYNAMIC_RECT_INSIDE, Color("#f9da2f"));
-	colors.set(ObjType::DYNAMIC_CIRC_BORDER, Color("#c6560c"));
-	colors.set(ObjType::DYNAMIC_CIRC_INSIDE, Color("#f9da2f"));
-	colors.set(ObjType::GP_RECT_BORDER, Color("#bb6666"));
-	colors.set(ObjType::GP_RECT_INSIDE, Color("#ff6666"));
-	colors.set(ObjType::GP_CIRC_BORDER, Color("#bb6666"));
-	colors.set(ObjType::GP_CIRC_INSIDE, Color("#ff6666"));
-	colors.set(ObjType::WOOD_BORDER, Color("#b55900"));
-	colors.set(ObjType::WOOD_INSIDE, Color("#6b3400"));
-	colors.set(ObjType::WATER_BORDER, Color("#ffffff"));
-	colors.set(ObjType::WATER_INSIDE, Color("#0000ff"));
-	colors.set(ObjType::CW_BORDER, Color("#fc8003"));
-	colors.set(ObjType::CW_INSIDE, Color("#ffec00"));
-	colors.set(ObjType::CW_DECAL, Color("#fc8003"));
-	colors.set(ObjType::CCW_BORDER, Color("#d147a5"));
-	colors.set(ObjType::CCW_INSIDE, Color("#ffcccc"));
-	colors.set(ObjType::CCW_DECAL, Color("#d147a5"));
-	colors.set(ObjType::UPW_BORDER, Color("#0a69fd"));
-	colors.set(ObjType::UPW_INSIDE, Color("#89fae3"));
-	colors.set(ObjType::UPW_DECAL, Color("#4a69fd"));
-	colors.set(ObjType::BUILD_BORDER, Color("#7777ee"));
-	colors.set(ObjType::BUILD_INSIDE, Color("#bcdbf9"));
-	colors.set(ObjType::GOAL_BORDER, Color("#bb6666"));
-	colors.set(ObjType::GOAL_INSIDE, Color("#f19191"));
-	colors.set(ObjType::JOINT_NORMAL, Color("#838383"));
-	colors.set(ObjType::JOINT_WHEEL_CENTER, Color("#ffffff"));
-	return colors;
-}
-
-PackedFloat32Array FTRender::getDefaultCornerRadii() {
-	PackedFloat32Array cornerRadii;
-	cornerRadii.resize(ObjType::OBJ_TYPE_SIZE);
-	cornerRadii.set(ObjType::STATIC_RECT_BORDER, 3);
-	cornerRadii.set(ObjType::DYNAMIC_RECT_BORDER, 3);
-	cornerRadii.set(ObjType::GP_RECT_BORDER, 3);
-	cornerRadii.set(ObjType::WOOD_BORDER, 2);
-	cornerRadii.set(ObjType::WATER_BORDER, 2);
-	cornerRadii.set(ObjType::BUILD_BORDER, 2);
-	cornerRadii.set(ObjType::GOAL_BORDER, 2);
-	return cornerRadii;
-}
-
-PackedFloat32Array FTRender::getDefaultBorderThicknesses() {
-	PackedFloat32Array borderThicknesses;
-	borderThicknesses.resize(ObjType::OBJ_TYPE_SIZE);
-	borderThicknesses.set(ObjType::STATIC_RECT_BORDER, 4);
-	borderThicknesses.set(ObjType::STATIC_CIRC_BORDER, 4);
-	borderThicknesses.set(ObjType::DYNAMIC_RECT_BORDER, 4);
-	borderThicknesses.set(ObjType::DYNAMIC_CIRC_BORDER, 4);
-	borderThicknesses.set(ObjType::GP_RECT_BORDER, 4);
-	borderThicknesses.set(ObjType::GP_CIRC_BORDER, 4);
-	borderThicknesses.set(ObjType::WOOD_BORDER, 3);
-	borderThicknesses.set(ObjType::WATER_BORDER, 3);
-	borderThicknesses.set(ObjType::BUILD_BORDER, 4);
-	borderThicknesses.set(ObjType::GOAL_BORDER, 4);
-	borderThicknesses.set(ObjType::CW_BORDER, 4);
-	borderThicknesses.set(ObjType::CCW_BORDER, 4);
-	borderThicknesses.set(ObjType::UPW_BORDER, 4);
-	borderThicknesses.set(ObjType::JOINT_NORMAL, 2);
-	borderThicknesses.set(ObjType::JOINT_WHEEL_CENTER, 2);
-	return borderThicknesses;
-}
-
 void FTRender::setColors(PackedColorArray colors_) {
 	colors = colors_;
 }
@@ -657,9 +586,6 @@ void FTRender::initLayers(int32_t layerMultimeshInstanceCount_, Vector2i layerDa
 
 void FTRender::initResources(Ref<ShaderMaterial> shaderMaterial_, MultiMeshInstance2D* mmiAreas,
 	MultiMeshInstance2D* mmiBorders, MultiMeshInstance2D* mmiInsides) {
-	colors = getDefaultColors();
-	cornerRadii = getDefaultCornerRadii();
-	borderThicknesses = getDefaultBorderThicknesses();
 
 	shaderMaterial = shaderMaterial_;
 
