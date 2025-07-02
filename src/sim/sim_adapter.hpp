@@ -3,6 +3,46 @@
 #include "gstr_adapter.hpp"
 
 #include "core/object/ref_counted.h"
+#include "core/variant/typed_array.h"
+
+class FTBlock : public RefCounted {
+    GDCLASS(FTBlock, RefCounted)
+
+protected:
+    static void _bind_methods();
+
+public:
+    fcsim_block_def bdef;
+
+    static Ref<FTBlock> init(uint16_t type, uint16_t id, double x, double y, double w, double h, double angle, uint16_t j1, uint16_t j2);
+
+    void set_type(uint16_t type);
+    uint16_t get_type() const;
+
+    void set_id(uint16_t id);
+    uint16_t get_id() const;
+
+    void set_x(double x);
+    double get_x() const;
+
+    void set_y(double y);
+    double get_y() const;
+
+    void set_w(double w);
+    double get_w() const;
+
+    void set_h(double h);
+    double get_h() const;
+
+    void set_angle(double angle);
+    double get_angle() const;
+
+    void set_joint_1(uint16_t joint);
+    uint16_t get_joint_1() const;
+
+    void set_joint_2(uint16_t joint);
+    uint16_t get_joint_2() const;
+};
 
 bool& get_assert_flag();
 bool& get_assertmem_flag();
@@ -21,6 +61,7 @@ public:
     static String dtostr(double);
     static double strtod(String);
     static int get_assert_flags();
+    static bool type_is_player(uint16_t type);
 };
 
 class FTDesign : public RefCounted {
@@ -35,12 +76,14 @@ private:
     ft_sim_settings settings;
 
 public:
-    void set_blocks(const PackedByteArray t, const PackedFloat64Array x, const PackedFloat64Array y, 
+    void set_blocks(const TypedArray<FTBlock> blocks);
+    void set_blocks_packed(const PackedByteArray t, const PackedFloat64Array x, const PackedFloat64Array y, 
         const PackedFloat64Array w, const PackedFloat64Array h, const PackedFloat64Array r, const PackedInt32Array j1, const PackedInt32Array j2);
     void set_build(double x, double y, double w, double h);
     void set_goal(double x, double y, double w, double h);
     void start_sim();
     void step_sim();
     bool check_solved() const;
-    PackedDoubleArray get_slice(int pi) const;
+    TypedArray<FTBlock> get_blocks() const;
+    PackedFloat64Array get_slice(int pi) const;
 };

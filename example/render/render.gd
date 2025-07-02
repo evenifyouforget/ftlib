@@ -118,8 +118,19 @@ const layerDataSize: Vector2i = Vector2(128, 128)
 
 var ft = FTDesign.new()
 func _ready() -> void:
+	#init blocks from packed data
+	var blocks: Array[FTBlock]
+	var j = 0
+	for i in range(npcs):
+		var block: FTBlock = FTBlock.init(pt[i], 0, px[i], py[i], pw[i], ph[i], pr[i], pj1[i], pj2[i])
+		if FTBackend.type_is_player(pt[i]):
+			j += 1
+			block.id = j
+		blocks.append(block)
+	
 	# init simulation
-	ft.set_blocks(pt, px, py, pw, ph, pr, pj1, pj2)
+	#ft.set_blocks_packed(pt, px, py, pw, ph, pr, pj1, pj2)
+	ft.set_blocks(blocks)
 	ft.set_build(build_area[0], build_area[1], build_area[2], build_area[3])
 	ft.set_goal(goal_area[0], goal_area[1], goal_area[2], goal_area[3])
 	ft.start_sim()
