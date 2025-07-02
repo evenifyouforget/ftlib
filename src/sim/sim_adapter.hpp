@@ -20,10 +20,10 @@ protected:
     static void _bind_methods();
 
 public:
-    String math_hash();
-    String dtostr(double);
-    double strtod(String);
-    int get_assert_flags();
+    static String math_hash();
+    static String dtostr(double);
+    static double strtod(String);
+    static int get_assert_flags();
 };
 
 class FTDesign : public RefCounted {

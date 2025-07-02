@@ -13,9 +13,14 @@ std::string from_gd(String s) {
 }
 
 void FTBackend::_bind_methods() {
-    ClassDB::bind_method(D_METHOD("dtostr", "value"), &FTBackend::dtostr);
-    ClassDB::bind_method(D_METHOD("strtod", "value"), &FTBackend::strtod);
-    ClassDB::bind_method(D_METHOD("get_assert_flags"), &FTBackend::get_assert_flags);
+    ClassDB::bind_static_method("FTBackend", D_METHOD("math_hash"), &FTBackend::math_hash);
+    ClassDB::bind_static_method("FTBackend", D_METHOD("dtostr", "value"), &FTBackend::dtostr);
+    ClassDB::bind_static_method("FTBackend", D_METHOD("strtod", "value"), &FTBackend::strtod);
+    ClassDB::bind_static_method("FTBackend", D_METHOD("get_assert_flags"), &FTBackend::get_assert_flags);
+}
+
+String FTBackend::math_hash() {
+    return to_gd(ft_math_hash());
 }
 
 String FTBackend::dtostr(double v) {
@@ -31,10 +36,6 @@ int FTBackend::get_assert_flags() {
     if (get_assert_flag()) { result |= 1; }
     if (get_assertmem_flag()) { result |= 2; }
     return result;
-}
-
-String FTBackend::math_hash() {
-    return to_gd(ft_math_hash());
 }
 
 void FTDesign::_bind_methods() {
