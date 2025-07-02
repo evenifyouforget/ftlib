@@ -9,6 +9,7 @@ void initialize_ftlib_module(ModuleInitializationLevel p_level) {
     }
     ClassDB::register_class<FTRender>();
     ClassDB::register_class<FTBackend>();
+    ClassDB::register_class<FTDesign>();
 }
 
 void uninitialize_ftlib_module(ModuleInitializationLevel p_level) {

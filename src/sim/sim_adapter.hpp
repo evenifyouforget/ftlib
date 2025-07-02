@@ -13,13 +13,6 @@ bool& get_assertmem_flag();
 String to_gd(std::string);
 std::string from_gd(String);
 
-struct ftb_slot {
-    ft_design_spec spec;
-    std::shared_ptr<ft_sim_state> sim;
-    ft_sim_settings settings;
-};
-
-// Doesn't actually contain any data. Every FTBackend instance will access the same shared slots.
 class FTBackend : public RefCounted {
     GDCLASS(FTBackend, RefCounted)
 
@@ -27,20 +20,30 @@ protected:
     static void _bind_methods();
 
 public:
-    FTBackend();
-    ~FTBackend();
-
-    int get_num_slots();
-    void clear_slot(int);
-    void set_blocks(int, PackedInt64Array, PackedDoubleArray, PackedDoubleArray, PackedDoubleArray, PackedDoubleArray, PackedDoubleArray, PackedInt64Array, PackedInt64Array);
-    void set_build(int, PackedDoubleArray);
-    void set_goal(int, PackedDoubleArray);
-    void start_sim(int);
-    void step_sim(int);
-    bool check_solved(int);
-    PackedDoubleArray get_slice(int, int);
     String math_hash();
     String dtostr(double);
     double strtod(String);
     int get_assert_flags();
+};
+
+class FTDesign : public RefCounted {
+    GDCLASS(FTDesign, RefCounted)
+
+protected:
+    static void _bind_methods();
+
+private:
+    ft_design_spec spec;
+    std::shared_ptr<ft_sim_state> sim;
+    ft_sim_settings settings;
+
+public:
+    void set_blocks(const PackedByteArray t, const PackedFloat64Array x, const PackedFloat64Array y, 
+        const PackedFloat64Array w, const PackedFloat64Array h, const PackedFloat64Array r, const PackedInt32Array j1, const PackedInt32Array j2);
+    void set_build(double x, double y, double w, double h);
+    void set_goal(double x, double y, double w, double h);
+    void start_sim();
+    void step_sim();
+    bool check_solved() const;
+    PackedDoubleArray get_slice(int pi) const;
 };

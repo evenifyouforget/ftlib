@@ -62,7 +62,7 @@ struct RenderLayer {
     void renderPartial(float scale, Vector2 shift, float aaWidth,
         PackedColorArray colors, PackedFloat32Array cornerRadii, PackedFloat32Array borderThicknesses,
         bool (*getObjIsCircle)(ObjType::Type), SdfType::Type(*getObjSdfType)(ObjType::Type), Ref<Image>& renderImg,
-        Vector2i dataImageSize);
+        Vector2i dataImageSize) const;
 
     void init(MultiMeshInstance2D* mmi_, uint32_t layerID_, int32_t multimeshInstanceCount);
 };
@@ -89,27 +89,23 @@ private:
     float ghostRodPadding;
 
 public:
-    static PackedColorArray getDefaultColors();
-    static PackedFloat32Array getDefaultCornerRadii();
-    static PackedFloat32Array getDefaultBorderThicknesses();
-
-    void setColors(PackedColorArray colors_);
-    PackedColorArray getColors();
+    void setColors(const PackedColorArray colors_);
+    PackedColorArray getColors() const;
 
     void setColor(ObjType::Type objType, Color color);
-    Color getColor(ObjType::Type objType);
+    Color getColor(ObjType::Type objType) const;
 
-    void setCornerRadii(PackedFloat32Array cornerRadii_);
-    PackedFloat32Array getCornerRadii();
+    void setCornerRadii(const PackedFloat32Array cornerRadii_);
+    PackedFloat32Array getCornerRadii() const;
 
     void setCornerRadius(ObjType::Type objType, double cornerRadius);
-    double getCornerRadius(ObjType::Type objType);
+    double getCornerRadius(ObjType::Type objType) const;
 
-    void setBorderThicknesses(PackedFloat32Array borderThicknesses_);
-    PackedFloat32Array getBorderThicknesses();
+    void setBorderThicknesses(const PackedFloat32Array borderThicknesses_);
+    PackedFloat32Array getBorderThicknesses() const;
 
     void setBorderThickness(ObjType::Type objType, double borderThickness);
-    double getBorderThickness(ObjType::Type objType);
+    double getBorderThickness(ObjType::Type objType) const;
 
     static ObjType::Type getPieceBorder(PieceType::Type piece);
     static ObjType::Type getPieceInside(PieceType::Type piece);
