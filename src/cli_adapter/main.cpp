@@ -2,7 +2,10 @@
 #include "fcsim.h"
 
 std::istream& operator>>(std::istream& is, fcsim_block_def& block) {
-    return is >> block.type >> block.id >> block.x >> block.y >> block.w >> block.h >> block.angle >> block.joints[0] >> block.joints[1];
+    int64_t block_type;
+    is >> block_type >> block.id >> block.x >> block.y >> block.w >> block.h >> block.angle >> block.joints[0] >> block.joints[1];
+    block.type = static_cast<fcsim_piece_type::type>(block_type);
+    return is;
 }
 
 std::istream& operator>>(std::istream& is, fcsim_rect& rect) {
