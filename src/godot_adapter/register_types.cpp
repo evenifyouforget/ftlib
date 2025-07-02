@@ -1,6 +1,6 @@
 #include "register_types.h"
 
-#include "backend_adapter.hpp"
+#include "sim_adapter.hpp"
 #include "render.h"
 
 void initialize_ftlib_module(ModuleInitializationLevel p_level) {
@@ -9,6 +9,7 @@ void initialize_ftlib_module(ModuleInitializationLevel p_level) {
     }
     ClassDB::register_class<FTRender>();
     ClassDB::register_class<FTBackend>();
+    ClassDB::register_class<FTDesign>();
 }
 
 void uninitialize_ftlib_module(ModuleInitializationLevel p_level) {

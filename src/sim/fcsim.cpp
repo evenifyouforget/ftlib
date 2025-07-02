@@ -128,35 +128,35 @@ static void generate_joint(b2World* world, joint* j)
 }
 
 
-static bool is_goal_object(uint8_t type)
+static bool is_goal_object(uint16_t type)
 {
 	switch (type) {
-	case FCSIM_GOAL_RECT:
-	case FCSIM_GOAL_CIRCLE:
+	case FCSIM_GP_RECT:
+	case FCSIM_GP_CIRC:
 		return true;
 	}
 	return false;
 }
 
-static bool is_wheel(block* b)
+static bool is_wheel(const block* b)
 {
 	switch (b->bdef.type) {
-	case FCSIM_GOAL_CIRCLE:
-	case FCSIM_WHEEL:
-	case FCSIM_CW_WHEEL:
-	case FCSIM_CCW_WHEEL:
+	case FCSIM_GP_CIRC:
+	case FCSIM_UPW:
+	case FCSIM_CW:
+	case FCSIM_CCW:
 		return true;
 	}
 	return false;
 }
 
-static bool is_player(fcsim_block_def& bdef)
+static bool is_player(const fcsim_block_def& bdef)
 {
 	switch (bdef.type) {
-	case FCSIM_STAT_RECT:
-	case FCSIM_STAT_CIRCLE:
-	case FCSIM_DYN_RECT:
-	case FCSIM_DYN_CIRCLE:
+	case FCSIM_STATIC_RECT:
+	case FCSIM_STATIC_CIRC:
+	case FCSIM_DYNAMIC_RECT:
+	case FCSIM_DYNAMIC_CIRC:
 		return false;
 	}
 	return true;
@@ -164,7 +164,7 @@ static bool is_player(fcsim_block_def& bdef)
 
 
 
-static block* find_block_by_id(std::shared_ptr<ft_sim_state> handle, int id)
+static block* find_block_by_id(const std::shared_ptr<ft_sim_state> handle, int id)
 {
 	for (int i = 0; i < handle->block_cnt; i++) {
 		if (handle->blocks[i].bdef.id == id)
@@ -181,7 +181,7 @@ static double distance(double x1, double y1, double x2, double y2)
 	return ft_sqrt(ft_add(ft_mul(dx, dx), ft_mul(dy, dy)));
 }
 
-static joint_collection* get_closest_jc(std::shared_ptr<ft_sim_state> handle, double x, double y, fcsim_block_def bdef)
+static joint_collection* get_closest_jc(const std::shared_ptr<ft_sim_state> handle, double x, double y, fcsim_block_def bdef)
 {
 	//double best_dist = 10000000.0;
 	double best_dist = 10.0;
@@ -215,7 +215,7 @@ void get_rod_endpoints(fcsim_block_def bdef, double* x0, double* y0, double* x1,
 	*y1 = ft_add(bdef.y, sw);
 }
 
-int share_block(std::shared_ptr<ft_sim_state> handle, joint_collection* jc0, joint_collection* jc1)
+int share_block(const std::shared_ptr<ft_sim_state> handle, const joint_collection* jc0, const joint_collection* jc1)
 {
 	for (int i = 0; i < handle->block_cnt; i++) {
 		bool f0 = false, f1 = false;
@@ -231,8 +231,8 @@ int share_block(std::shared_ptr<ft_sim_state> handle, joint_collection* jc0, joi
 static int joint_type(int block_type)
 {
 	switch (block_type) {
-	case FCSIM_CW_WHEEL:  return JOINT_CW;
-	case FCSIM_CCW_WHEEL: return JOINT_CCW;
+	case FCSIM_CW:  return JOINT_CW;
+	case FCSIM_CCW: return JOINT_CCW;
 	}
 	return JOINT_PIN;
 }
@@ -261,16 +261,16 @@ static joint_collection_list* create_joint(block* b, double x, double y)
 	return jcl;
 }
 
-static int joint_type(block* b)
+static int joint_type(const block* b)
 {
 	switch (b->bdef.type) {
-	case FCSIM_CW_WHEEL:  return JOINT_CW;
-	case FCSIM_CCW_WHEEL: return JOINT_CCW;
+	case FCSIM_CW:  return JOINT_CW;
+	case FCSIM_CCW: return JOINT_CCW;
 	}
 	return JOINT_PIN;
 }
 
-static bool is_singular_wheel_center(joint_collection* jc)
+static bool is_singular_wheel_center(const joint_collection* jc)
 {
 	if (jc->joints_head)
 		return false;
@@ -282,7 +282,7 @@ static bool is_singular_wheel_center(joint_collection* jc)
 		jc->y == jc->top_block->bdef.y;
 }
 
-static int get_joint_type(block* b, joint_collection* jc)
+static int get_joint_type(const block* b, const joint_collection* jc)
 {
 	block* top = jc->top_block;
 	int type;
@@ -346,7 +346,7 @@ static void replace_joint(block* b, joint_collection_list* jcl, joint_collection
 	}
 }
 
-static void create_rod_joints(block* b, std::shared_ptr<ft_sim_state> handle)
+static void create_rod_joints(block* b, const std::shared_ptr<ft_sim_state> handle)
 {
 	fcsim_block_def bdef = b->bdef;
 	double x0, y0, x1, y1;
@@ -385,7 +385,7 @@ static void create_rod_joints(block* b, std::shared_ptr<ft_sim_state> handle)
 
 
 
-static void create_wheel_joints(block* b, std::shared_ptr<ft_sim_state> handle)
+static void create_wheel_joints(block* b, const std::shared_ptr<ft_sim_state> handle)
 {
 	fcsim_block_def bdef = b->bdef;
 	double x = bdef.x;
@@ -435,26 +435,26 @@ static void create_goal_rect_joints(block* b)
 	create_joint(b, ft_sub(ft_sub(x, x0), x1), ft_sub(ft_sub(y, y0), y1));
 }
 
-static void create_joints(block* b, std::shared_ptr<ft_sim_state> handle)
+static void create_joints(block* b, const std::shared_ptr<ft_sim_state> handle)
 {
 	switch (b->bdef.type) {
-	case FCSIM_GOAL_RECT:
+	case FCSIM_GP_RECT:
 		create_goal_rect_joints(b);
 		return;
-	case FCSIM_GOAL_CIRCLE:
-	case FCSIM_WHEEL:
-	case FCSIM_CW_WHEEL:
-	case FCSIM_CCW_WHEEL:
+	case FCSIM_GP_CIRC:
+	case FCSIM_UPW:
+	case FCSIM_CW:
+	case FCSIM_CCW:
 		create_wheel_joints(b, handle);
 		return;
-	case FCSIM_ROD:
-	case FCSIM_SOLID_ROD:
+	case FCSIM_WATER:
+	case FCSIM_WOOD:
 		create_rod_joints(b, handle);
 		return;
 	}
 }
 
-void add_block(std::shared_ptr<ft_sim_state> handle, fcsim_block_def bdef)
+void add_block(const std::shared_ptr<ft_sim_state> handle, fcsim_block_def bdef)
 {
 	block* block = &handle->blocks[handle->block_cnt++];
 
@@ -462,11 +462,11 @@ void add_block(std::shared_ptr<ft_sim_state> handle, fcsim_block_def bdef)
 
 	/* TODO: deal with this somewhere else */
 	/*
-	if (bdef.type == FCSIM_STAT_CIRCLE || bdef.type == FCSIM_DYN_CIRCLE) {
+	if (bdef.type == FCSIM_STATIC_CIRC || bdef.type == FCSIM_DYNAMIC_CIRC) {
 		bdef.w = ft_mul(bdef.w, 2);
 		bdef.h = ft_mul(bdef.h, 2);
 	}
-	if (bdef.type == FCSIM_DYN_CIRCLE) {
+	if (bdef.type == FCSIM_DYNAMIC_CIRC) {
 		bdef.angle = 0;
 	}
 	*/
@@ -475,7 +475,7 @@ void add_block(std::shared_ptr<ft_sim_state> handle, fcsim_block_def bdef)
 	create_joints(block, handle);
 }
 
-std::shared_ptr<ft_sim_state> fcsim_new(std::shared_ptr<ft_sim_state> handle, ft_design_spec& arena, const ft_sim_settings&)
+std::shared_ptr<ft_sim_state> fcsim_new(std::shared_ptr<ft_sim_state> handle, const ft_design_spec& arena, const ft_sim_settings& settings)
 {
 	if (!handle) {
 		handle = std::make_shared<ft_sim_state>();
@@ -515,7 +515,7 @@ std::shared_ptr<ft_sim_state> fcsim_new(std::shared_ptr<ft_sim_state> handle, ft
 	return handle;
 }
 
-void fcsim_step(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings&)
+void fcsim_step(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings& settings)
 {
 	handle->world->Step(TIME_STEP, ITERATIONS);
 
@@ -571,7 +571,7 @@ bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
 	return true;
 }
 
-bool fcsim_is_solved(std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec) {
+bool fcsim_is_solved(const std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec) {
 	bool goal_exist = false;
 	for (int i = 0; i < sim->block_cnt; ++i) {
 		fcsim_block_def& bdef = sim->blocks[i].bdef;

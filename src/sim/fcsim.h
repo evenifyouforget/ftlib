@@ -6,28 +6,29 @@
 #include <vector>
 #include "box2d/Include/Box2D.h"
 
-// TODO: refactor into enum
-#define FCSIM_STAT_RECT   0
-#define FCSIM_STAT_CIRCLE 1
-#define FCSIM_DYN_RECT    2
-#define FCSIM_DYN_CIRCLE  3
-#define FCSIM_GOAL_RECT   4
-#define FCSIM_GOAL_CIRCLE 5
-#define FCSIM_WHEEL       6
-#define FCSIM_CW_WHEEL    7
-#define FCSIM_CCW_WHEEL   8
-#define FCSIM_ROD         9
-#define FCSIM_SOLID_ROD   10
-
-#define FCSIM_TYPE_LAST FCSIM_SOLID_ROD
-#define FCSIM_NO_JOINT 65535
+//intentionally in the same order as the render enum, so they can be converted back and forth, and the render bindings can be used for this
+enum fcsim_piece_type : uint16_t {
+	FCSIM_STATIC_RECT,
+	FCSIM_STATIC_CIRC,
+	FCSIM_DYNAMIC_RECT,
+	FCSIM_DYNAMIC_CIRC,
+	FCSIM_GP_RECT,
+	FCSIM_GP_CIRC,
+	FCSIM_UPW,
+	FCSIM_CW,
+	FCSIM_CCW,
+	FCSIM_WATER,
+	FCSIM_WOOD,
+	FCSIM_SIZE,
+	FCSIM_NO_JOINT = 65535,
+};
 
 inline bool type_is_player(int t) {
-	return t >= FCSIM_GOAL_RECT;
+	return t >= FCSIM_GP_RECT;
 }
 
 struct fcsim_block_def {
-	uint8_t type;
+	uint16_t type;
 	uint16_t id;
 	double x, y;
 	double w, h;
@@ -102,7 +103,7 @@ struct ft_sim_settings {
 
 };
 
-std::shared_ptr<ft_sim_state> fcsim_new(std::shared_ptr<ft_sim_state> handle, ft_design_spec& arena, const ft_sim_settings&);
+std::shared_ptr<ft_sim_state> fcsim_new(std::shared_ptr<ft_sim_state> handle, const ft_design_spec& arena, const ft_sim_settings&);
 
 void fcsim_step(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings&);
 
@@ -120,6 +121,7 @@ template <typename T> void delete_all(std::vector<T*>& vec) {
 }
 
 bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area);
-bool fcsim_is_solved(std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec);
+
+bool fcsim_is_solved(const std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec);
 
 #endif

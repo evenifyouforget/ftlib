@@ -1,6 +1,6 @@
 import SCons
 
-Import('env')
+env = Environment()
 
 flatten=lambda l: sum(map(flatten,l),[]) if isinstance(l,list) else [l]
 
@@ -19,19 +19,36 @@ def AllCXXFiles(node='.'):
 
 src_toplevel_dirs = [
     'box2d',
-    'sim',
+    'cli_adapter',
     'glib',
     'glib_adapter',
-    'godot_adapter',
     'openlibm',
-    'render',
     'softfloat',
     'spectre',
     ]
-src_all_cxx_files = AllCXXFiles(src_toplevel_dirs)
+src_toplevel_dirs = ['../' + path for path in src_toplevel_dirs]
 
-module_env = env.Clone()
-module_env.add_source_files(env.modules_sources, src_all_cxx_files)
-module_env.Append(CPPPATH=[
-    '.',
-    ] + src_toplevel_dirs)
+src_all_cxx_files = AllCXXFiles(src_toplevel_dirs) + ['../sim/fcsim.cpp']
+
+include_dirs = [
+    '..',
+    '../sim',
+    ] + src_toplevel_dirs
+
+ccflags = ['-O2', '-flto']
+cppflags = ['-std=c++17']
+cppdefines = [
+    'HARDFLOAT_TOGGLE', # use hard float
+    'S794',
+    ]
+
+env.Append(
+    CPPPATH=include_dirs,
+    CCFLAGS=ccflags,
+    CPPFLAGS=cppflags,
+    CPPDEFINES=cppdefines,
+    )
+env.Program(
+    target='run_single_design',
+    source=src_all_cxx_files
+    )
