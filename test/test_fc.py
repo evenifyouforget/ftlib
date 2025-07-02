@@ -84,7 +84,7 @@ def test_single_design(design_uid, design_data, global_max_ticks):
     real_end_ticks = run_result.real_end_ticks
     # check result
     correct_result_message = f'solves at {expect_solve_ticks}' if expect_solve_ticks is not None else f'still no solve within {design_max_ticks}'
-    post_message = ''
+    post_message = f' (design "{design_struct.name}")' if 'D' in design_uid else f' (level "{design_struct.name}")'
     if user_comment:
         post_message += f' (user comment: {user_comment})'
     real_result_message = f'Design solved at {real_solve_ticks}' if real_solve_ticks != -1 else f'Design did not solve within {real_end_ticks}'
