@@ -4,9 +4,6 @@
 
 #include "core/object/ref_counted.h"
 
-#define FTBACKEND_SLOTS 256
-#define PackedDoubleArray PackedFloat64Array
-
 bool& get_assert_flag();
 bool& get_assertmem_flag();
 
