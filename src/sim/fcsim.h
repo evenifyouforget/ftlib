@@ -7,28 +7,31 @@
 #include "box2d/Include/Box2D.h"
 
 //intentionally in the same order as the render enum, so they can be converted back and forth, and the render bindings can be used for this
-enum fcsim_piece_type : uint16_t {
-	FCSIM_STATIC_RECT,
-	FCSIM_STATIC_CIRC,
-	FCSIM_DYNAMIC_RECT,
-	FCSIM_DYNAMIC_CIRC,
-	FCSIM_GP_RECT,
-	FCSIM_GP_CIRC,
-	FCSIM_UPW,
-	FCSIM_CW,
-	FCSIM_CCW,
-	FCSIM_WATER,
-	FCSIM_WOOD,
-	FCSIM_SIZE,
-	FCSIM_NO_JOINT = 65535,
+struct fcsim_piece_type {
+	enum type : uint16_t {
+		STATIC_RECT,
+		STATIC_CIRC,
+		DYNAMIC_RECT,
+		DYNAMIC_CIRC,
+		GP_RECT,
+		GP_CIRC,
+		UPW,
+		CW,
+		CCW,
+		WATER,
+		WOOD,
+		SIZE,
+	};
 };
 
+const uint16_t FCSIM_NO_JOINT = 65535;
+
 inline bool type_is_player(int t) {
-	return t >= FCSIM_GP_RECT;
+	return t >= fcsim_piece_type::GP_RECT;
 }
 
 struct fcsim_block_def {
-	uint16_t type;
+	fcsim_piece_type::type type;
 	uint16_t id;
 	double x, y;
 	double w, h;

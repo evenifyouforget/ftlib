@@ -8,6 +8,8 @@ void initialize_ftlib_module(ModuleInitializationLevel p_level) {
         return;
     }
     ClassDB::register_class<FTRender>();
+
+    ClassDB::register_class<FTBlock>();
     ClassDB::register_class<FTBackend>();
     ClassDB::register_class<FTDesign>();
 }

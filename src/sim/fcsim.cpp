@@ -128,11 +128,11 @@ static void generate_joint(b2World* world, joint* j)
 }
 
 
-static bool is_goal_object(uint16_t type)
+static bool is_goal_object(fcsim_piece_type::type type)
 {
 	switch (type) {
-	case FCSIM_GP_RECT:
-	case FCSIM_GP_CIRC:
+	case fcsim_piece_type::GP_RECT:
+	case fcsim_piece_type::GP_CIRC:
 		return true;
 	}
 	return false;
@@ -141,10 +141,10 @@ static bool is_goal_object(uint16_t type)
 static bool is_wheel(const block* b)
 {
 	switch (b->bdef.type) {
-	case FCSIM_GP_CIRC:
-	case FCSIM_UPW:
-	case FCSIM_CW:
-	case FCSIM_CCW:
+	case fcsim_piece_type::GP_CIRC:
+	case fcsim_piece_type::UPW:
+	case fcsim_piece_type::CW:
+	case fcsim_piece_type::CCW:
 		return true;
 	}
 	return false;
@@ -153,10 +153,10 @@ static bool is_wheel(const block* b)
 static bool is_player(const fcsim_block_def& bdef)
 {
 	switch (bdef.type) {
-	case FCSIM_STATIC_RECT:
-	case FCSIM_STATIC_CIRC:
-	case FCSIM_DYNAMIC_RECT:
-	case FCSIM_DYNAMIC_CIRC:
+	case fcsim_piece_type::STATIC_RECT:
+	case fcsim_piece_type::STATIC_CIRC:
+	case fcsim_piece_type::DYNAMIC_RECT:
+	case fcsim_piece_type::DYNAMIC_CIRC:
 		return false;
 	}
 	return true;
@@ -231,8 +231,8 @@ int share_block(const std::shared_ptr<ft_sim_state> handle, const joint_collecti
 static int joint_type(int block_type)
 {
 	switch (block_type) {
-	case FCSIM_CW:  return JOINT_CW;
-	case FCSIM_CCW: return JOINT_CCW;
+	case fcsim_piece_type::CW:  return JOINT_CW;
+	case fcsim_piece_type::CCW: return JOINT_CCW;
 	}
 	return JOINT_PIN;
 }
@@ -264,8 +264,8 @@ static joint_collection_list* create_joint(block* b, double x, double y)
 static int joint_type(const block* b)
 {
 	switch (b->bdef.type) {
-	case FCSIM_CW:  return JOINT_CW;
-	case FCSIM_CCW: return JOINT_CCW;
+	case fcsim_piece_type::CW:  return JOINT_CW;
+	case fcsim_piece_type::CCW: return JOINT_CCW;
 	}
 	return JOINT_PIN;
 }
@@ -438,17 +438,17 @@ static void create_goal_rect_joints(block* b)
 static void create_joints(block* b, const std::shared_ptr<ft_sim_state> handle)
 {
 	switch (b->bdef.type) {
-	case FCSIM_GP_RECT:
+	case fcsim_piece_type::GP_RECT:
 		create_goal_rect_joints(b);
 		return;
-	case FCSIM_GP_CIRC:
-	case FCSIM_UPW:
-	case FCSIM_CW:
-	case FCSIM_CCW:
+	case fcsim_piece_type::GP_CIRC:
+	case fcsim_piece_type::UPW:
+	case fcsim_piece_type::CW:
+	case fcsim_piece_type::CCW:
 		create_wheel_joints(b, handle);
 		return;
-	case FCSIM_WATER:
-	case FCSIM_WOOD:
+	case fcsim_piece_type::WATER:
+	case fcsim_piece_type::WOOD:
 		create_rod_joints(b, handle);
 		return;
 	}
