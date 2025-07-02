@@ -7,7 +7,6 @@
 #define FTBACKEND_SLOTS 256
 #define PackedDoubleArray PackedFloat64Array
 
-// TODO: figure out what this does
 bool& get_assert_flag();
 bool& get_assertmem_flag();
 
@@ -21,6 +20,7 @@ protected:
     static void _bind_methods();
 
 public:
+    String math_hash();
     String dtostr(double);
     double strtod(String);
     int get_assert_flags();

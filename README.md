@@ -71,7 +71,7 @@ They are not hard rules, but are likely to result in higher quality code based o
 
 * Be aware of our fixed-spectre math functions, and use them where appropriate, especially in game logic which needs to be consistent. You can find the list in `src/spectre/ftmath.h`.
 * Make use of STL. We know Godot discourages it, but their reasons don't really apply to our use cases.
-* Use `int64_t` for integers unless you have a very good reason to use another type. It avoids overflow errors and it's unlikely to impact performance.
+* Use `int64_t` for integers unless you have a very good reason to use another type. It avoids overflow errors and it's unlikely to impact performance. In particular, please try to avoid the 8-bit integers, as they behave strangely sometimes.
 * Assume the compiler is decently smart, and don't prematurely try to make low-level optimizations. We rely on a lot of inlining, including LTO (link time optimization) for maximum performance.
 * Avoid macros like `#define`, unless you have a very good reason to use them. Global constants in particular are a terrible reason to use macros. You can use the old-style `extern const`, or the new-style `inline constexpr` (C++17). Do use `enum` types for enums.
 

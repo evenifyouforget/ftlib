@@ -28,7 +28,7 @@ inline bool type_is_player(int t) {
 }
 
 struct fcsim_block_def {
-	uint8_t type;
+	uint16_t type;
 	uint16_t id;
 	double x, y;
 	double w, h;
@@ -121,6 +121,7 @@ template <typename T> void delete_all(std::vector<T*>& vec) {
 }
 
 bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area);
+
 bool fcsim_is_solved(const std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec);
 
 #endif

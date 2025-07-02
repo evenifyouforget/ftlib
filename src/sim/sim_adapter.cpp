@@ -33,6 +33,10 @@ int FTBackend::get_assert_flags() {
     return result;
 }
 
+String FTBackend::math_hash() {
+    return to_gd(ft_math_hash());
+}
+
 void FTDesign::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_blocks", "type", "x", "y", "w", "h", "r", "j1", "j2"), &FTDesign::set_blocks);
     ClassDB::bind_method(D_METHOD("set_build", "x", "y", "w", "h"), &FTDesign::set_build);
