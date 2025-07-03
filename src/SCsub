@@ -1,0 +1,9 @@
+Import('env')
+
+src_dirs = ["box2d", "cli_adapter", "glib", "glib_adapter", "openlibm", "sim", "softfloat", "spectre"]
+
+env.Append(CPPPATH=src_dirs)
+
+for dir in src_dirs:
+    env.add_source_files(env.modules_sources, f"{dir}/*.c")
+    env.add_source_files(env.modules_sources, f"{dir}/*.cpp")
