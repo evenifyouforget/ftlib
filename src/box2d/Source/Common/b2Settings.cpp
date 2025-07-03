@@ -59,8 +59,11 @@ bool& get_assertmem_flag() {
 }
 
 void b2logmsg(const char* msg) {
-	std::ofstream out;
-	out.open("b2err.txt", std::ios_base::app);
-	out << msg;
-	out.close();
+	//I murdered b2err because it was hella annoying
+	//TODO: figure out what the errors actually were
+
+	// std::ofstream out;
+	// out.open("b2err.txt", std::ios_base::app);
+	// out << msg;
+	// out.close();
 }
