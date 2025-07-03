@@ -3,7 +3,8 @@
 #include "fcsim.h"
 
 std::istream& operator>>(std::istream& is, fcsim_block_def& block) {
-    return is >> static_cast<uint16_t>(block.type) >> block.id >> block.x >> block.y >> block.w >> block.h >> block.angle >> block.joints[0] >> block.joints[1];
+    uint16_t block_type_uint = static_cast<uint16_t>(block.type);
+    return is >> block_type_uint >> block.id >> block.x >> block.y >> block.w >> block.h >> block.angle >> block.joints[0] >> block.joints[1];
 }
 
 std::istream& operator>>(std::istream& is, fcsim_rect& rect) {
