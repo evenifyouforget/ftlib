@@ -109,7 +109,6 @@ func _ready() -> void:
 	
 	#get and parse design
 	var xml = await Requests.retrieve_design(12707021, false)
-	print(xml[1].get_string_from_utf8())
 	if !xml[0]:
 		push_error("design retrieval failed")
 		return

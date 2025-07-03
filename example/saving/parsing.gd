@@ -50,7 +50,7 @@ static func parse_xywh(parser: XMLParser) -> Array:
 	if !read_until(parser, [XMLParser.NODE_TEXT], [], 1, 1):
 		push_error(); return [false, ERR_INVALID_DATA]
 	x = FTBackend.strtod(parser.get_node_data()) #TODO: handle strtod fail
-	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["x"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["x"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	
 	var y: float
@@ -59,7 +59,7 @@ static func parse_xywh(parser: XMLParser) -> Array:
 	if !read_until(parser, [XMLParser.NODE_TEXT], [], 1, 1):
 		push_error(); return [false, ERR_INVALID_DATA]
 	y = FTBackend.strtod(parser.get_node_data()) #TODO: handle strtod fail
-	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["y"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["y"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	
 	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["position"], 1, 2):
@@ -71,7 +71,7 @@ static func parse_xywh(parser: XMLParser) -> Array:
 	if !read_until(parser, [XMLParser.NODE_TEXT], [], 1, 1):
 		push_error(); return [false, ERR_INVALID_DATA]
 	width = FTBackend.strtod(parser.get_node_data()) #TODO: handle strtod fail
-	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["width"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["width"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	
 	var height: float
@@ -80,7 +80,7 @@ static func parse_xywh(parser: XMLParser) -> Array:
 	if !read_until(parser, [XMLParser.NODE_TEXT], [], 1, 1):
 		push_error(); return [false, ERR_INVALID_DATA]
 	height = FTBackend.strtod(parser.get_node_data()) #TODO: handle strtod fail
-	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["height"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["height"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	
 	return [true, FTRect.init(x, y, width, height)]
@@ -129,7 +129,7 @@ static func parse_block(parser: XMLParser) -> Array:
 	if !read_until(parser, [XMLParser.NODE_TEXT], [], 1, 1):
 		push_error(); return [false, ERR_INVALID_DATA]
 	rotation = FTBackend.strtod(parser.get_node_data()) #TODO: handle strtod fail
-	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["rotation"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["rotation"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	
 	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["position"], 1, 2):
@@ -142,7 +142,7 @@ static func parse_block(parser: XMLParser) -> Array:
 	if !xywh_parsed[0]:
 		push_error(); return [false, ERR_INVALID_DATA]
 	x = xywh_parsed[1].x; y = xywh_parsed[1].y; width = xywh_parsed[1].w; height = xywh_parsed[1].h
-	if type in [FTRender.PieceType_STATIC_CIRC, FTRender.PieceType_DYNAMIC_CIRC]: #TODO: ensure this is the correct behavior
+	if type in [FTRender.PieceType_STATIC_CIRC, FTRender.PieceType_DYNAMIC_CIRC]: #TODO: ensure this is the exact correct behavior
 		width *= 2; height *= 2
 	
 	var goalBlock_str: String
@@ -157,7 +157,7 @@ static func parse_block(parser: XMLParser) -> Array:
 	goalBlock = goalBlock_str == "true"
 	if type == FTRender.PieceType_UPW && goalBlock:
 		type = FTRender.PieceType_GP_CIRC
-	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["goalBlock"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["goalBlock"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	
 	var no_joints: bool
@@ -172,7 +172,7 @@ static func parse_block(parser: XMLParser) -> Array:
 		if !read_until(parser, [XMLParser.NODE_TEXT], [], 1, 1):
 			push_error(); return [false, ERR_INVALID_DATA]
 		joint1 = int(parser.get_node_data())
-		if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["jointedTo"], 1, 1):
+		if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["jointedTo"], 1, 2):
 			push_error(); return [false, ERR_INVALID_DATA]
 		
 		if !read_until(parser, [XMLParser.NODE_ELEMENT, XMLParser.NODE_ELEMENT_END], ["jointedTo", "joints"], 1, 2):
@@ -181,7 +181,7 @@ static func parse_block(parser: XMLParser) -> Array:
 			if !read_until(parser, [XMLParser.NODE_TEXT], [], 1, 1):
 				push_error(); return [false, ERR_INVALID_DATA]
 			joint2 = int(parser.get_node_data())
-			if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["jointedTo"], 1, 1):
+			if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["jointedTo"], 1, 2):
 				push_error(); return [false, ERR_INVALID_DATA]
 			if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["joints"], 1, 2):
 				push_error(); return [false, ERR_INVALID_DATA]
@@ -223,17 +223,17 @@ static func parse_design(xml_buffer: PackedByteArray) -> Array:
 		push_error(); return [false, ERR_INVALID_DATA]
 	
 	var levelId: int
-	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["levelId"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["levelId"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	if !read_until(parser, [XMLParser.NODE_TEXT], [], 1, 1):
 		push_error(); return [false, ERR_INVALID_DATA]
 	levelId = int(parser.get_node_data()) #TODO: handle int fail
-	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["levelId"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["levelId"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	
 	var has_level: bool
 	var levelNumber = null #int or null
-	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["levelNumber"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["levelNumber"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	has_level = read_until(parser, [XMLParser.NODE_TEXT], [], 1, 1)
 	if has_level:
@@ -243,15 +243,15 @@ static func parse_design(xml_buffer: PackedByteArray) -> Array:
 		push_error(); return [false, ERR_INVALID_DATA]
 	
 	var name: String
-	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["name"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["name"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	if !read_until(parser, [XMLParser.NODE_TEXT], [], 1, 1):
 		push_error(); return [false, ERR_INVALID_DATA]
 	name = parser.get_node_data()
-	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["name"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["name"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	
-	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["level"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["level"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 		
 	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["levelBlocks"], 1, 2):
@@ -307,7 +307,7 @@ static func parse_design(xml_buffer: PackedByteArray) -> Array:
 	if !read_until(parser, [XMLParser.NODE_TEXT], [], 1, 1):
 		push_error(); return [false, ERR_INVALID_DATA]
 	tickCount = int(parser.get_node_data()) #TODO: handle int fail
-	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["tickCount"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["tickCount"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	
 	var pieceCount: int
@@ -316,12 +316,12 @@ static func parse_design(xml_buffer: PackedByteArray) -> Array:
 	if !read_until(parser, [XMLParser.NODE_TEXT], [], 1, 1):
 		push_error(); return [false, ERR_INVALID_DATA]
 	pieceCount = int(parser.get_node_data()) #TODO: handle int fail
-	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["pieceCount"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["pieceCount"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	
 	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["level"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
-	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["retrieveLevel"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["retrieveLevel"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	
 	var design: FTDesign = FTDesign.new()
