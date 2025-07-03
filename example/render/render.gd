@@ -36,7 +36,7 @@ const layerDataSize: Vector2i = Vector2(128, 128)
 	arr[FTRender.ObjType_STATIC_RECT_BORDER] = Color("#008009"); arr[FTRender.ObjType_STATIC_RECT_INSIDE] = Color("#00be01")
 	arr[FTRender.ObjType_STATIC_CIRC_BORDER] = Color("#008009"); arr[FTRender.ObjType_STATIC_CIRC_INSIDE] = Color("#00be01")
 	arr[FTRender.ObjType_DYNAMIC_RECT_BORDER] = Color("#c6560c"); arr[FTRender.ObjType_DYNAMIC_RECT_INSIDE] = Color("#f9da2f")
-	arr[FTRender.ObjType_DYNAMIC_CIRC_BORDER] = Color("#c6560c"); arr[FTRender.ObjType_DYNAMIC_CIRC_INSIDE] = Color("#f9da2f")
+	arr[FTRender.ObjType_DYNAMIC_CIRC_BORDER] = Color("#c6560c"); arr[FTRender.ObjType_DYNAMIC_CIRC_INSIDE] = Color("#f9892f")
 	arr[FTRender.ObjType_GP_RECT_BORDER] = Color("#bb6666"); arr[FTRender.ObjType_GP_RECT_INSIDE] = Color("#ff6666")
 	arr[FTRender.ObjType_GP_CIRC_BORDER] = Color("#bb6666"); arr[FTRender.ObjType_GP_CIRC_INSIDE] = Color("#ff6666")
 	arr[FTRender.ObjType_WOOD_BORDER] = Color("#b55900"); arr[FTRender.ObjType_WOOD_INSIDE] = Color("#6b3400")
@@ -89,18 +89,6 @@ const layerDataSize: Vector2i = Vector2(128, 128)
 @export var ghostRodPadding: float = 1
 
 var ft: FTDesign
-#func _ready() -> void:
-	#var xml_string: String = Test.xml
-	#var xml_buffer: PackedByteArray = xml_string.to_utf8_buffer()
-	#var parsed_buffer: Array = Parsing.parse_design(xml_buffer)
-	#ft = parsed_buffer[1][5]
-	#
-	#ft.start_sim()
-	## init render
-	#render.initLayers(layerMultimeshInstanceCount, layerDataSize)
-	#render.initResources(shaderMaterial, mmAreas, mmBorders, mmInsides)
-	#render.initVisuals(colors, cornerRadii, borderThicknesses, aaWidth, jointRadius, innerJointThresholdRadius, woodSizePadding, waterSizePadding, ghostRodPadding)
-
 func _ready() -> void:
 	#init render
 	render.initLayers(layerMultimeshInstanceCount, layerDataSize)
@@ -108,7 +96,7 @@ func _ready() -> void:
 	render.initVisuals(colors, cornerRadii, borderThicknesses, aaWidth, jointRadius, innerJointThresholdRadius, woodSizePadding, waterSizePadding, ghostRodPadding)
 	
 	#get and parse design
-	var xml = await Requests.retrieve_design(12707021, false)
+	var xml = await Requests.retrieve_design(12708646, false)
 	if !xml[0]:
 		push_error("design retrieval failed")
 		return
@@ -121,16 +109,21 @@ func _ready() -> void:
 	ft.start_sim()
 
 var frames: int = 0
-var mod_ticks: int = 3
+var ticks: int = 0
+var mod_ticks: int = 1
 func _process(_delta: float) -> void:
 	if ft == null:
 		return
 	
 	frames += 1
-	
-	# tick once
 	if frames % mod_ticks == 0:
 		ft.step_sim()
+		ticks += 1
+	
+	if ft.check_solved():
+		print("WIN: ", ticks, " Ticks")
+	else:
+		print(ticks, " Ticks")
 	
 	# get updated sim state
 	var pt: PackedFloat64Array = ft.get_slice(0)
