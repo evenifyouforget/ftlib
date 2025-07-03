@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cstdint>
 #include "fcsim.h"
 
 std::istream& operator>>(std::istream& is, fcsim_block_def& block) {

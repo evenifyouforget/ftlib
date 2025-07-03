@@ -112,6 +112,67 @@ uint16_t FTBlock::get_joint_2() const {
     return bdef.joints[1];
 }
 
+
+
+void FTRect::_bind_methods() {
+    ClassDB::bind_static_method("FTRect", D_METHOD("init", "x", "y", "w", "h"), &FTRect::init);
+    ClassDB::bind_method(D_METHOD("set_x", "x"), &FTRect::set_x);
+    ClassDB::bind_method(D_METHOD("get_x"), &FTRect::get_x);
+    ClassDB::bind_method(D_METHOD("set_y", "y"), &FTRect::set_y);
+    ClassDB::bind_method(D_METHOD("get_y"), &FTRect::get_y);
+    ClassDB::bind_method(D_METHOD("set_w", "w"), &FTRect::set_w);
+    ClassDB::bind_method(D_METHOD("get_w"), &FTRect::get_w);
+    ClassDB::bind_method(D_METHOD("set_h", "h"), &FTRect::set_h);
+    ClassDB::bind_method(D_METHOD("get_h"), &FTRect::get_h);
+
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "x"), "set_x", "get_x");
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "y"), "set_y", "get_y");
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "w"), "set_w", "get_w");
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "h"), "set_h", "get_h");
+}
+
+Ref<FTRect> FTRect::init(double x, double y, double w, double h) {
+    Ref<FTRect> rect;
+    rect.instantiate();
+    fcsim_rect rect_{x, y, w, h};
+    rect->rect = rect_;
+    return rect;
+}
+
+void FTRect::set_x(double x) {
+    rect.x = x;
+}
+
+double FTRect::get_x() const {
+    return rect.x;
+}
+
+void FTRect::set_y(double y) {
+    rect.y = y;
+}
+
+double FTRect::get_y() const {
+    return rect.y;
+}
+
+void FTRect::set_w(double w) {
+    rect.w = w;
+}
+
+double FTRect::get_w() const {
+    return rect.w;
+}
+
+void FTRect::set_h(double h) {
+    rect.h = h;
+}
+
+double FTRect::get_h() const {
+    return rect.h;
+}
+
+
+
 String to_gd(std::string s) {
     return String(s.c_str());
 }
@@ -157,16 +218,20 @@ bool FTBackend::type_is_player(uint16_t type) {
     return ::type_is_player(static_cast<int>(type));
 }
 
+
+
 void FTDesign::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_blocks", "blocks"), &FTDesign::set_blocks);
+    ClassDB::bind_method(D_METHOD("get_blocks"), &FTDesign::get_blocks);
     ClassDB::bind_method(D_METHOD("set_blocks_packed", "type", "x", "y", "w", "h", "r", "j1", "j2"), &FTDesign::set_blocks_packed);
-    ClassDB::bind_method(D_METHOD("set_build", "x", "y", "w", "h"), &FTDesign::set_build);
-    ClassDB::bind_method(D_METHOD("set_goal", "x", "y", "w", "h"), &FTDesign::set_goal);
+    ClassDB::bind_method(D_METHOD("get_slice"), &FTDesign::get_slice);
+    ClassDB::bind_method(D_METHOD("set_build", "rect"), &FTDesign::set_build);
+    ClassDB::bind_method(D_METHOD("get_build"), &FTDesign::get_build);
+    ClassDB::bind_method(D_METHOD("set_goal", "rect"), &FTDesign::set_goal);
+    ClassDB::bind_method(D_METHOD("get_goal"), &FTDesign::get_goal);
     ClassDB::bind_method(D_METHOD("start_sim"), &FTDesign::start_sim);
     ClassDB::bind_method(D_METHOD("step_sim"), &FTDesign::step_sim);
     ClassDB::bind_method(D_METHOD("check_solved"), &FTDesign::check_solved);
-    ClassDB::bind_method(D_METHOD("get_blocks"), &FTDesign::get_blocks);
-    ClassDB::bind_method(D_METHOD("get_slice"), &FTDesign::get_slice);
 }
 
 void FTDesign::set_blocks(const TypedArray<FTBlock> blocks) {
@@ -176,6 +241,18 @@ void FTDesign::set_blocks(const TypedArray<FTBlock> blocks) {
         fcsim_block_def bdef = block->bdef;
         spec.blocks.push_back(bdef);
     }
+}
+
+TypedArray<FTBlock> FTDesign::get_blocks() const {
+    TypedArray<FTBlock> result;
+    for (int i = 0; i < sim->block_cnt; ++i) {
+        fcsim_block_def& bdef = sim->blocks[i].bdef;
+        Ref<FTBlock> block;
+        block.instantiate();
+        block->bdef = bdef;
+        result.push_back(block);
+    }
+    return result;
 }
 
 void FTDesign::set_blocks_packed(const PackedByteArray t, const PackedFloat64Array x, const PackedFloat64Array y, 
@@ -193,12 +270,65 @@ void FTDesign::set_blocks_packed(const PackedByteArray t, const PackedFloat64Arr
     }
 }
 
-void FTDesign::set_build(double x, double y, double w, double h) {
-    spec.build = { x, y, w, h };
+PackedFloat64Array FTDesign::get_slice(int pi) const {
+    PackedFloat64Array result;
+    for (int i = 0; i < sim->block_cnt; ++i) {
+        fcsim_block_def& bdef = sim->blocks[i].bdef;
+        double data;
+        switch(pi) {
+            case 0:
+                data = static_cast<double>(bdef.type);
+                break;
+            case 1:
+                data = static_cast<double>(bdef.id);
+                break;
+            case 2:
+                data = bdef.x;
+                break;
+            case 3:
+                data = bdef.y;
+                break;
+            case 4:
+                data = bdef.w;
+                break;
+            case 5:
+                data = bdef.h;
+                break;
+            case 6:
+                data = bdef.angle;
+                break;
+            case 7:
+                data = bdef.joints[1];
+                break;
+            case 8:
+                data = bdef.joints[2];
+                break;
+        }
+        result.push_back(data);
+    }
+    return result;
 }
 
-void FTDesign::set_goal(double x, double y, double w, double h) {
-    spec.goal = { x, y, w, h };
+void FTDesign::set_build(const Ref<FTRect> rect) {
+    spec.build = rect->rect;
+}
+
+Ref<FTRect> FTDesign::get_build() const {
+    Ref<FTRect> rect;
+    rect.instantiate();
+    rect->rect = spec.build;
+    return rect;
+}
+
+void FTDesign::set_goal(const Ref<FTRect> rect) {
+    spec.goal = rect->rect;
+}
+
+Ref<FTRect> FTDesign::get_goal() const {
+    Ref<FTRect> rect;
+    rect.instantiate();
+    rect->rect = spec.goal;
+    return rect;
 }
 
 void FTDesign::start_sim() {
@@ -212,25 +342,4 @@ void FTDesign::step_sim() {
 
 bool FTDesign::check_solved() const {
     return fcsim_is_solved(sim, spec);
-}
-
-PackedFloat64Array FTDesign::get_slice(int pi) const {
-    PackedFloat64Array result;
-    for (int i = 0; i < sim->block_cnt; ++i) {
-        fcsim_block_def& bdef = sim->blocks[i].bdef;
-        result.push_back(pi == 0 ? bdef.x : pi == 1 ? bdef.y : pi == 2 ? bdef.w : pi == 3 ? bdef.h : bdef.angle);
-    }
-    return result;
-}
-
-TypedArray<FTBlock> FTDesign::get_blocks() const {
-    TypedArray<FTBlock> result;
-    for (int i = 0; i < sim->block_cnt; ++i) {
-        fcsim_block_def& bdef = sim->blocks[i].bdef;
-        Ref<FTBlock> block;
-        block.instantiate();
-        block->bdef = bdef;
-        result.push_back(block);
-    }
-    return result;
 }
