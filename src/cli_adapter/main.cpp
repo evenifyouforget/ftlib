@@ -1,8 +1,9 @@
 #include <iostream>
+#include <cstdint>
 #include "fcsim.h"
 
 std::istream& operator>>(std::istream& is, fcsim_block_def& block) {
-    return is >> block.type >> block.id >> block.x >> block.y >> block.w >> block.h >> block.angle >> block.joints[0] >> block.joints[1];
+    return is >> static_cast<uint16_t>(block.type) >> block.id >> block.x >> block.y >> block.w >> block.h >> block.angle >> block.joints[0] >> block.joints[1];
 }
 
 std::istream& operator>>(std::istream& is, fcsim_rect& rect) {
