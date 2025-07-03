@@ -41,7 +41,7 @@ static func read_until(parser: XMLParser, node_types: Array[XMLParser.NodeType],
 		reads += 1
 	return false
 	
-#array contains [pass/fail, [x, y, w, h]/error code]
+#array contains [pass/fail, rect/error code]
 #expects parser to be on the "position" element node
 static func parse_xywh(parser: XMLParser) -> Array:
 	var x: float
@@ -83,7 +83,7 @@ static func parse_xywh(parser: XMLParser) -> Array:
 	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], ["height"], 1, 1):
 		push_error(); return [false, ERR_INVALID_DATA]
 	
-	return [true, [x, y, width, height]]
+	return [true, FTRect.init(x, y, width, height)]
 
 #expects the parser to be on the block element node	
 static func parse_block(parser: XMLParser) -> Array:
@@ -141,7 +141,9 @@ static func parse_block(parser: XMLParser) -> Array:
 	var xywh_parsed: Array = parse_xywh(parser)
 	if !xywh_parsed[0]:
 		push_error(); return [false, ERR_INVALID_DATA]
-	x = xywh_parsed[1][0]; y = xywh_parsed[1][1]; width = xywh_parsed[1][2]; height = xywh_parsed[1][3]
+	x = xywh_parsed[1].x; y = xywh_parsed[1].y; width = xywh_parsed[1].w; height = xywh_parsed[1].h
+	if type in [FTRender.PieceType_STATIC_CIRC, FTRender.PieceType_DYNAMIC_CIRC]: #TODO: ensure this is the correct behavior
+		width *= 2; height *= 2
 	
 	var goalBlock_str: String
 	var goalBlock: bool
@@ -191,7 +193,7 @@ static func parse_block(parser: XMLParser) -> Array:
 	
 	return [true, FTBlock.init(type, id, x, y, width, height, rotation, joint1, joint2)]
 
-#array contains [pass/fail, [is_start, x, y, w, h]/error code]
+#array contains [pass/fail, [is_start, rect]/error code]
 static func parse_area(parser: XMLParser, area_name: String) -> Array:
 	var type_str: String
 	var is_start: bool
@@ -207,10 +209,10 @@ static func parse_area(parser: XMLParser, area_name: String) -> Array:
 	if !xywh_parsed[0]:
 		push_error(); return [false, ERR_INVALID_DATA]
 	
-	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], [type_str], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT_END], [type_str], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	
-	return [true, [is_start] + xywh_parsed[1]]
+	return [true, [is_start, xywh_parsed[1]]]
 
 #array contains [pass/fail, [levelId, levelNumber, name, tickCount, pieceCount, design]/error code]
 static func parse_design(xml_buffer: PackedByteArray) -> Array:
@@ -252,7 +254,7 @@ static func parse_design(xml_buffer: PackedByteArray) -> Array:
 	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["level"], 1, 1):
 		push_error(); return [false, ERR_INVALID_DATA]
 		
-	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["levelBlocks"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["levelBlocks"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	var blocks: Array[FTBlock]
 	while true:
@@ -268,7 +270,7 @@ static func parse_design(xml_buffer: PackedByteArray) -> Array:
 			push_error(); return block_parsed
 		blocks.append(block_parsed[1])
 	
-	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["playerBlocks"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["playerBlocks"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	while true:
 		var node_names: Array[String] = player_block_node_names.duplicate(); node_names.append("playerBlocks")
@@ -284,7 +286,7 @@ static func parse_design(xml_buffer: PackedByteArray) -> Array:
 		blocks.append(block_parsed[1])
 	
 	var start: Array
-	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["start"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["start"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	var start_parsed: Array = parse_area(parser, "start")
 	if !start_parsed[0]:
@@ -292,7 +294,7 @@ static func parse_design(xml_buffer: PackedByteArray) -> Array:
 	start = start_parsed[1]
 	
 	var end: Array
-	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["end"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["end"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	var end_parsed: Array = parse_area(parser, "end")
 	if !end_parsed[0]:
@@ -300,7 +302,7 @@ static func parse_design(xml_buffer: PackedByteArray) -> Array:
 	end = end_parsed[1]
 	
 	var tickCount: int
-	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["tickCount"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["tickCount"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	if !read_until(parser, [XMLParser.NODE_TEXT], [], 1, 1):
 		push_error(); return [false, ERR_INVALID_DATA]
@@ -309,7 +311,7 @@ static func parse_design(xml_buffer: PackedByteArray) -> Array:
 		push_error(); return [false, ERR_INVALID_DATA]
 	
 	var pieceCount: int
-	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["pieceCount"], 1, 1):
+	if !read_until(parser, [XMLParser.NODE_ELEMENT], ["pieceCount"], 1, 2):
 		push_error(); return [false, ERR_INVALID_DATA]
 	if !read_until(parser, [XMLParser.NODE_TEXT], [], 1, 1):
 		push_error(); return [false, ERR_INVALID_DATA]
@@ -324,8 +326,8 @@ static func parse_design(xml_buffer: PackedByteArray) -> Array:
 	
 	var design: FTDesign = FTDesign.new()
 	design.set_blocks(blocks)
-	design.set_build(start[0], start[1], start[2], start[3])
-	design.set_goal(end[0], end[1], end[2], end[3])
+	design.set_build(start[1])
+	design.set_goal(end[1])
 	return [true, [levelId, levelNumber, name, tickCount, pieceCount, design]]
 
 static func parse_debug(xml_buffer: PackedByteArray) -> FTDesign:
@@ -358,14 +360,3 @@ static func parse_debug(xml_buffer: PackedByteArray) -> FTDesign:
 		err = parser.read()
 	
 	return FTDesign.new()
-	
-#static func parse_design(xml_buffer: PackedByteArray):
-	#var parser = XMLParser.new()
-	#parser.open_buffer(xml_buffer)
-	#while parser.read() != ERR_FILE_EOF:
-		#if parser.get_node_type() == XMLParser.NODE_ELEMENT:
-			#var node_name = parser.get_node_name()
-			#var attributes_dict = {}
-			#for idx in range(parser.get_attribute_count()):
-				#attributes_dict[parser.get_attribute_name(idx)] = parser.get_attribute_value(idx)
-			#print("The ", node_name, " element has the following attributes: ", attributes_dict)

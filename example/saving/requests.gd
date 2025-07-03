@@ -2,6 +2,7 @@ extends Node
 
 const timeout = 5
 
+#returns [pass/fail, design/error code]
 func retrieve_design(design_id: int, as_string: bool) -> Array:
 	var http = HTTPRequest.new()
 	http.timeout = timeout
@@ -18,6 +19,7 @@ func retrieve_design(design_id: int, as_string: bool) -> Array:
 		
 		var error = http.request(url, headers, HTTPClient.METHOD_POST, body)
 		if error != OK:
+			push_error()
 			ok = false
 			data = error
 			break
@@ -29,6 +31,7 @@ func retrieve_design(design_id: int, as_string: bool) -> Array:
 		var reply_body: PackedByteArray = reply[3]
 		
 		if reply_response_code != HTTPClient.RESPONSE_OK:
+			push_error()
 			ok = false
 			data = ERR_CONNECTION_ERROR
 			break

@@ -1,58 +1,7 @@
 extends Node
+class_name Test
 
-func _ready() -> void:
-	#var design = await Requests.retrieve_design(12708607, false)
-	#print(design[1].get_string_from_utf8())
-	#Parsing.parse_design(design[1])
-	
-	#var xml: String = """
-	  #<SolidRod id="6">
-		#<rotation>1.431837559523214</rotation>
-		#<position>
-		  #<x>-272.85</x>
-		  #<y>-119.4</y>
-		#</position>
-		#<width>72.1959140118054</width>
-		#<height>8</height>
-		#<goalBlock>false</goalBlock>
-		#<joints>
-		  #<jointedTo>1</jointedTo>
-		  #<jointedTo>3</jointedTo>
-		#</joints>
-	  #</SolidRod>
-#"""
-	#var buffer: PackedByteArray = xml.to_utf8_buffer()
-	#
-	#Parsing.parse_debug(buffer)
-	#
-	#var parser = XMLParser.new()
-	#parser.open_buffer(buffer)
-	#Parsing.read_until(parser, [XMLParser.NODE_ELEMENT], [], 0, -1)
-	#var read = Parsing.parse_block(parser)
-	#var block: FTBlock = read[1]
-	#print(read[0], " ", block.type, " ", block.id, " ", block.x, " ", block.y, " ", block.w, " ", block.h, " ", block.angle, " ", block.joint_1, " ", block.joint_2)
-	
-	#var xml: String = """
-	#<start>
-	  #<position>
-		#<x>-191.85</x>
-		#<y>-69.1</y>
-	  #</position>
-	  #<width>947.9</width>
-	  #<height>411.9</height>
-	#</start>
-#"""
-	#var buffer: PackedByteArray = xml.to_utf8_buffer()
-	#
-	#Parsing.parse_debug(buffer)
-	#
-	#var parser = XMLParser.new()
-	#parser.open_buffer(buffer)
-	#Parsing.read_until(parser, [XMLParser.NODE_ELEMENT], [], 0, -1)
-	#var read = Parsing.parse_area(parser)
-	#print(read[0], read[1])
-	
-	var xml: String = """
+const xml: String = """
 <?xml version="1.0"?><retrieveLevel>
 <levelId>688082</levelId>
 <levelNumber></levelNumber>
@@ -210,7 +159,7 @@ func _ready() -> void:
   </level>
 </retrieveLevel>
 """
-	print("\n\n\n")
-	var buffer: PackedByteArray = xml.to_utf8_buffer()	
-	#Parsing.parse_debug(buffer)
-	print(Parsing.parse_design(buffer))
+
+#func _ready() -> void:
+	#var xml = await Requests.retrieve_design(12708607, false)
+	#print(xml)

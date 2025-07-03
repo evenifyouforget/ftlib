@@ -1,8 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://cn4n73u4r8y2v"]
+[gd_scene load_steps=8 format=3 uid="uid://cn4n73u4r8y2v"]
 
 [ext_resource type="Script" uid="uid://00k6cb311vdg" path="res://render/render.gd" id="1_h2yge"]
 [ext_resource type="Material" uid="uid://c7pyjdqr3nu18" path="res://render/render.tres" id="2_h2yge"]
 [ext_resource type="QuadMesh" uid="uid://befpwqu6qr7xj" path="res://render/mesh.tres" id="3_1bvp3"]
+[ext_resource type="Script" uid="uid://cr3shwj2r7xun" path="res://saving/test.gd" id="4_1bvp3"]
 
 [sub_resource type="MultiMesh" id="MultiMesh_lquwl"]
 instance_count = 16384
@@ -23,12 +24,6 @@ buffer = PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 [node name="Render" type="Node" parent="."]
 script = ExtResource("1_h2yge")
-aaWidth = null
-jointRadius = null
-innerJointThresholdRadius = null
-woodSizePadding = null
-waterSizePadding = null
-ghostRodPadding = null
 
 [node name="FTRender" type="FTRender" parent="Render"]
 
@@ -43,3 +38,6 @@ multimesh = SubResource("MultiMesh_7mycd")
 [node name="mmInsides" type="MultiMeshInstance2D" parent="Render/FTRender"]
 material = ExtResource("2_h2yge")
 multimesh = SubResource("MultiMesh_272bh")
+
+[node name="Node" type="Node" parent="."]
+script = ExtResource("4_1bvp3")
