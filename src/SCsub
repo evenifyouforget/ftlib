@@ -1,9 +1,28 @@
 Import('env')
 
-src_dirs = ["box2d", "cli_adapter", "glib", "glib_adapter", "openlibm", "sim", "softfloat", "spectre"]
+src_dirs = [
+    ".",
+    "box2d", "box2d/Include", "box2d/Source/Collision", "box2d/Source/Common", "box2d/Source/Dynamics", "box2d/Source/Dynamics/Contacts", "box2d/Source/Dynamics/Joints",
+    "cli_adapter", 
+    "glib", 
+    "glib_adapter",
+    "openlibm", 
+    "sim", 
+    "softfloat", 
+    "spectre"
+]
 
 env.Append(CPPPATH=src_dirs)
 
+sources = []
+
 for dir in src_dirs:
-    env.add_source_files(env.modules_sources, f"{dir}/*.c")
-    env.add_source_files(env.modules_sources, f"{dir}/*.cpp")
+    sources += Glob(f"{dir}/*.cpp")
+    sources += Glob(f"{dir}/*.c")
+
+if env.get('godot', False):
+    # Only export sources for Godot module
+    env.modules_sources += sources
+else:
+    lib = env.StaticLibrary(target='ftlib', source=sources)
+    Default(lib)
