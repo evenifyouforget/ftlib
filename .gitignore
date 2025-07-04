@@ -265,3 +265,4 @@ src/cli_adapter/run_single_design
 # Custom
 .editorconfig
 .vscode/
+bin/

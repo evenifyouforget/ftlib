@@ -17,7 +17,7 @@ header_dirs = [
 
 menv = env.Clone()
 
-menv.Append(CPPPATH=header_dirs)
+menv.Append(CPPPATH=src_dirs + header_dirs)
 
 sources = []
 for dir in src_dirs:
