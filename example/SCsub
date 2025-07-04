@@ -1,0 +1,32 @@
+Import('env')
+
+src_dirs = [
+    ".",
+    #to be able to include headers properly
+    "#src"
+    "#src/box2d", "#src/box2d/Include", "#src/box2d/Source/Collision", "#src/box2d/Source/Common", 
+    "#src/box2d/Source/Dynamics", "#src/box2d/Source/Dynamics/Contacts", "#src/box2d/Source/Dynamics/Joints",
+    "#src/glib", 
+    "#src/glib_adapter",
+    "#src/openlibm", 
+    "#src/sim", 
+    "#src/softfloat", 
+    "#src/spectre"
+]
+
+env.Append(CPPPATH=src_dirs)
+
+sources = []
+for dir in src_dirs:
+    sources += Glob(f"{dir}/*.cpp")
+    sources += Glob(f"{dir}/*.c")
+
+# lib = env.StaticLibrary(target='#bin/ftlib', source=sources)
+
+example = env.Program(
+    target='#bin/example_cli',
+    source=sources,
+    LIBS=['ftlib'],           # Link against your static library
+    LIBPATH=['#bin']             # Look for libftlib.a in the current dir
+)
+Default(example)
