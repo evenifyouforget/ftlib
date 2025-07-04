@@ -15,14 +15,14 @@ src_dirs = [
 env.Append(CPPPATH=src_dirs)
 
 sources = []
-
 for dir in src_dirs:
     sources += Glob(f"{dir}/*.cpp")
     sources += Glob(f"{dir}/*.c")
 
 if env.get('godot', False):
-    # Only export sources for Godot module
+    # modules_sources only exists in godot
     env.modules_sources += sources
 else:
-    lib = env.StaticLibrary(target='ftlib', source=sources)
+    # Puts static lib in bin/, but leaves object files with source
+    lib = env.StaticLibrary(target='#bin/ftlib', source=sources)
     Default(lib)

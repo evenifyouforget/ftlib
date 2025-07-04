@@ -1,4 +1,3 @@
-# SConstruct
 import os
 
 env = Environment(CXX='g++', CXXFLAGS='-std=c++17', CPPPATH=['src'], LIBS=[], LIBPATH=[])
