@@ -3,7 +3,6 @@ Import('env')
 src_dirs = [
     ".",
     "box2d", "box2d/Include", "box2d/Source/Collision", "box2d/Source/Common", "box2d/Source/Dynamics", "box2d/Source/Dynamics/Contacts", "box2d/Source/Dynamics/Joints",
-    "cli_adapter", 
     "glib", 
     "glib_adapter",
     "openlibm", 
@@ -11,6 +10,9 @@ src_dirs = [
     "softfloat", 
     "spectre"
 ]
+
+if not env.get('godot', False):
+    src_dirs.append('cli_adapter')
 
 env.Append(CPPPATH=src_dirs)
 
