@@ -11,20 +11,22 @@ src_dirs = [
     "spectre"
 ]
 
-if not env.get('godot', False):
+menv = env.Clone()
+
+if not menv.get('godot', False):
     src_dirs.append('cli_adapter')
 
-env.Append(CPPPATH=src_dirs)
+menv.Append(CPPPATH=src_dirs)
 
 sources = []
 for dir in src_dirs:
     sources += Glob(f"{dir}/*.cpp")
     sources += Glob(f"{dir}/*.c")
 
-if env.get('godot', False):
+if menv.get('godot', False):
     # modules_sources only exists in godot
-    env.modules_sources += sources
+    menv.modules_sources += sources
 else:
     # Puts static lib in bin/, but leaves object files with source
-    lib = env.StaticLibrary(target='#bin/ftlib', source=sources)
+    lib = menv.StaticLibrary(target='#bin/ftlib', source=sources)
     Default(lib)
