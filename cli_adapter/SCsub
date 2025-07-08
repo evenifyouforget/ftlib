@@ -15,7 +15,7 @@ header_dirs = [
     "#src/spectre"
 ]
 
-menv = env.Clone()
+menv = env
 
 menv.Append(CPPPATH=src_dirs + header_dirs)
 
