@@ -1,0 +1,35 @@
+import os
+
+Import('env')
+
+# paths of all source files and header files
+src_base = Dir('.').abspath
+src_dirs = ["."]
+# convert to absolute paths for consistency (this won't ever be built in godot but whatever)
+src_dirs_abs = [os.path.join(src_base, d) for d in src_dirs]
+
+env.Append(CPPPATH=src_dirs_abs)
+
+# clone the env to change warning settings
+example_env = env.Clone()
+example_env.Append(
+    CCFLAGS=[
+        "-Wall" if not env.get('msvc', False) else "-W3",
+        "-O2",
+        "-flto"
+    ],
+    LINKFLAGS=["-O2", "-flto"]
+)
+
+sources = []
+for dir in src_dirs_abs:
+    sources += Glob(f"{dir}/*.cpp")
+    sources += Glob(f"{dir}/*.c")
+
+example = example_env.Program(
+    target='#bin/example_cli',
+    source=sources,
+    LIBS=['ftlib'],
+    LIBPATH=['#bin']
+)
+Default(example)

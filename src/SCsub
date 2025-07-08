@@ -1,0 +1,50 @@
+import os
+
+Import('env')
+
+# paths of all source files and header files
+src_base = Dir('.').abspath
+src_dirs = [
+    ".",
+    "glib", 
+    "glib_adapter",
+    "openlibm", 
+    "sim", 
+    "softfloat", 
+    "spectre"
+]
+# convert to absolute paths to avoid errors building in godot
+src_dirs_abs = [os.path.join(src_base, d) for d in src_dirs]
+
+# modify include path on base env
+env.Append(CPPPATH=src_dirs_abs)
+
+# clone the env to change warning settings
+src_env = env.Clone()
+src_env.Append(
+    CCFLAGS=[
+        "-Wall" if not env.get('msvc', False) else "-W3",
+        "-O2",
+        "-flto"
+    ],
+    LINKFLAGS=["-O2", "-flto"]
+)
+
+# add the sources
+sources = []
+for dir in src_dirs_abs:
+    sources += Glob(f"{dir}/*.cpp")
+    sources += Glob(f"{dir}/*.c")
+
+# build box2d first
+box2d_obj = SConscript('box2d/SCsub')
+
+# add source files to local env
+if env.get('godot', False):
+    # box2d source files are handled already
+    src_env.add_source_files(env.modules_sources, sources)
+else:
+    # Puts static lib in bin/, but leaves object files with source
+    # remember to add box2d
+    lib = src_env.StaticLibrary(target='#bin/ftlib', source=sources + [box2d_obj])
+    Default(lib)

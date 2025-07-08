@@ -1,0 +1,46 @@
+import os
+
+Import('env')
+
+# paths of all source files and header files
+src_base = Dir('.').abspath
+src_dirs = [
+    "Include", 
+    "Source/Collision", 
+    "Source/Common", 
+    "Source/Dynamics", 
+    "Source/Dynamics/Contacts", 
+    "Source/Dynamics/Joints",
+]
+# convert to absolute paths to avoid errors building in godot
+src_dirs_abs = [os.path.join(src_base, d) for d in src_dirs]
+
+# modify include path on base env
+env.Append(CPPPATH=src_dirs_abs)
+
+# clone the env to change warning settings
+box2d_env = env.Clone()
+box2d_env.Append(
+    CXXFLAGS=[
+        '-w', #box2d spits out a bunch of useless warnings so silence them
+        "-O2",
+        "-flto"
+    ],
+    LINKFLAGS=["-O2", "-flto"]
+)
+
+# add the sources
+sources = []
+for dir in src_dirs_abs:
+    sources += Glob(f"{dir}/*.cpp")
+    sources += Glob(f"{dir}/*.c")
+
+# add source files to local env
+if env.get('godot', False):
+    # modules_sources only exists in godot
+    box2d_env.add_source_files(box2d_env.modules_sources, sources)
+    # don't return anything because godot doesn't need it
+else:
+    #return the box2d object so it can be built into the library
+    box2d_obj = box2d_env.Object(sources)
+    Return('box2d_obj')

@@ -31,8 +31,8 @@ def global_max_ticks(pytestconfig):
 
 def pytest_sessionstart(session):
     # build once the binary we will run for every test
-    cli_adapter_dir = Path() / 'src' / 'cli_adapter'
-    subprocess.run(['scons'], cwd=cli_adapter_dir, check=True)
+    cli_adapter_dir = Path() / 'cli_adapter'
+    subprocess.run(['scons']) #TODO: add build option to only build cli adapter
 
 def pytest_runtest_logreport(report):
     """
