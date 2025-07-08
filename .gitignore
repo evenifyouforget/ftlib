@@ -256,8 +256,7 @@ config.log
 .sconf_temp
 
 # Temporary build files
-build/
-src/cli_adapter/run_single_design
+bin/
 
 # Design cache
 .fc_design_cache
@@ -265,4 +264,3 @@ src/cli_adapter/run_single_design
 # Custom
 .editorconfig
 .vscode/
-bin/
