@@ -12,10 +12,6 @@ src_dirs = [
 ]
 
 menv = env.Clone()
-
-if not menv.get('godot', False):
-    src_dirs.append('cli_adapter')
-
 menv.Append(CPPPATH=src_dirs)
 
 sources = []
