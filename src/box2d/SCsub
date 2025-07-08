@@ -5,13 +5,12 @@ Import('env')
 # paths of all source files and header files
 src_base = Dir('.').abspath
 src_dirs = [
-    ".",
-    "glib", 
-    "glib_adapter",
-    "openlibm", 
-    "sim", 
-    "softfloat", 
-    "spectre"
+    "Include", 
+    "Source/Collision", 
+    "Source/Common", 
+    "Source/Dynamics", 
+    "Source/Dynamics/Contacts", 
+    "Source/Dynamics/Joints",
 ]
 # convert to absolute paths to avoid errors building in godot
 src_dirs_abs = [os.path.join(src_base, d) for d in src_dirs]
@@ -20,9 +19,9 @@ src_dirs_abs = [os.path.join(src_base, d) for d in src_dirs]
 env.Append(CPPPATH=src_dirs_abs)
 
 # clone the env to change warning settings
-src_env = env.Clone()
-src_env.Append(CCFLAGS=[
-    "-Wall" if not env.msvc else "-W3"
+box2d_env = env.Clone()
+box2d_env.Append(CXXFLAGS=[
+    '-w' #box2d spits out a bunch of useless warnings so silence them
 ])
 
 # add the sources
@@ -31,15 +30,11 @@ for dir in src_dirs_abs:
     sources += Glob(f"{dir}/*.cpp")
     sources += Glob(f"{dir}/*.c")
 
-# build box2d first
-box2d_obj = SConscript('box2d/SCsub')
-
 # add source files to local env
 if env.get('godot', False):
-    # box2d source files are handled already
-    src_env.add_source_files(env.modules_sources, sources)
+    # modules_sources only exists in godot
+    box2d_env.add_source_files(box2d_env.modules_sources, sources)
+    # don't return anything because godot doesn't need it
 else:
-    # Puts static lib in bin/, but leaves object files with source
-    # remember to add box2d
-    lib = src_env.StaticLibrary(target='#bin/ftlib', source=sources + [box2d_obj])
-    Default(lib)
+    #return the box2d object so it can be build into the library
+    Return(box2d_env.Object(sources))
