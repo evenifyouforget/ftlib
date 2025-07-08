@@ -15,16 +15,15 @@ header_dirs = [
     "#src/spectre"
 ]
 
-menv = env
-
-menv.Append(CPPPATH=src_dirs + header_dirs)
+env = env
+env.Append(CPPPATH=src_dirs + header_dirs)
 
 sources = []
 for dir in src_dirs:
     sources += Glob(f"{dir}/*.cpp")
     sources += Glob(f"{dir}/*.c")
 
-example = menv.Program(
+example = env.Program(
     target='#bin/run_single_design',
     source=sources,
     LIBS=['ftlib'],

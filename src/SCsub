@@ -1,5 +1,9 @@
+import os
+
 Import('env')
 
+#absolute paths so this builds correctly in godot
+src_base = Dir('.').abspath
 src_dirs = [
     ".",
     "box2d", "box2d/Include", "box2d/Source/Collision", "box2d/Source/Common", "box2d/Source/Dynamics", "box2d/Source/Dynamics/Contacts", "box2d/Source/Dynamics/Joints",
@@ -10,19 +14,19 @@ src_dirs = [
     "softfloat", 
     "spectre"
 ]
+src_dirs_abs = [os.path.join(src_base, d) for d in src_dirs]
 
-menv = env
-menv.Append(CPPPATH=src_dirs)
+env.Append(CPPPATH=src_dirs_abs)
 
 sources = []
-for dir in src_dirs:
+for dir in src_dirs_abs:
     sources += Glob(f"{dir}/*.cpp")
     sources += Glob(f"{dir}/*.c")
 
-if menv.get('godot', False):
+if env.get('godot', False):
     # modules_sources only exists in godot
-    menv.modules_sources += sources
+    env.add_source_files(env.modules_sources, sources)
 else:
     # Puts static lib in bin/, but leaves object files with source
-    lib = menv.StaticLibrary(target='#bin/ftlib', source=sources)
+    lib = env.StaticLibrary(target='#bin/ftlib', source=sources)
     Default(lib)
