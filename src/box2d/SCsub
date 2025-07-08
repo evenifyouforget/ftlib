@@ -21,9 +21,9 @@ env.Append(CPPPATH=src_dirs_abs)
 # clone the env to change warning settings
 box2d_env = env.Clone()
 box2d_env.Append(CXXFLAGS=[
-    ['-w'], #box2d spits out a bunch of useless warnings so silence them
-    ["-O2"],
-    ["-flto"]
+    '-w', #box2d spits out a bunch of useless warnings so silence them
+    "-O2",
+    "-flto"
 ])
 
 # add the sources
