@@ -21,11 +21,14 @@ env.Append(CPPPATH=src_dirs_abs)
 
 # clone the env to change warning settings
 src_env = env.Clone()
-src_env.Append(CCFLAGS=[
-    "-Wall" if not env.get('msvc', False) else "-W3",
-    "-O2",
-    "-flto"
-])
+src_env.Append(
+    CCFLAGS=[
+        "-Wall" if not env.get('msvc', False) else "-W3",
+        "-O2",
+        "-flto"
+    ],
+    LINKFLAGS=["-O2", "-flto"]
+)
 
 # add the sources
 sources = []
