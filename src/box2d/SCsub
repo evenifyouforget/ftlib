@@ -36,5 +36,6 @@ if env.get('godot', False):
     box2d_env.add_source_files(box2d_env.modules_sources, sources)
     # don't return anything because godot doesn't need it
 else:
-    #return the box2d object so it can be build into the library
-    Return(box2d_env.Object(sources))
+    #return the box2d object so it can be built into the library
+    box2d_obj = box2d_env.Object(sources)
+    Return('box2d_obj')

@@ -1,32 +1,30 @@
+import os
+
 Import('env')
 
+# paths of all source files and header files
+src_base = Dir('.').abspath
 src_dirs = ["."]
+# convert to absolute paths for consistency (this won't ever be built in godot but whatever)
+src_dirs_abs = [os.path.join(src_base, d) for d in src_dirs]
 
-header_dirs = [
-    #to be able to include headers properly
-    "#src",
-    "#src/box2d", "#src/box2d/Include", "#src/box2d/Source/Collision", "#src/box2d/Source/Common", 
-    "#src/box2d/Source/Dynamics", "#src/box2d/Source/Dynamics/Contacts", "#src/box2d/Source/Dynamics/Joints",
-    "#src/glib", 
-    "#src/glib_adapter",
-    "#src/openlibm", 
-    "#src/sim", 
-    "#src/softfloat", 
-    "#src/spectre"
-]
+env.Append(CPPPATH=src_dirs_abs)
 
-env = env
-env.Append(CPPPATH=src_dirs + header_dirs)
+# clone the env to change warning settings
+run_single_design_env = env.Clone()
+run_single_design_env.Append(CCFLAGS=[
+    "-Wall" if not env.get('msvc', False) else "-W3"
+])
 
 sources = []
-for dir in src_dirs:
+for dir in src_dirs_abs:
     sources += Glob(f"{dir}/*.cpp")
     sources += Glob(f"{dir}/*.c")
 
-example = env.Program(
+run_single_design = run_single_design_env.Program(
     target='#bin/run_single_design',
     source=sources,
     LIBS=['ftlib'],
     LIBPATH=['#bin']
 )
-Default(example)
+Default(run_single_design)
