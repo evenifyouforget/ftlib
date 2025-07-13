@@ -1,10 +1,9 @@
+import json
 import pytest
 from pathlib import Path
 import subprocess
 
-# Count results per test function
-# Key will be "file_path::function_name" just like pytest internals
-test_function_results_aggregated = {}
+current_run_results = {}
 
 # supported terminal colors, and at what pass rate we apply each color
 pass_rate_colors = [
@@ -45,7 +44,7 @@ def pytest_runtest_logreport(report):
 
         # Extract the function name, stripping any parameter part
         function_name_with_params = report.nodeid.split("::")[-1]
-        function_name = function_name_with_params.split("[")[0]
+        function_name, params = function_name_with_params.split("[")[0]
 
         # Create a unique key for the aggregated function (file + function name)
         aggregated_key = f"{file_path}::{function_name}"
