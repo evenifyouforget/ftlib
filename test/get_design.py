@@ -1,6 +1,8 @@
 from enum import Enum
 from collections import namedtuple
 import requests
+import struct
+import subprocess
 from xml.dom import minidom
 from pathlib import Path
 
@@ -34,6 +36,17 @@ class fcxml_piece_types(Enum):
 
 FCPieceStruct = namedtuple('FCPieceStruct', ['type_id', 'piece_id', 'x', 'y', 'w', 'h', 'angle', 'joints'])
 FCDesignStruct = namedtuple('FCDesignStruct', ['name', 'base_level_id', 'goal_pieces', 'design_pieces', 'level_pieces', 'build_area', 'goal_area'])
+
+def fcsim_strtod(istr):
+    """
+    Convert a string to double using the janky and slightly incorrect method.
+    """
+    exec_path = Path() / 'bin' / 'fcsim_strtod'
+    command = [exec_path]
+    proc = subprocess.run(command, text=True, input=istr, stdout=subprocess.PIPE)
+    stdout = proc.stdout
+    x_as_int = int(stdout.strip())
+    return struct.unpack("d", struct.pack("Q", x_as_int))[0]
 
 def retrieveLevel(levelId, is_design=False, cache=None):
     # try to get it from cache first
@@ -76,7 +89,8 @@ def retrieveLevel(levelId, is_design=False, cache=None):
 def retrieveDesign(designId):
     return retrieveLevel(designId, is_design=True)
 
-def pieceDomToStruct(dom):
+def pieceDomToStruct(dom, use_fcsim_strtod=True):
+    to_float = fcsim_strtod if use_fcsim_strtod else float
     xml_type = dom.nodeName
     # get numerical piece type
     try:
@@ -93,13 +107,13 @@ def pieceDomToStruct(dom):
         for joint in dom.getElementsByTagName("joints")[0].getElementsByTagName("jointedTo"):
             joints.append(int(joint.firstChild.nodeValue))
     # get xywhr
-    x = float(dom.getElementsByTagName("position")[0].getElementsByTagName("x")[0].firstChild.nodeValue)
-    y = float(dom.getElementsByTagName("position")[0].getElementsByTagName("y")[0].firstChild.nodeValue)
-    w = float(dom.getElementsByTagName("width")[0].firstChild.nodeValue)
-    h = float(dom.getElementsByTagName("height")[0].firstChild.nodeValue)
+    x = to_float(dom.getElementsByTagName("position")[0].getElementsByTagName("x")[0].firstChild.nodeValue)
+    y = to_float(dom.getElementsByTagName("position")[0].getElementsByTagName("y")[0].firstChild.nodeValue)
+    w = to_float(dom.getElementsByTagName("width")[0].firstChild.nodeValue)
+    h = to_float(dom.getElementsByTagName("height")[0].firstChild.nodeValue)
     angle = 0
     if(len(dom.getElementsByTagName("rotation")) > 0):
-        angle = float(dom.getElementsByTagName("rotation")[0].firstChild.nodeValue)
+        angle = to_float(dom.getElementsByTagName("rotation")[0].firstChild.nodeValue)
     # static circles and dynamic circles use radius instead of diameter like every other piece. let's fix that
     use_radius = piece_type in (fcsim_piece_types.FCSIM_STATIC_CIRC.value, fcsim_piece_types.FCSIM_DYNAMIC_CIRC.value)
     if use_radius:
