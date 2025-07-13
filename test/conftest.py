@@ -73,24 +73,18 @@ def pytest_runtest_logreport(report):
         # will be "passed" or "failed" or "skipped"
         current_run_results[function_name][params] = report.outcome
 
-def pytest_sessionfinish(session, exitstatus):
-    """
-    Runs once after all tests.
-    We only use this to log the results.
-    """
-
-    # write results
-    live_results_dir = Path() / 'test' / 'history' / 'live'
-    live_results_dir.mkdir(parents=True, exist_ok=True)
-    with open(live_results_dir / f'{current_run_uid}.json', 'w') as file:
-        json.dump(current_run_results, file, indent=2)
-
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     """
     Add a section to the terminal summary report.
     This hook runs after all tests are complete and pytest's main summary is generated.
     You may still need to scroll up a bit to see the output.
     """
+    # write results
+    live_results_dir = Path() / 'test' / 'history' / 'live'
+    live_results_dir.mkdir(parents=True, exist_ok=True)
+    with open(live_results_dir / f'{current_run_uid}.json', 'w') as file:
+        json.dump(current_run_results, file, indent=2, sort_keys=True)
+
     # get reference results if available
     reference_run_results = {}
     reference_run_dir = Path() / 'test' / 'history' / 'reference'
