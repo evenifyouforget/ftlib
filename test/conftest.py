@@ -5,6 +5,10 @@ from pathlib import Path
 import re
 import subprocess
 
+# assign (probably) unique and sequential ID to current run
+now = datetime.datetime.now(tz=datetime.timezone.utc)
+current_run_uid = now.strftime('%Y-%m-%d-%H-%M-%S')
+
 current_run_results = {}
 
 # supported terminal colors, and at what pass rate we apply each color
@@ -75,14 +79,10 @@ def pytest_sessionfinish(session, exitstatus):
     We only use this to log the results.
     """
 
-    # assign (probably) unique and sequential ID to current run
-    now = datetime.datetime.now(tz=datetime.timezone.utc)
-    uid = now.strftime('%Y-%m-%d-%H-%M-%S')
-
     # write results
     live_results_dir = Path() / 'test' / 'history' / 'live'
     live_results_dir.mkdir(parents=True, exist_ok=True)
-    with open(live_results_dir / f'{uid}.json', 'w') as file:
+    with open(live_results_dir / f'{current_run_uid}.json', 'w') as file:
         json.dump(current_run_results, file, indent=2)
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
