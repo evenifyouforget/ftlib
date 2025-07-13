@@ -261,6 +261,9 @@ bin/
 # Design cache
 .fc_design_cache
 
+# Local live test run history
+test/history/live/
+
 # Custom
 .editorconfig
 .vscode/
