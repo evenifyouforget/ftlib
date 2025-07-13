@@ -105,6 +105,12 @@ uint64_t _as_int(double f) {
     return r.i;
 }
 
+double fcsim_strtod(std::string s) {
+    double result;
+    _fcsim_strtod(s.c_str(), s.size(), &result);
+    return result;
+}
+
 static inline uint64_t rotl(const uint64_t x, int k) {
     return (x << k) | (x >> (64 - k));
 }
