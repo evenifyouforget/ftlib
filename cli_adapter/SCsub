@@ -28,3 +28,11 @@ run_single_design = run_single_design_env.Program(
     LIBPATH=['#bin']
 )
 Default(run_single_design)
+
+fcsim_strtod = run_single_design_env.Program(
+    target='#bin/fcsim_strtod',
+    source=['fcsim_strtod.cpp'],
+    LIBS=['ftlib'],
+    LIBPATH=['#bin']
+)
+Default(fcsim_strtod)
