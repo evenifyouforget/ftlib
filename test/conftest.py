@@ -61,7 +61,7 @@ def pytest_runtest_logreport(report):
         if '[' in function_name:
             function_name, params = function_name.split("[")
         params = params[:-1] # remove last ]
-        design_key = re.search('[DL]\d{6,8}', params)
+        design_key = re.search('[DL]\\d{6,8}', params)
 
         if design_key:
             # design acts as a unique key resistant to other internal changes
