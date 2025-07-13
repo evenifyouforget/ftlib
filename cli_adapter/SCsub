@@ -21,14 +21,9 @@ run_single_design_env.Append(
     LINKFLAGS=["-O2", "-flto"]
 )
 
-sources = []
-for dir in src_dirs_abs:
-    sources += Glob(f"{dir}/*.cpp")
-    sources += Glob(f"{dir}/*.c")
-
 run_single_design = run_single_design_env.Program(
     target='#bin/run_single_design',
-    source=sources,
+    source=['main.cpp'],
     LIBS=['ftlib'],
     LIBPATH=['#bin']
 )
