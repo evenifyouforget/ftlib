@@ -1,0 +1,1 @@
+To set a local run result as the new reference run, move it from the `live` directory to here.

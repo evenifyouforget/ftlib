@@ -1,6 +1,6 @@
 import pytest
 import itertools
-from collections import namedtuple
+from collections import namedtuple, Counter
 import csv
 import math
 from pathlib import Path
@@ -30,6 +30,21 @@ def generate_test_single_design_data():
         reader = csv.reader(file, delimiter='\t')
         # tsv to 2D list
         fc_data = list(reader)
+    # sanity check
+    all_design_uids = []
+    for row in fc_data:
+        if not(any(row)):
+            raise ValueError('Empty row in FC dataset')
+        # parse row
+        level_id, design_id, solve_ticks, design_max_ticks, user_comment, spectre_override, cpu_name, p2_solve_ticks, *_ = itertools.chain(row, [None]*10)
+        level_id = extract_design_id(level_id)
+        design_id = extract_design_id(design_id)
+        design_uid = f'D{design_id}' if design_id else f'L{level_id}'
+        all_design_uids.append(design_uid)
+    count_design_uids = Counter(all_design_uids)
+    for design_uid, count in count_design_uids.items():
+        if count > 1:
+            raise ValueError(f'Duplicate design or level in FC dataset: {design_uid}')
     # generate results
     result = []
     for row in fc_data:

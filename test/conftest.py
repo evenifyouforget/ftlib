@@ -1,10 +1,15 @@
+import datetime
+import json
 import pytest
 from pathlib import Path
+import re
 import subprocess
 
-# Count results per test function
-# Key will be "file_path::function_name" just like pytest internals
-test_function_results_aggregated = {}
+# assign (probably) unique and sequential ID to current run
+now = datetime.datetime.now(tz=datetime.timezone.utc)
+current_run_uid = now.strftime('%Y-%m-%d-%H-%M-%S')
+
+current_run_results = {}
 
 # supported terminal colors, and at what pass rate we apply each color
 pass_rate_colors = [
@@ -14,6 +19,13 @@ pass_rate_colors = [
     ('cyan', 0.95),
     ('blue', 1)
     ]
+
+def fix_text_table_alignment(table):
+    num_columns = max(map(len, table))
+    for column_i in range(num_columns):
+        max_len = max(len(row[column_i]) for row in table)
+        for row in table:
+            row[column_i] += ' ' * (max_len - len(row[column_i]))
 
 def pytest_addoption(parser):
     parser.addoption("--all", action="store_true", help="Run all tests, and disable global tick limit. (slow)")
@@ -44,22 +56,22 @@ def pytest_runtest_logreport(report):
         file_path = report.nodeid.split("::")[0]
 
         # Extract the function name, stripping any parameter part
-        function_name_with_params = report.nodeid.split("::")[-1]
-        function_name = function_name_with_params.split("[")[0]
+        function_name = report.nodeid.split("::")[-1]
+        params = ''
+        if '[' in function_name:
+            function_name, params = function_name.split("[")
+        params = params[:-1] # remove last ]
+        design_key = re.search('[DL]\\d{6,8}', params)
 
-        # Create a unique key for the aggregated function (file + function name)
-        aggregated_key = f"{file_path}::{function_name}"
+        if design_key:
+            # design acts as a unique key resistant to other internal changes
+            params = design_key[0]
 
-        if aggregated_key not in test_function_results_aggregated:
-            test_function_results_aggregated[aggregated_key] = {"passed": 0, "failed": 0, "skipped": 0}
+        if function_name not in current_run_results:
+            current_run_results[function_name] = {}
 
-        if report.outcome == "passed":
-            test_function_results_aggregated[aggregated_key]["passed"] += 1
-        elif report.outcome == "failed":
-            test_function_results_aggregated[aggregated_key]["failed"] += 1
-        # we don't care about skipped tests, but for completeness it's included
-        elif report.outcome == "skipped":
-            test_function_results_aggregated[aggregated_key]["skipped"] += 1
+        # will be "passed" or "failed" or "skipped"
+        current_run_results[function_name][params] = report.outcome
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     """
@@ -67,22 +79,42 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
     This hook runs after all tests are complete and pytest's main summary is generated.
     You may still need to scroll up a bit to see the output.
     """
+    # write results
+    live_results_dir = Path() / 'test' / 'history' / 'live'
+    live_results_dir.mkdir(parents=True, exist_ok=True)
+    with open(live_results_dir / f'{current_run_uid}.json', 'w') as file:
+        json.dump(current_run_results, file, indent=2, sort_keys=True)
+
+    # get reference results if available
+    reference_run_results = {}
+    reference_run_dir = Path() / 'test' / 'history' / 'reference'
+    reference_run_dir.mkdir(parents=True, exist_ok=True)
+    reference_run_paths = sorted(reference_run_dir.glob('*.json'))
+    if reference_run_paths:
+        latest_reference_run_path = reference_run_paths[-1]
+        with open(latest_reference_run_path) as file:
+            reference_run_results = json.load(file)
+
     # title
     terminalreporter.write_sep("=", "pass rate grouped by function")
     # generate table
     table = []
     colors = []
-    for aggregated_key, results in test_function_results_aggregated.items():
+    current_run_results_list = list(current_run_results.items())
+    for function_name, per_test_results in current_run_results_list:
         # get pass/fail stats
-        passed = results["passed"]
-        failed = results["failed"]
+        passed = 0
+        failed = 0
+        for params, result in per_test_results.items():
+            passed += result == 'passed'
+            failed += result == 'failed'
         total = passed + failed
 
         if total == 0:
             continue
 
         row = []
-        row.append(aggregated_key)
+        row.append(function_name)
 
         pass_rate = passed / total
         row.append(f'{pass_rate:.2%}')
@@ -96,13 +128,28 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         table.append(row)
         colors.append(color)
 
-    # fix table alignment
-    num_columns = max(map(len, table))
-    for column_i in range(num_columns):
-        max_len = max(len(row[column_i]) for row in table)
-        for row in table:
-            row[column_i] += ' ' * (max_len - len(row[column_i]))
+    fix_text_table_alignment(table)
 
-    for color, row in zip(colors, table):
+    for color, row, (function_name, per_test_results) in zip(colors, table, current_run_results_list):
         settings = {color: True}
         terminalreporter.write_line(' '.join(row), **settings)
+
+        # add regression table below
+        ref_per_test_results = reference_run_results.get(function_name, {})
+        pf_table = [[0] * 3 for _ in range(2)]
+        for params, result in per_test_results.items():
+            ref_result = ref_per_test_results.get(params, None)
+            y = 0 if result == 'passed' else 1 if result == 'failed' else None
+            x = 0 if ref_result == 'passed' else 1 if ref_result == 'failed' else 2
+            if y is not None:
+                pf_table[y][x] += 1
+        regression_table = []
+        regression_table.append(['Now \\ Ref', 'Pass', 'Fail', 'No data'])
+        regression_table.append(['Pass'] + list(map(str, pf_table[0])))
+        regression_table.append(['Fail'] + list(map(str, pf_table[1])))
+        fix_text_table_alignment(regression_table)
+        caused_regression = pf_table[1][0] != 0
+        regression_color = 'red' if caused_regression else color
+        for regression_row in regression_table:
+            regression_settings = {color: True}
+            terminalreporter.write_line(' '.join(regression_row), **regression_settings)
