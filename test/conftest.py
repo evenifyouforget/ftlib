@@ -95,7 +95,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
     reference_run_results = {}
     reference_run_dir = Path() / 'test' / 'history' / 'reference'
     reference_run_dir.mkdir(parents=True, exist_ok=True)
-    reference_run_paths = sorted(reference_run_dir.iterdir())
+    reference_run_paths = sorted(reference_run_dir.glob('*.json'))
     if reference_run_paths:
         latest_reference_run_path = reference_run_paths[-1]
         with open(latest_reference_run_path) as file:
