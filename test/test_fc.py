@@ -116,11 +116,13 @@ def test_single_design(design_uid, design_data, global_max_ticks):
             raise AssertionError(error_message)
 
 # test memory safety
-def test_valgrind(design_uid, design_data):
+def test_valgrind(design_uid, design_data, global_max_ticks):
     # unpack tuple
     design_struct = design_data.design_struct
     # calculate additional config
     max_ticks = 100
+    if global_max_ticks and global_max_ticks > 0:
+        max_ticks = min(max_ticks, global_max_ticks)
     # run the design
     run_result = run_design(design_struct, max_ticks, command_prepend=['valgrind'])
     valgrind_report = run_result.proc.stderr
