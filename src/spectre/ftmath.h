@@ -25,6 +25,8 @@ double ft_atan2(double, double);
 long double extra_sinl(long double x);
 long double extra_cosl(long double x);
 
+int _fcsim_strtod(const char *str, int len, double *res);
+
 #ifdef __cplusplus
 }
 #endif
