@@ -37,14 +37,30 @@ class fcxml_piece_types(Enum):
 FCPieceStruct = namedtuple('FCPieceStruct', ['type_id', 'piece_id', 'x', 'y', 'w', 'h', 'angle', 'joints'])
 FCDesignStruct = namedtuple('FCDesignStruct', ['name', 'base_level_id', 'goal_pieces', 'design_pieces', 'level_pieces', 'build_area', 'goal_area'])
 
+fcsim_strtod_query_server = None
+
+def fcsim_strtod_query_server_clear():
+    """
+    Clear the server if any is being used.
+    """
+    global fcsim_strtod_query_server
+    fcsim_strtod_query_server.kill()
+    fcsim_strtod_query_server = None
+
 def fcsim_strtod(istr):
     """
     Convert a string to double using the janky and slightly incorrect method.
+    Warning: starts a subprocess (the "server") the first time this is called,
+    so we can reuse it
     """
-    exec_path = Path() / 'bin' / 'fcsim_strtod'
-    command = [exec_path]
-    proc = subprocess.run(command, text=True, input=istr, stdout=subprocess.PIPE)
-    stdout = proc.stdout
+    global fcsim_strtod_query_server
+    if not fcsim_strtod_query_server:
+        exec_path = Path() / 'bin' / 'fcsim_strtod'
+        command = [exec_path]
+        fcsim_strtod_query_server = subprocess.Popen(command, text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    fcsim_strtod_query_server.stdin.write(istr + '\n')
+    fcsim_strtod_query_server.stdin.flush()
+    stdout = fcsim_strtod_query_server.stdout.readline()
     x_as_int = int(stdout.strip())
     return struct.unpack("d", struct.pack("Q", x_as_int))[0]
 
