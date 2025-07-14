@@ -3,6 +3,7 @@ from collections import namedtuple
 import requests
 from xml.dom import minidom
 from pathlib import Path
+import warnings
 
 DISABLE_CACHE = 'DISABLE_CACHE'
 
@@ -31,6 +32,12 @@ class fcxml_piece_types(Enum):
     CounterClockwiseWheel = 8
     HollowRod = 9
     SolidRod = 10
+
+class XMLBadDataWarning(UserWarning):
+    """
+    Raised when the XML is valid XML but has missing or invalid data in the context the XML data is meant for
+    """
+    pass
 
 FCPieceStruct = namedtuple('FCPieceStruct', ['type_id', 'piece_id', 'x', 'y', 'w', 'h', 'angle', 'joints'])
 FCDesignStruct = namedtuple('FCDesignStruct', ['name', 'base_level_id', 'goal_pieces', 'design_pieces', 'level_pieces', 'build_area', 'goal_area'])
@@ -139,10 +146,12 @@ def designDomToStruct(dom):
             level_pieces.append(pieceDomToStruct(element))
     for element in level.getElementsByTagName("playerBlocks")[0].childNodes:
         if element.nodeType == 1: #1 = ELEMENT_NODE
-            if(element.getElementsByTagName("goalBlock")[0].firstChild.toxml() == "true"):
-                goal_pieces.append(pieceDomToStruct(element))
-            else:
-                design_pieces.append(pieceDomToStruct(element))
+            is_goal = False
+            try:
+                is_goal = element.getElementsByTagName("goalBlock")[0].firstChild.toxml() == "true"
+            except IndexError as err:
+                warnings.warn(f'Will assume piece is not goal piece due to error: {err}', XMLBadDataWarning)
+            (design_pieces, goal_pieces)[is_goal].append(pieceDomToStruct(element))
     # get areas
     build_area = pieceDomToStruct(level.getElementsByTagName("start")[0])
     goal_area = pieceDomToStruct(level.getElementsByTagName("end")[0])
