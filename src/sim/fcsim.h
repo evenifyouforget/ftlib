@@ -69,28 +69,20 @@ struct joint {
 	bool generated;
 	block* block1;
 	block* block2;
-	joint* next;
 };
 
-// list of "joints" that are joined together to form 1 joint-ish ("joint stack")
-struct joint_collection {
+struct joint_stack {
 	double x, y;
 	block* top_block;
-	joint* joints_head;
-	joint* joints_tail;
+	std::shared_ptr<std::vector<joint>> joints;
 };
 
-// linked list node for list of joint stacks which this body is a member of
-struct joint_collection_list {
-	joint_collection* jc;
-	joint_collection_list* next;
-};
+typedef std::vector<joint_stack> joint_stack_list;
 
 struct block {
 	fcsim_block_def bdef;
 	b2Body* body; // not managed by us
-	joint_collection_list* jcs_head;
-	joint_collection_list* jcs_tail;
+	joint_stack_list joints;
 };
 
 struct ft_sim_state {
