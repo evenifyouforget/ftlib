@@ -109,14 +109,14 @@ std::shared_ptr<ft_sim_state> fcsim_new(std::shared_ptr<ft_sim_state> handle, co
 void fcsim_step(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings&);
 
 template <typename T> void add_unique(std::vector<T>& vec, const T& el) {
-	for (int i = 0; i < vec.size(); ++i) {
+	for (size_t i = 0; i < vec.size(); ++i) {
 		if (vec[i] == el) { return; }
 	}
 	vec.push_back(el);
 }
 
 template <typename T> void delete_all(std::vector<T*>& vec) {
-	for (int i = 0; i < vec.size(); ++i) {
+	for (size_t i = 0; i < vec.size(); ++i) {
 		delete vec[i];
 	}
 }
