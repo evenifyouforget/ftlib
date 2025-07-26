@@ -4,23 +4,23 @@
 #include "ftmath.h"
 
 ft_sim_state::~ft_sim_state() {
-	// std::vector<joint_collection_list*> uj2;
-	// std::vector<joint_collection*> uj1;
-	// std::vector<joint*> uj0;
-	// // clean up joints
-	// for (int i = 0; i < blocks.size(); i++) {
-	// 	block* b = &(blocks[i]);
-	// 	for (joint_collection_list* l = b->jcs_head; l; l = l->next) {
-	// 		add_unique(uj2, l);
-	// 		add_unique(uj1, l->jc);
-	// 		for (joint* j = l->jc->joints_head; j; j = j->next) {
-	// 			add_unique(uj0, j);
-	// 		}
-	// 	}
-	// }
-	// delete_all(uj2);
-	// delete_all(uj1);
-	// delete_all(uj0);
+	std::vector<joint_collection_list*> uj2;
+	std::vector<joint_collection*> uj1;
+	std::vector<joint*> uj0;
+	// clean up joints
+	for (int i = 0; i < blocks.size(); i++) {
+		block* b = &(blocks[i]);
+		for (joint_collection_list* l = b->jcs_head; l; l = l->next) {
+			add_unique(uj2, l);
+			add_unique(uj1, l->jc);
+			for (joint* j = l->jc->joints_head; j; j = j->next) {
+				add_unique(uj0, j);
+			}
+		}
+	}
+	delete_all(uj2);
+	delete_all(uj1);
+	delete_all(uj0);
 	// clean up world data
 	world->CleanBodyList();
 	delete world;
@@ -35,19 +35,13 @@ class collision_filter : public b2CollisionFilter {
 		block* b1 = (block*)s1->GetUserData();
 		block* b2 = (block*)s2->GetUserData();
 
-		for(auto& jc1 : b1->joints) {
-			for(auto& jc2 : b2->joints) {
-				if(jc1.joints == jc2.joints) return false;
+		joint_collection_list* j1, * j2;
+		for (j1 = b1->jcs_head; j1; j1 = j1->next) {
+			for (j2 = b2->jcs_head; j2; j2 = j2->next) {
+				if (j1->jc == j2->jc)
+					return false;
 			}
 		}
-
-		// joint_collection_list* j1, * j2;
-		// for (j1 = b1->jcs_head; j1; j1 = j1->next) {
-		// 	for (j2 = b2->jcs_head; j2; j2 = j2->next) {
-		// 		if (j1->jc == j2->jc)
-		// 			return false;
-		// 	}
-		// }
 
 		return true;
 	}
@@ -186,22 +180,22 @@ static double distance(double x1, double y1, double x2, double y2)
 	return ft_sqrt(ft_add(ft_mul(dx, dx), ft_mul(dy, dy)));
 }
 
-//default initialized == null
-static joint_stack get_closest_jc(const std::shared_ptr<ft_sim_state> handle, double x, double y, fcsim_block_def bdef)
+static joint_collection* get_closest_jc(const std::shared_ptr<ft_sim_state> handle, double x, double y, fcsim_block_def bdef)
 {
 	//double best_dist = 10000000.0;
 	double best_dist = 10.0;
-	joint_stack res;
+	joint_collection* res = NULL;
 
-	for (int i = 0; i < 2 && bdef.joints[i] != FCSIM_NO_JOINT; i++) {
+	for (int i = 0; i < 2; i++) {
+		if (bdef.joints[i] == FCSIM_NO_JOINT)break;
 		block* b = find_block_by_id(handle, bdef.joints[i]);
 		if (!b)
 			continue;
-		for (auto& jc : b->joints) {
-			double dist = distance(x, y, jc.x, jc.y);
+		for (joint_collection_list* j = b->jcs_head; j; j = j->next) {
+			double dist = distance(x, y, j->jc->x, j->jc->y);
 			if (dist < best_dist) {
 				best_dist = dist;
-				res = jc;
+				res = j->jc;
 			}
 		}
 	}
@@ -220,13 +214,13 @@ void get_rod_endpoints(fcsim_block_def bdef, double* x0, double* y0, double* x1,
 	*y1 = ft_add(bdef.y, sw);
 }
 
-bool share_block(const std::shared_ptr<ft_sim_state> handle, const joint_stack jc0, const joint_stack jc1)
+int share_block(const std::shared_ptr<ft_sim_state> handle, const joint_collection* jc0, const joint_collection* jc1)
 {
 	for (int i = 0; i < handle->blocks.size(); i++) {
 		bool f0 = false, f1 = false;
-		for (auto& jc : handle->blocks[i].joints) {
-			if (jc.joints == jc0.joints) f0 = true;
-			if (jc.joints == jc1.joints) f1 = true;
+		for (joint_collection_list* j = handle->blocks[i].jcs_head; j; j = j->next) {
+			if (j->jc == jc0) f0 = true;
+			if (j->jc == jc1) f1 = true;
 		}
 		if (f0 && f1) return true;
 	}
@@ -242,15 +236,26 @@ static int joint_type(int block_type)
 	return JOINT_PIN;
 }
 
-static joint_stack_list create_joint(block* b, double x, double y)
+static joint_collection_list* create_joint(block* b, double x, double y)
 {
-	joint_stack jc;
-	jc.x = x;
-	jc.y = y;
-	jc.top_block = b;
+	joint_collection* jc = new joint_collection;
+	jc->x = x;
+	jc->y = y;
+	jc->top_block = b;
+	jc->joints_head = NULL;
+	jc->joints_tail = NULL;
 
-	joint_stack_list jcl;
-	jcl.push_back(jc);
+	joint_collection_list* jcl = new joint_collection_list;
+	jcl->jc = jc;
+	jcl->next = NULL;
+
+	if (b->jcs_tail) {
+		b->jcs_tail->next = jcl;
+		b->jcs_tail = jcl;
+	} else {
+		b->jcs_head = jcl;
+		b->jcs_tail = jcl;
+	}
 
 	return jcl;
 }
@@ -264,25 +269,25 @@ static int joint_type(const block* b)
 	return JOINT_PIN;
 }
 
-static bool is_singular_wheel_center(joint_stack jc)
+static bool is_singular_wheel_center(const joint_collection* jc)
 {
-	if (jc.joints->size() > 0)
+	if (jc->joints_head)
 		return false;
 
-	if (!is_wheel(jc.top_block))
+	if (!is_wheel(jc->top_block))
 		return false;
 
-	return jc.x == jc.top_block->bdef.x &&
-		jc.y == jc.top_block->bdef.y;
+	return jc->x == jc->top_block->bdef.x &&
+		jc->y == jc->top_block->bdef.y;
 }
 
-static int get_joint_type(const block* b, joint_stack jc)
+static int get_joint_type(const block* b, const joint_collection* jc)
 {
-	block* top = jc.top_block;
+	block* top = jc->top_block;
 	int type;
 
 	if (is_singular_wheel_center(jc))
-		type = joint_type(jc.top_block);
+		type = joint_type(jc->top_block);
 	else
 		type = joint_type(b);
 
@@ -292,33 +297,52 @@ static int get_joint_type(const block* b, joint_stack jc)
 	return type;
 }
 
-static void replace_joint(block* b, std::size_t idx, joint_stack new_js)
+static joint_collection_list* jcl_swap(joint_collection_list* jcl)
 {
-    auto& joints = b->joints;
-    if (idx >= joints.size()) return;
+	joint_collection_list* new_jcl = jcl->next;
 
-    joints[idx] = new_js;
+	if (!new_jcl)
+		return jcl;
 
-    if (idx + 1 < joints.size()) {
-        std::swap(joints[idx], joints[idx + 1]);
-        idx = idx + 1;
-    }
+	jcl->next = new_jcl->next;
+	new_jcl->next = jcl;
 
-    joint j;
-    auto& stack = joints[idx];
-    j.x = stack.x;
-    j.y = stack.y;
-    j.type = get_joint_type(b, stack);
-    j.generated = false;
-    j.block1 = stack.top_block;
-    j.block2 = b;
+	return new_jcl;
+}
 
-    if (!stack.joints)
-        stack.joints = std::make_shared<std::vector<joint>>();
+static void replace_joint(block* b, joint_collection_list* jcl, joint_collection* jc)
+{
+	delete jcl->jc;
+	jcl->jc = jc;
 
-    stack.joints->push_back(j);
+	if (b->jcs_head == jcl) {
+		b->jcs_head = jcl_swap(b->jcs_head);
+	} else {
+		for (joint_collection_list* l = b->jcs_head; l; l = l->next) {
+			if (l->next == jcl) {
+				l->next = jcl_swap(l->next);
+				break;
+			}
+		}
+	}
 
-    stack.top_block = b;
+	joint* j = new joint;
+	j->x = jc->x;
+	j->y = jc->y;
+	j->type = get_joint_type(b, jc);
+	j->generated = false;
+	j->block1 = jc->top_block;
+	j->block2 = b;
+	j->next = NULL;
+
+	jc->top_block = b;
+	if (jc->joints_tail) {
+		jc->joints_tail->next = j;
+		jc->joints_tail = j;
+	} else {
+		jc->joints_head = j;
+		jc->joints_tail = j;
+	}
 }
 
 static void create_rod_joints(block* b, const std::shared_ptr<ft_sim_state> handle)
@@ -327,20 +351,20 @@ static void create_rod_joints(block* b, const std::shared_ptr<ft_sim_state> hand
 	double x0, y0, x1, y1;
 
 	get_rod_endpoints(bdef, &x0, &y0, &x1, &y1);
-	joint_stack jc0 = get_closest_jc(handle, x0, y0, bdef);
-	joint_stack jc1 = get_closest_jc(handle, x1, y1, bdef);
+	joint_collection* jc0 = get_closest_jc(handle, x0, y0, bdef);
+	joint_collection* jc1 = get_closest_jc(handle, x1, y1, bdef);
 
-	if (jc0.joints != NULL && jc1.joints != NULL && share_block(handle, jc0, jc1))
-		jc1.joints = NULL;
+	if (jc0 && jc1 && share_block(handle, jc0, jc1))
+		jc1 = NULL;
 
-	if (jc0.joints != NULL) {
-		x0 = jc0.x;
-		y0 = jc0.y;
+	if (jc0) {
+		x0 = jc0->x;
+		y0 = jc0->y;
 	}
 
-	if (jc1.joints != NULL) {
-		x1 = jc1.x;
-		y1 = jc1.y;
+	if (jc1) {
+		x1 = jc1->x;
+		y1 = jc1->y;
 	}
 
 	bdef.angle = ft_atan2(ft_sub(y1, y0), ft_sub(x1, x0));
@@ -348,14 +372,14 @@ static void create_rod_joints(block* b, const std::shared_ptr<ft_sim_state> hand
 	bdef.x = ft_add(x0, ft_div(ft_sub(x1, x0), 2.0));
 	bdef.y = ft_add(y0, ft_div(ft_sub(y1, y0), 2.0));
 
-	joint_stack_list jcl0 = create_joint(b, x0, y0);
-	joint_stack_list jcl1 = create_joint(b, x1, y1);
+	joint_collection_list* jcl0 = create_joint(b, x0, y0);
+	joint_collection_list* jcl1 = create_joint(b, x1, y1);
 
-	if (jc0.joints != NULL)
-		replace_joint(b, 0, jc0);
+	if (jc0)
+		replace_joint(b, jcl0, jc0);
 
-	if (jc1.joints != NULL)
-		replace_joint(b, 1, jc1);
+	if (jc1)
+		replace_joint(b, jcl1, jc1);
 }
 
 
@@ -367,10 +391,10 @@ static void create_wheel_joints(block* b, const std::shared_ptr<ft_sim_state> ha
 	double y = bdef.y;
 	double r = ft_div(bdef.w, 2);
 
-	joint_stack jc = get_closest_jc(handle, x, y, bdef);
-	if (jc.joints != NULL) {
-		x = bdef.x = jc.x;
-		y = bdef.y = jc.y;
+	joint_collection* jc = get_closest_jc(handle, x, y, bdef);
+	if (jc) {
+		x = bdef.x = jc->x;
+		y = bdef.y = jc->y;
 	}
 
 	double a[4] = {
@@ -380,14 +404,14 @@ static void create_wheel_joints(block* b, const std::shared_ptr<ft_sim_state> ha
 		4.71238898038469,
 	};
 
-	joint_stack_list jcl = create_joint(b, bdef.x, bdef.y);
+	joint_collection_list* jcl = create_joint(b, bdef.x, bdef.y);
 	for (int i = 0; i < 4; i++) {
 		create_joint(b, ft_add(x, ft_mul(ft_cos(ft_add(bdef.angle, a[i])), r)),
 			ft_add(y, ft_mul(ft_sin(ft_add(bdef.angle, a[i])), r)));
 	}
 
-	if (jc.joints != NULL)
-		replace_joint(b, 0, jc);
+	if (jc)
+		replace_joint(b, jcl, jc);
 }
 
 static void create_goal_rect_joints(block* b)
@@ -479,9 +503,9 @@ std::shared_ptr<ft_sim_state> fcsim_new(std::shared_ptr<ft_sim_state> handle, co
 
 	for (int i = 0; i < handle->blocks.size(); i++) {
 		block* b = &handle->blocks[i];
-		for (auto& jc : b->joints) {
-			for (auto& j : *jc.joints)
-				generate_joint(handle->world, &j);
+		for (joint_collection_list* l = b->jcs_head; l; l = l->next) {
+			for (joint* j = l->jc->joints_head; j; j = j->next)
+				generate_joint(handle->world, j);
 		}
 	}
 
