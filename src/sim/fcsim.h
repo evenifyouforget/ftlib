@@ -24,6 +24,7 @@ struct fcsim_piece_type {
 	};
 };
 
+const uint16_t FCSIM_NO_ID = 65535;
 const uint16_t FCSIM_NO_JOINT = 65535;
 
 inline bool type_is_player(int t) {
