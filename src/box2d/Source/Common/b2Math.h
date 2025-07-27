@@ -45,7 +45,7 @@ inline float64 b2InvSqrt(float64 x)
 struct b2Vec2
 {
 	b2Vec2() {}
-	b2Vec2(float64 x, float64 y) : x(x), y(y) {}
+	b2Vec2(float64 x_, float64 y_) : x(x_), y(y_) {}
 
 	void SetZero() { x = 0.0; y = 0.0; }
 	void Set(float64 x_, float64 y_) { x = x_; y = y_; }
