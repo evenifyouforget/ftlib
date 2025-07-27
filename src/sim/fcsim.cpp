@@ -35,20 +35,18 @@ class collision_filter : public b2CollisionFilter {
 
 		ft_block* b1 = static_cast<ft_block*>(s1->GetUserData());
 		ft_block* b2 = static_cast<ft_block*>(s2->GetUserData());
-		ft_design* design = b1->design;
 
-		for(const auto& jc : design->joints) {
-			bool has_b1 = false;
-			bool has_b2 = false;
-			for(const auto& joint : jc.joints) {
-				if(&(design->design_blocks[joint.block_idx]) == b1) has_b1 = true;
-				if(&(design->design_blocks[joint.block_idx]) == b2) has_b2 = true;
-				if(has_b1 && has_b2) {
-					return false;
-				}
+		for(uint16_t js_idx1 : b1->joint_stack_idxs) {
+			if(js_idx1 == FCSIM_NO_JOINT_STACK) goto checked_for_intersection;
+
+			for(uint16_t js_idx2 : b2->joint_stack_idxs) {
+				if(js_idx2 == FCSIM_NO_JOINT_STACK) goto checked_for_intersection;
+
+				if(js_idx1 == js_idx2) return false;
 			}
 		}
 
+		checked_for_intersection:
 		return true;
 	}
 };
@@ -144,18 +142,18 @@ static bool is_goal_object(fcsim_piece_type::type type)
 	}
 }
 
-static bool is_wheel(fcsim_piece_type::type type)
-{
-	switch (type) {
-	case fcsim_piece_type::GP_CIRC:
-	case fcsim_piece_type::UPW:
-	case fcsim_piece_type::CW:
-	case fcsim_piece_type::CCW:
-		return true;
-	default:
-		return false;
-	}
-}
+// static bool is_wheel(fcsim_piece_type::type type)
+// {
+// 	switch (type) {
+// 	case fcsim_piece_type::GP_CIRC:
+// 	case fcsim_piece_type::UPW:
+// 	case fcsim_piece_type::CW:
+// 	case fcsim_piece_type::CCW:
+// 		return true;
+// 	default:
+// 		return false;
+// 	}
+// }
 
 static bool is_player(fcsim_piece_type::type type)
 {
@@ -700,7 +698,7 @@ uint16_t get_closest_joint_stack(const ft_design& design, double x, double y, fc
 
 	for(size_t i = 0; i < 2; i++) {
 		if (bdef.joints[i] == FCSIM_NO_JOINT) break;
-		const ft_block& b = design.design_blocks[bdef.joints[i]]; //TODO: check if block id is valid?
+		//TODO: check if block id is valid?
 		for(uint16_t j = 0; j < design.joints.size(); j++) {
 			const ft_joint_stack& js = design.joints[j];
 			for(uint16_t k = 0; k < js.joints.size(); k++) {
@@ -759,11 +757,12 @@ void create_joint(ft_design& design, fcsim_block_def bdef, size_t js_idx, double
 		.joint_idx = joint_idx, //not size - 1 because its not added yet
 	});
 
-	ft_block& block = design.level_blocks[bdef.id];
+	ft_block& block = design.design_blocks[bdef.id];
 	for(size_t i = 0; i < 5; i++) {
 		if(block.joint_stack_idxs[i] != FCSIM_NO_JOINT_STACK) continue;
 		block.joint_stack_idxs[i] = joint_stack_idx;
 		block.joint_idxs[i] = joint_idx;
+		break;
 	}
 }
 

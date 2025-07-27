@@ -10,7 +10,7 @@ void print_design(const ft_design_spec& spec) {
     printf("LEVEL BLOCKS:\n");
     for(const auto& block : design.level_blocks) {
         printf("\tidx: %d, type: %d, x: %f, y: %f, w: %f, h: %f, angle: %f,"
-            " joint_stack_idxs: {%d, %d, %d, %d, %d}, joint_idxs: {%d, %d, %d, %d, %d}",
+            " joint_stack_idxs: {%d, %d, %d, %d, %d}, joint_idxs: {%d, %d, %d, %d, %d}\n",
             block.block_idx,
             block.type,
             block.x,
@@ -25,7 +25,7 @@ void print_design(const ft_design_spec& spec) {
     printf("DESIGN BLOCKS:\n");
     for(const auto& block : design.design_blocks) {
         printf("\tidx: %d, type: %d, x: %f, y: %f, w: %f, h: %f, angle: %f,"
-            " joint_stack_idxs: {%d, %d, %d, %d, %d}, joint_idxs: {%d, %d, %d, %d, %d}",
+            " joint_stack_idxs: {%d, %d, %d, %d, %d}, joint_idxs: {%d, %d, %d, %d, %d}\n",
             block.block_idx,
             block.type,
             block.x,
@@ -57,7 +57,7 @@ int main() {
     //get the example design
     ft_design_spec design = make_the_design();
 
-    // print_design(design);
+    print_design(design);
 
     //create the handle and setings
     std::shared_ptr<ft_sim_state> handle;
