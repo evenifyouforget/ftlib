@@ -24,8 +24,9 @@ struct fcsim_piece_type {
 	};
 };
 
-const uint16_t FCSIM_NO_ID = 65535;
-const uint16_t FCSIM_NO_JOINT = 65535;
+const uint16_t FCSIM_NO_ID = -1;
+const uint16_t FCSIM_NO_JOINT = -1;
+const uint16_t FCSIM_NO_JOINT_STACK = -1;
 
 inline bool type_is_player(int t) {
 	return t >= fcsim_piece_type::GP_RECT;
@@ -51,6 +52,37 @@ struct ft_design_spec {
 	fcsim_rect build;
 	fcsim_rect goal;
 };
+
+//designed to be reasonable and possible to edit
+struct ft_block {
+	fcsim_piece_type::type type;
+	double x, y;
+	double w, h;
+	double angle;
+};
+
+struct ft_joint {
+	uint16_t block_idx; //index into design.design_blocks
+	// uint16_t block_joint_idx;
+};
+
+struct ft_joint_stack {
+	std::vector<ft_joint> joints;
+	double x;
+	double y;
+};
+
+struct ft_design {
+	std::vector<ft_block> level_blocks;
+	//blocks which can be moved by the player
+	//index into design_blocks = block id
+	std::vector<ft_block> design_blocks;
+	std::vector<ft_joint_stack> joints;
+	fcsim_rect build;
+	fcsim_rect goal;
+};
+
+std::unique_ptr<ft_design> create_design(const ft_design_spec& spec);
 
 #define ARENA_WIDTH	2000
 #define ARENA_HEIGHT	1450

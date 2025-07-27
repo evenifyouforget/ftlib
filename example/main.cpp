@@ -3,10 +3,54 @@
 #include "sim/fcsim.h"
 #include "example_design.h"
 
+void print_design(const ft_design_spec& spec) {
+    std::unique_ptr<ft_design> design = create_design(spec);
+
+    printf("LEVEL BLOCKS:\n");
+    for(const auto& block : design->level_blocks) {
+        printf("type: %d, x: %f, y: %f, w: %f, h: %f, angle: %f\n",
+            block.type,
+            block.x,
+            block.y,
+            block.w,
+            block.h,
+            block.angle);
+    }
+    
+    printf("DESIGN BLOCKS:\n");
+    for(int i = 0; i < design->design_blocks.size(); i++) {
+        const auto& block = design->design_blocks[i];
+        printf("id: %d, type: %d, x: %f, y: %f, w: %f, h: %f, angle: %f\n",
+            i,
+            block.type,
+            block.x,
+            block.y,
+            block.w,
+            block.h,
+            block.angle);
+    }
+
+    printf("JOINTS:\n");
+    for(const auto& js : design->joints) {
+        printf("joint stack: x: %f, y: %f\n", js.x, js.y);
+        for(const auto& joint : js.joints) {
+            printf("block_idx: %d\n", joint.block_idx);
+        }
+    }
+
+    printf("BUILD: x: %f, y: %f, w: %f, h: %f\n",
+        spec.build.x, spec.build.y, spec.build.w, spec.build.h);
+    
+    printf("GOAL: x: %f, y: %f, w: %f, h: %f\n",
+        spec.goal.x, spec.goal.y, spec.goal.w, spec.goal.h);
+}
+
 // extremely low level (not for human use) program to run a single design, and see if it solves
 int main() {
     //get the example design
     ft_design_spec design = make_the_design();
+
+    // print_design(design);
 
     //create the handle and setings
     std::shared_ptr<ft_sim_state> handle;
