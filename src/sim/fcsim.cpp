@@ -743,18 +743,28 @@ bool share_block(const ft_joint_stack& js1, const ft_joint_stack& js2) {
 //if js_idx == design.joints.size(), a new joint stack is added
 //js_x and js_y are optional, only relevant if js_idx == design.joints.size()
 void create_joint(ft_design& design, fcsim_block_def bdef, size_t js_idx, double js_x = 0., double js_y = 0.) {
+	uint16_t joint_stack_idx = static_cast<uint16_t>(js_idx);
 	if(js_idx == design.joints.size()) {
 		design.joints.emplace_back(ft_joint_stack{
-			.joint_stack_idx = static_cast<uint16_t>(js_idx),
+			.joint_stack_idx = joint_stack_idx,
 			.x = js_x,
 			.y = js_y
 		});
 	}
+	uint16_t joint_idx = design.joints[js_idx].joints.size();
+
 	design.joints[js_idx].joints.emplace_back(ft_joint{
 		.block_idx = bdef.id, 
-		.joint_stack_idx = static_cast<uint16_t>(js_idx),
-		.joint_idx = static_cast<uint16_t>(design.joints[js_idx].joints.size()) //not size - 1 because its not added yet
+		.joint_stack_idx = joint_stack_idx,
+		.joint_idx = joint_idx, //not size - 1 because its not added yet
 	});
+
+	ft_block& block = design.level_blocks[bdef.id];
+	for(size_t i = 0; i < 5; i++) {
+		if(block.joint_stack_idxs[i] != FCSIM_NO_JOINT_STACK) continue;
+		block.joint_stack_idxs[i] = joint_stack_idx;
+		block.joint_idxs[i] = joint_idx;
+	}
 }
 
 void create_rod_joints(ft_design& design, fcsim_block_def bdef) {
@@ -875,6 +885,9 @@ void create_design (ft_design* design, const ft_design_spec& spec) {
 			.h = spec.blocks[i].h,
 			.angle = spec.blocks[i].angle,
 			.design = design,
+			//joints initialized in create_joints
+			.joint_stack_idxs = {FCSIM_NO_JOINT_STACK, FCSIM_NO_JOINT_STACK, FCSIM_NO_JOINT_STACK, FCSIM_NO_JOINT_STACK, FCSIM_NO_JOINT_STACK},
+			.joint_idxs = {FCSIM_NO_JOINT, FCSIM_NO_JOINT, FCSIM_NO_JOINT, FCSIM_NO_JOINT, FCSIM_NO_JOINT},
 		};
 		if (is_player(spec.blocks[i].type)) {
 			design->design_blocks.push_back(ftb);

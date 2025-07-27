@@ -63,8 +63,8 @@ struct ft_block {
 	double w, h;
 	double angle;
 	ft_design* design;
-	// uint16_t joint_stack_idxs[2]; //indexes into design.joints which contain this block's joint stacks
-	// uint16_t joint_idxs[2]; //indexes into this js.joints which contains this block's joints
+	uint16_t joint_stack_idxs[5]; //indexes into design.joints which contain this block's joint stacks
+	uint16_t joint_idxs[5]; //indexes into this js.joints which contains this block's joints
 
 	b2Body* body; // not managed by us
 };

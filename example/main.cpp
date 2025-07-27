@@ -9,26 +9,32 @@ void print_design(const ft_design_spec& spec) {
 
     printf("LEVEL BLOCKS:\n");
     for(const auto& block : design.level_blocks) {
-        printf("\ttype: %d, x: %f, y: %f, w: %f, h: %f, angle: %f\n",
+        printf("\tidx: %d, type: %d, x: %f, y: %f, w: %f, h: %f, angle: %f,"
+            " joint_stack_idxs: {%d, %d, %d, %d, %d}, joint_idxs: {%d, %d, %d, %d, %d}",
+            block.block_idx,
             block.type,
             block.x,
             block.y,
             block.w,
             block.h,
-            block.angle);
+            block.angle,
+            block.joint_stack_idxs[0], block.joint_stack_idxs[1], block.joint_stack_idxs[2], block.joint_stack_idxs[3], block.joint_stack_idxs[4], 
+            block.joint_idxs[0], block.joint_idxs[1], block.joint_idxs[2], block.joint_idxs[3], block.joint_idxs[4]);
     }
     
     printf("DESIGN BLOCKS:\n");
-    for(size_t i = 0; i < design.design_blocks.size(); i++) {
-        const auto& block = design.design_blocks[i];
-        printf("\tid: %lu, type: %d, x: %f, y: %f, w: %f, h: %f, angle: %f\n",
-            i,
+    for(const auto& block : design.design_blocks) {
+        printf("\tidx: %d, type: %d, x: %f, y: %f, w: %f, h: %f, angle: %f,"
+            " joint_stack_idxs: {%d, %d, %d, %d, %d}, joint_idxs: {%d, %d, %d, %d, %d}",
+            block.block_idx,
             block.type,
             block.x,
             block.y,
             block.w,
             block.h,
-            block.angle);
+            block.angle,
+            block.joint_stack_idxs[0], block.joint_stack_idxs[1], block.joint_stack_idxs[2], block.joint_stack_idxs[3], block.joint_stack_idxs[4], 
+            block.joint_idxs[0], block.joint_idxs[1], block.joint_idxs[2], block.joint_idxs[3], block.joint_idxs[4]);
     }
 
     printf("JOINTS:\n");
