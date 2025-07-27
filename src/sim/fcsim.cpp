@@ -510,7 +510,7 @@ void generate_body(b2World* world, ft_block& block) {
 }
 
 //only generate joints from the 2nd joint onwards in a joint stack!!!
-void generate_joint(b2World* world, ft_design& design, ft_joint_stack& js, ft_joint& joint) {
+void generate_joint(b2World* world, ft_design& design, ft_joint_stack& js, ft_joint& joint) { //TODO: make sure this is the correct joint ordering behavior
 	if(joint.joint != nullptr) {
 		return;
 	}
@@ -528,19 +528,19 @@ void generate_joint(b2World* world, ft_design& design, ft_joint_stack& js, ft_jo
 	joint_def.anchorPoint.Set(js.x, js.y);
 	joint_def.collideConnected = true;
 	
-	// int jt = JOINT_PIN; //jt is CW or CCW if either block is CW or CCW
-	// int jt1 = joint_type(block1.type);
-	// if(jt1 != JOINT_PIN) {
-	// 	jt = jt1;
-	// } else {
-	// 	jt = joint_type(block2.type);
-	// }
+	int jt = JOINT_PIN;
+	int jt1 = joint_type(block1.type);
+	if(jt1 != JOINT_PIN) {
+		jt = jt1;
+	} else {
+		jt = -joint_type(block2.type); //negative because block1 and block2 are jointed in the opposite order as in the first case
+	}
 
-	// if (jt != JOINT_PIN) {
-	// 	joint_def.motorTorque = 50000000;
-	// 	joint_def.motorSpeed = -5 * jt;
-	// 	joint_def.enableMotor = true;
-	// }
+	if (jt != JOINT_PIN) {
+		joint_def.motorTorque = 50000000;
+		joint_def.motorSpeed = -5 * jt;
+		joint_def.enableMotor = true;
+	}
 	world->CreateJoint(&joint_def);
 }
 
