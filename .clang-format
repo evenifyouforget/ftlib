@@ -1,0 +1,11 @@
+﻿---
+BasedOnStyle: LLVM
+ColumnLimit: '100'
+IndentWidth: '4'
+PointerAlignment: Left
+SortIncludes: 'true'
+SpaceBeforeParens: ControlStatements
+TabWidth: '4'
+UseTab: Never
+
+...

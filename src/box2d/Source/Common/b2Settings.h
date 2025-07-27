@@ -29,7 +29,8 @@ bool& get_assertmem_flag();
 void b2logmsg(const char*);
 #define _b2AssertLogOnce(A, b, msg) if(!(A)) {if(!b()){b()=true;b2logmsg(msg);}}
 
-#define NOT_USED(x) x
+//#define NOT_USED(x) x
+#define NOT_USED(x) //old define threw a bunch of warnings. idk why it was like that
 //#define b2Assert(A) assert((A))
 #define b2Assert(A) _b2AssertLogOnce(A, get_assert_flag, "other error: " #A "\n")
 #define b2AssertMemory(A) _b2AssertLogOnce(A, get_assertmem_flag, "memory error: " #A "\n")

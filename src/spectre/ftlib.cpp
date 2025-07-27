@@ -170,7 +170,7 @@ std::string ft_math_hash() {
     {
         xs_reset();
         uint64_t h = 0;
-        for (int i = 0; i < MH_ITERATIONS; ++i) {
+        for (uint64_t i = 0; i < MH_ITERATIONS; ++i) {
             uint64_t ui = xs_next();
             uint64_t vi = xs_next();
             double u = _as_double(ui);
@@ -196,7 +196,7 @@ std::string ft_math_hash() {
     {
         xs_reset();
         uint64_t h = 0;
-        for (int i = 0; i < MH_ITERATIONS; ++i) {
+        for (uint64_t i = 0; i < MH_ITERATIONS; ++i) {
             uint64_t ui = xs_next();
             uint64_t vi = xs_next();
             double u = _as_double(ui);
@@ -218,7 +218,7 @@ std::string ft_math_hash() {
     {
         xs_reset();
         uint64_t h = 0;
-        for (int i = 0; i < MH_ITERATIONS; ++i) {
+        for (uint64_t i = 0; i < MH_ITERATIONS; ++i) {
             uint64_t ui = xs_next();
             uint64_t vi = xs_next();
             double u = _as_double(ui);
@@ -240,7 +240,7 @@ std::string ft_math_hash() {
     {
         xs_reset();
         uint64_t h = 0;
-        for (int i = 0; i < MH_ITERATIONS; ++i) {
+        for (uint64_t i = 0; i < MH_ITERATIONS; ++i) {
             uint64_t ui = xs_next();
             uint64_t vi = xs_next();
             double u = _as_double(ui);
@@ -262,7 +262,7 @@ std::string ft_math_hash() {
     {
         xs_reset();
         uint64_t h = 0;
-        for (int i = 0; i < MH_ITERATIONS; ++i) {
+        for (uint64_t i = 0; i < MH_ITERATIONS; ++i) {
             uint64_t vi = xs_next();
             double v = _as_double(vi);
             hash_combine(h, _as_int(ft_sqrt(v)));
@@ -279,7 +279,7 @@ std::string ft_math_hash() {
     {
         xs_reset();
         uint64_t h = 0;
-        for (int i = 0; i < MH_ITERATIONS; ++i) {
+        for (uint64_t i = 0; i < MH_ITERATIONS; ++i) {
             uint64_t vi = xs_next();
             double v = _as_double(vi);
             hash_combine(h, _as_int(ft_sin(v)));
@@ -300,7 +300,7 @@ std::string ft_math_hash() {
     {
         xs_reset();
         uint64_t h = 0;
-        for (int i = 0; i < MH_ITERATIONS; ++i) {
+        for (uint64_t i = 0; i < MH_ITERATIONS; ++i) {
             uint64_t vi = xs_next();
             double v = _as_double(vi);
             hash_combine(h, _as_int(ft_sin(v)));
@@ -317,7 +317,7 @@ std::string ft_math_hash() {
     {
         xs_reset();
         uint64_t h = 0;
-        for (int i = 0; i < MH_ITERATIONS; ++i) {
+        for (uint64_t i = 0; i < MH_ITERATIONS; ++i) {
             uint64_t vi = xs_next();
             double v = _as_double(vi);
             hash_combine(h, _as_int(ft_cos(v)));
@@ -334,7 +334,7 @@ std::string ft_math_hash() {
     {
         xs_reset();
         uint64_t h = 0;
-        for (int i = 0; i < MH_ITERATIONS; ++i) {
+        for (uint64_t i = 0; i < MH_ITERATIONS; ++i) {
             uint64_t ui = xs_next();
             uint64_t vi = xs_next();
             double u = _as_double(ui);
@@ -356,7 +356,7 @@ std::string ft_math_hash() {
     {
         xs_reset();
         uint64_t h = 0;
-        for (int i = 0; i < MH_ITERATIONS; ++i) {
+        for (uint64_t i = 0; i < MH_ITERATIONS; ++i) {
             uint64_t vi = xs_next();
             double v = _as_double(vi);
             hash_combine(h, ft_dtostr(v));
@@ -373,7 +373,7 @@ std::string ft_math_hash() {
     {
         xs_reset();
         uint64_t h = 0;
-        for (int i = 0; i < MH_ITERATIONS; ++i) {
+        for (uint64_t i = 0; i < MH_ITERATIONS; ++i) {
             uint64_t vi = xs_next();
             double v = _as_double(vi);
             check_dtostrtod(h, v);
