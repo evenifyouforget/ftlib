@@ -9,7 +9,7 @@ void print_design(const ft_design_spec& spec) {
 
     printf("LEVEL BLOCKS:\n");
     for(const auto& block : design.level_blocks) {
-        printf("type: %d, x: %f, y: %f, w: %f, h: %f, angle: %f\n",
+        printf("\ttype: %d, x: %f, y: %f, w: %f, h: %f, angle: %f\n",
             block.type,
             block.x,
             block.y,
@@ -21,7 +21,7 @@ void print_design(const ft_design_spec& spec) {
     printf("DESIGN BLOCKS:\n");
     for(size_t i = 0; i < design.design_blocks.size(); i++) {
         const auto& block = design.design_blocks[i];
-        printf("id: %lu, type: %d, x: %f, y: %f, w: %f, h: %f, angle: %f\n",
+        printf("\tid: %lu, type: %d, x: %f, y: %f, w: %f, h: %f, angle: %f\n",
             i,
             block.type,
             block.x,
@@ -32,10 +32,11 @@ void print_design(const ft_design_spec& spec) {
     }
 
     printf("JOINTS:\n");
-    for(const auto& js : design.joints) {
-        printf("joint stack: x: %f, y: %f\n", js.x, js.y);
+    for(size_t i = 0; i < design.joints.size(); i++) {
+        const ft_joint_stack& js = design.joints[i];
+        printf("\tjoint stack: id: %lu, x: %f, y: %f\n", i, js.x, js.y);
         for(const auto& joint : js.joints) {
-            printf("block_idx: %d\n", joint.block_idx);
+            printf("\t\tblock_idx: %d, joint_stack_idx: %d, joint_idx: %d\n", joint.block_idx, joint.joint_stack_idx, joint.joint_idx);
         }
     }
 
@@ -50,7 +51,7 @@ int main() {
     //get the example design
     ft_design_spec design = make_the_design();
 
-    // print_design(design);
+    print_design(design);
 
     //create the handle and setings
     std::shared_ptr<ft_sim_state> handle;
