@@ -6,13 +6,13 @@
 #include <vector>
 #include "box2d/Include/Box2D.h"
 
-struct fcsim_rect {
+struct ft_rect {
 	double x, y;
 	double w, h;
 };
 
 //intentionally in the same order as the render enum, so they can be converted back and forth, and the render bindings can be used for this
-struct fcsim_piece_type {
+struct ft_piece_type {
 	enum type : uint16_t {
 		STATIC_RECT,
 		STATIC_CIRC,
@@ -29,18 +29,18 @@ struct fcsim_piece_type {
 	};
 };
 
-bool is_goal_object(fcsim_piece_type::type type);
-bool is_circle(fcsim_piece_type::type type); //any circle
-bool is_wheel(fcsim_piece_type::type type); //only circles which can be moved by the player
-bool is_player_movable(fcsim_piece_type::type type);
-bool is_player_deletable(fcsim_piece_type::type type);
+bool ft_is_goal_object(ft_piece_type::type type);
+bool ft_is_circle(ft_piece_type::type type); //any circle
+bool ft_is_wheel(ft_piece_type::type type); //only circles which can be moved by the player
+bool ft_is_player_movable(ft_piece_type::type type);
+bool ft_is_player_deletable(ft_piece_type::type type);
 
-const uint16_t FCSIM_NO_ID = std::numeric_limits<uint16_t>::max();
-const uint16_t FCSIM_NO_JOINT = std::numeric_limits<uint16_t>::max();
-const uint16_t FCSIM_NO_JOINT_STACK = std::numeric_limits<uint16_t>::max();
+const uint16_t FT_NO_ID = std::numeric_limits<uint16_t>::max();
+const uint16_t FT_NO_JOINT = std::numeric_limits<uint16_t>::max();
+const uint16_t FT_NO_JOINT_STACK = std::numeric_limits<uint16_t>::max();
 
 struct fcsim_block_def {
-	fcsim_piece_type::type type;
+	ft_piece_type::type type;
 	uint16_t id;
 	double x, y;
 	double w, h;
@@ -52,8 +52,8 @@ struct fcsim_block_def {
 //a "design spec": a pretty direct translation of design xml
 struct ft_design_spec {
 	std::vector<fcsim_block_def> blocks;
-	fcsim_rect build;
-	fcsim_rect goal;
+	ft_rect build;
+	ft_rect goal;
 };
 
 // a design which can be created from a spec, intended to be possible to edit and easier to simulate
@@ -62,7 +62,7 @@ struct ft_design;
 //a single level or design object in a design
 struct ft_block {
 	uint16_t block_idx;
-	fcsim_piece_type::type type;
+	ft_piece_type::type type;
 	double x, y;
 	double w, h;
 	double angle;
@@ -83,7 +83,7 @@ struct fcsim_joint_type {
 	};
 };
 
-fcsim_joint_type::type joint_type(fcsim_piece_type::type block_type);
+fcsim_joint_type::type joint_type(ft_piece_type::type block_type);
 
 //a joint jointing this block with the previous block in the joint stack
 struct ft_joint {
@@ -108,13 +108,13 @@ struct ft_joint_stack {
 struct ft_design {
 	std::vector<ft_block> level_blocks; //blocks which can't be moved by the player
 	std::vector<ft_block> design_blocks; //blocks which can be moved by the player. index into design_blocks = block idx = block id
-	std::vector<ft_joint_stack> joints;
-	fcsim_rect build;
-	fcsim_rect goal;
+	std::vector<ft_joint_stack> joint_stacks;
+	ft_rect build;
+	ft_rect goal;
 };
 
 //make the design from the spec
-void create_design(ft_design* design, const ft_design_spec& spec);
+void ft_create_design(ft_design* design, const ft_design_spec& spec);
 
 const double ARENA_WIDTH = 2000;
 const double ARENA_HEIGHT = 1450;
@@ -134,15 +134,15 @@ struct ft_sim_settings {
 };
 
 //make a ft_sim_state from a spec and settings
-std::shared_ptr<ft_sim_state> fcsim_new(std::shared_ptr<ft_sim_state> handle, const ft_design_spec& spec, const ft_sim_settings& settings);
+std::shared_ptr<ft_sim_state> ft_create_sim(std::shared_ptr<ft_sim_state> handle, const ft_design_spec& spec, const ft_sim_settings& settings);
 
 //step the sim state forward 1 tick
-void fcsim_step(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings& settings);
+void ft_step_sim(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings& settings);
 
 //check if a block is within an area
-bool fcsim_in_area(const ft_block& block, const fcsim_rect& area);
+bool ft_in_area(const ft_block& block, const ft_rect& area);
 
 //check if a design has solved (if all the gps are within the goal)
-bool fcsim_is_solved(const std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec);
+bool ft_is_solved(const std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec);
 
 #endif

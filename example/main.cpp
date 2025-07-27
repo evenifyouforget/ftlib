@@ -5,7 +5,7 @@
 
 void print_design(const ft_design_spec& spec) {
     ft_design design;
-    create_design(&design, spec);
+    ft_create_design(&design, spec);
 
     printf("LEVEL BLOCKS:\n");
     for(const auto& block : design.level_blocks) {
@@ -38,8 +38,8 @@ void print_design(const ft_design_spec& spec) {
     }
 
     printf("JOINTS:\n");
-    for(size_t i = 0; i < design.joints.size(); i++) {
-        const ft_joint_stack& js = design.joints[i];
+    for(size_t i = 0; i < design.joint_stacks.size(); i++) {
+        const ft_joint_stack& js = design.joint_stacks[i];
         printf("\tjoint stack: id: %lu, x: %f, y: %f\n", i, js.x, js.y);
         for(const auto& joint : js.joints) {
             printf("\t\tblock_idx: %d, joint_stack_idx: %d, joint_idx: %d\n", joint.block_idx, joint.joint_stack_idx, joint.joint_idx);
@@ -64,11 +64,11 @@ int main() {
     ft_sim_settings settings;
 
     //initialize the handle
-    handle = fcsim_new(handle, design, settings);
+    handle = ft_create_sim(handle, design, settings);
 
     //step the simulation until it solves
-    while(!fcsim_is_solved(handle, design)) {
-        fcsim_step(handle, settings);
+    while(!ft_is_solved(handle, design)) {
+        ft_step_sim(handle, settings);
     }
 
     //behold: a solve

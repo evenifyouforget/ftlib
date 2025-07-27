@@ -5,11 +5,11 @@
 std::istream& operator>>(std::istream& is, fcsim_block_def& block) {
     int64_t block_type;
     is >> block_type >> block.id >> block.x >> block.y >> block.w >> block.h >> block.angle >> block.joints[0] >> block.joints[1];
-    block.type = static_cast<fcsim_piece_type::type>(block_type);
+    block.type = static_cast<ft_piece_type::type>(block_type);
     return is;
 }
 
-std::istream& operator>>(std::istream& is, fcsim_rect& rect) {
+std::istream& operator>>(std::istream& is, ft_rect& rect) {
     return is >> rect.x >> rect.y >> rect.w >> rect.h;
 }
 
@@ -36,11 +36,11 @@ int main() {
     // run up to max ticks
     std::shared_ptr<ft_sim_state> handle;
     ft_sim_settings settings;
-    handle = fcsim_new(handle, design, settings);
+    handle = ft_create_sim(handle, design, settings);
     int64_t solve_tick = -1;
     while(handle->tick != max_ticks) {
-        fcsim_step(handle, settings);
-        if(fcsim_is_solved(handle, design)) {
+        ft_step_sim(handle, settings);
+        if(ft_is_solved(handle, design)) {
             // stop early on solve
             solve_tick = handle->tick;
             break;
