@@ -4,10 +4,11 @@
 #include "example_design.h"
 
 void print_design(const ft_design_spec& spec) {
-    std::unique_ptr<ft_design> design = create_design(spec);
+    ft_design design;
+    create_design(&design, spec);
 
     printf("LEVEL BLOCKS:\n");
-    for(const auto& block : design->level_blocks) {
+    for(const auto& block : design.level_blocks) {
         printf("type: %d, x: %f, y: %f, w: %f, h: %f, angle: %f\n",
             block.type,
             block.x,
@@ -18,9 +19,9 @@ void print_design(const ft_design_spec& spec) {
     }
     
     printf("DESIGN BLOCKS:\n");
-    for(int i = 0; i < design->design_blocks.size(); i++) {
-        const auto& block = design->design_blocks[i];
-        printf("id: %d, type: %d, x: %f, y: %f, w: %f, h: %f, angle: %f\n",
+    for(size_t i = 0; i < design.design_blocks.size(); i++) {
+        const auto& block = design.design_blocks[i];
+        printf("id: %lu, type: %d, x: %f, y: %f, w: %f, h: %f, angle: %f\n",
             i,
             block.type,
             block.x,
@@ -31,7 +32,7 @@ void print_design(const ft_design_spec& spec) {
     }
 
     printf("JOINTS:\n");
-    for(const auto& js : design->joints) {
+    for(const auto& js : design.joints) {
         printf("joint stack: x: %f, y: %f\n", js.x, js.y);
         for(const auto& joint : js.joints) {
             printf("block_idx: %d\n", joint.block_idx);
@@ -45,7 +46,6 @@ void print_design(const ft_design_spec& spec) {
         spec.goal.x, spec.goal.y, spec.goal.w, spec.goal.h);
 }
 
-// extremely low level (not for human use) program to run a single design, and see if it solves
 int main() {
     //get the example design
     ft_design_spec design = make_the_design();

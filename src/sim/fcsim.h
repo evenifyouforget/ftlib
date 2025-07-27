@@ -53,17 +53,22 @@ struct ft_design_spec {
 	fcsim_rect goal;
 };
 
+struct ft_design;
+
 //designed to be reasonable and possible to edit
 struct ft_block {
 	fcsim_piece_type::type type;
 	double x, y;
 	double w, h;
 	double angle;
+	b2Body* body; // not managed by us
+	ft_design* design;
 };
 
 struct ft_joint {
 	uint16_t block_idx; //index into design.design_blocks
 	// uint16_t block_joint_idx;
+	b2Joint* joint; // not managed by us
 };
 
 struct ft_joint_stack {
@@ -82,7 +87,7 @@ struct ft_design {
 	fcsim_rect goal;
 };
 
-std::unique_ptr<ft_design> create_design(const ft_design_spec& spec);
+void create_design(ft_design* design, const ft_design_spec& spec);
 
 #define ARENA_WIDTH	2000
 #define ARENA_HEIGHT	1450
@@ -128,7 +133,7 @@ struct block {
 
 struct ft_sim_state {
 	b2World* world;
-	std::vector<block> blocks;
+	ft_design design;
 	int tick = 0;
 	~ft_sim_state();
 };

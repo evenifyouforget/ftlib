@@ -5,23 +5,23 @@
 #include <unordered_set>
 
 ft_sim_state::~ft_sim_state() {
-	std::vector<joint_collection_list*> uj2;
-	std::vector<joint_collection*> uj1;
-	std::vector<joint*> uj0;
-	// clean up joints
-	for (size_t i = 0; i < blocks.size(); i++) {
-		block* b = &(blocks[i]);
-		for (joint_collection_list* l = b->jcs_head; l; l = l->next) {
-			add_unique(uj2, l);
-			add_unique(uj1, l->jc);
-			for (joint* j = l->jc->joints_head; j; j = j->next) {
-				add_unique(uj0, j);
-			}
-		}
-	}
-	delete_all(uj2);
-	delete_all(uj1);
-	delete_all(uj0);
+	// std::vector<joint_collection_list*> uj2;
+	// std::vector<joint_collection*> uj1;
+	// std::vector<joint*> uj0;
+	// // clean up joints
+	// for (size_t i = 0; i < blocks.size(); i++) {
+	// 	block* b = &(blocks[i]);
+	// 	for (joint_collection_list* l = b->jcs_head; l; l = l->next) {
+	// 		add_unique(uj2, l);
+	// 		add_unique(uj1, l->jc);
+	// 		for (joint* j = l->jc->joints_head; j; j = j->next) {
+	// 			add_unique(uj0, j);
+	// 		}
+	// 	}
+	// }
+	// delete_all(uj2);
+	// delete_all(uj1);
+	// delete_all(uj0);
 	// clean up world data
 	world->CleanBodyList();
 	delete world;
@@ -33,14 +33,19 @@ class collision_filter : public b2CollisionFilter {
 		if (!b2_defaultFilter.ShouldCollide(s1, s2))
 			return false;
 
-		block* b1 = (block*)s1->GetUserData();
-		block* b2 = (block*)s2->GetUserData();
+		ft_block* b1 = static_cast<ft_block*>(s1->GetUserData());
+		ft_block* b2 = static_cast<ft_block*>(s2->GetUserData());
+		ft_design* design = b1->design;
 
-		joint_collection_list* j1, * j2;
-		for (j1 = b1->jcs_head; j1; j1 = j1->next) {
-			for (j2 = b2->jcs_head; j2; j2 = j2->next) {
-				if (j1->jc == j2->jc)
+		for(const auto& jc : design->joints) {
+			bool has_b1 = false;
+			bool has_b2 = false;
+			for(const auto& joint : jc.joints) {
+				if(&(design->design_blocks[joint.block_idx]) == b1) has_b1 = true;
+				if(&(design->design_blocks[joint.block_idx]) == b2) has_b2 = true;
+				if(has_b1 && has_b2) {
 					return false;
+				}
 			}
 		}
 
@@ -78,54 +83,54 @@ static struct block_physics block_physics_tbl[] = {
 	{  0, 1.0, 0.7, 0.2, 256, -17, 0.009, 0.2 }, /* SOLID_ROD */
 };
 
-static void generate_body(b2World* world, block* b)
-{
-	fcsim_block_def bdef = b->bdef;
-	block_physics phys = block_physics_tbl[bdef.type];
-	b2BoxDef box_def;
-	b2CircleDef circle_def;
-	b2ShapeDef* shape_def;
-	b2BodyDef body_def;
+// static void generate_body(b2World* world, block* b)
+// {
+// 	fcsim_block_def bdef = b->bdef;
+// 	block_physics phys = block_physics_tbl[bdef.type];
+// 	b2BoxDef box_def;
+// 	b2CircleDef circle_def;
+// 	b2ShapeDef* shape_def;
+// 	b2BodyDef body_def;
 
-	if (phys.circle) {
-		circle_def.radius = ft_mul(bdef.w, 0.5);
-		shape_def = &circle_def;
-	} else {
-		box_def.extents.Set(ft_mul(bdef.w, 0.5), ft_mul(bdef.h, 0.5));
-		shape_def = &box_def;
-	}
-	shape_def->density = phys.density;
-	shape_def->friction = phys.friction;
-	shape_def->restitution = phys.restitution;
-	shape_def->categoryBits = phys.categoryBits;
-	shape_def->maskBits = phys.maskBits;
-	shape_def->userData = b;
-	body_def.position.Set(bdef.x, bdef.y);
-	body_def.rotation = bdef.angle;
-	body_def.linearDamping = phys.linearDamping;
-	body_def.angularDamping = phys.angularDamping;
-	body_def.AddShape(shape_def);
-	b->body = world->CreateBody(&body_def);
-}
+// 	if (phys.circle) {
+// 		circle_def.radius = ft_mul(bdef.w, 0.5);
+// 		shape_def = &circle_def;
+// 	} else {
+// 		box_def.extents.Set(ft_mul(bdef.w, 0.5), ft_mul(bdef.h, 0.5));
+// 		shape_def = &box_def;
+// 	}
+// 	shape_def->density = phys.density;
+// 	shape_def->friction = phys.friction;
+// 	shape_def->restitution = phys.restitution;
+// 	shape_def->categoryBits = phys.categoryBits;
+// 	shape_def->maskBits = phys.maskBits;
+// 	shape_def->userData = b;
+// 	body_def.position.Set(bdef.x, bdef.y);
+// 	body_def.rotation = bdef.angle;
+// 	body_def.linearDamping = phys.linearDamping;
+// 	body_def.angularDamping = phys.angularDamping;
+// 	body_def.AddShape(shape_def);
+// 	b->body = world->CreateBody(&body_def);
+// }
 
-static void generate_joint(b2World* world, joint* j)
-{
-	if (j->generated)
-		return;
-	j->generated = true;
+// static void generate_joint(b2World* world, joint* j)
+// {
+// 	if (j->generated)
+// 		return;
+// 	j->generated = true;
 
-	b2RevoluteJointDef joint_def;
-	joint_def.body1 = j->block1->body;
-	joint_def.body2 = j->block2->body;
-	joint_def.anchorPoint.Set(j->x, j->y);
-	joint_def.collideConnected = true;
-	if (j->type != JOINT_PIN) {
-		joint_def.motorTorque = 50000000;
-		joint_def.motorSpeed = -5 * j->type;
-		joint_def.enableMotor = true;
-	}
-	world->CreateJoint(&joint_def);
-}
+// 	b2RevoluteJointDef joint_def;
+// 	joint_def.body1 = j->block1->body;
+// 	joint_def.body2 = j->block2->body;
+// 	joint_def.anchorPoint.Set(j->x, j->y);
+// 	joint_def.collideConnected = true;
+// 	if (j->type != JOINT_PIN) {
+// 		joint_def.motorTorque = 50000000;
+// 		joint_def.motorSpeed = -5 * j->type;
+// 		joint_def.enableMotor = true;
+// 	}
+// 	world->CreateJoint(&joint_def);
+// }
 
 
 static bool is_goal_object(fcsim_piece_type::type type)
@@ -167,14 +172,14 @@ static bool is_player(fcsim_piece_type::type type)
 
 
 
-static block* find_block_by_id(const std::shared_ptr<ft_sim_state> handle, uint16_t id)
-{
-	for (size_t i = 0; i < handle->blocks.size(); i++) {
-		if (handle->blocks[i].bdef.id == id)
-			return &handle->blocks[i];
-	}
-	return NULL;
-}
+// static block* find_block_by_id(const std::shared_ptr<ft_sim_state> handle, uint16_t id)
+// {
+// 	for (size_t i = 0; i < handle->blocks.size(); i++) {
+// 		if (handle->blocks[i].bdef.id == id)
+// 			return &handle->blocks[i];
+// 	}
+// 	return NULL;
+// }
 
 static double distance(double x1, double y1, double x2, double y2)
 {
@@ -184,28 +189,28 @@ static double distance(double x1, double y1, double x2, double y2)
 	return ft_sqrt(ft_add(ft_mul(dx, dx), ft_mul(dy, dy)));
 }
 
-static joint_collection* get_closest_jc(const std::shared_ptr<ft_sim_state> handle, double x, double y, fcsim_block_def bdef)
-{
-	//double best_dist = 10000000.0;
-	double best_dist = 10.0;
-	joint_collection* res = NULL;
+// static joint_collection* get_closest_jc(const std::shared_ptr<ft_sim_state> handle, double x, double y, fcsim_block_def bdef)
+// {
+// 	//double best_dist = 10000000.0;
+// 	double best_dist = 10.0;
+// 	joint_collection* res = NULL;
 
-	for (size_t i = 0; i < 2; i++) {
-		if (bdef.joints[i] == FCSIM_NO_JOINT)break;
-		block* b = find_block_by_id(handle, bdef.joints[i]);
-		if (!b)
-			continue;
-		for (joint_collection_list* j = b->jcs_head; j; j = j->next) {
-			double dist = distance(x, y, j->jc->x, j->jc->y);
-			if (dist < best_dist) {
-				best_dist = dist;
-				res = j->jc;
-			}
-		}
-	}
+// 	for (size_t i = 0; i < 2; i++) {
+// 		if (bdef.joints[i] == FCSIM_NO_JOINT)break;
+// 		block* b = find_block_by_id(handle, bdef.joints[i]);
+// 		if (!b)
+// 			continue;
+// 		for (joint_collection_list* j = b->jcs_head; j; j = j->next) {
+// 			double dist = distance(x, y, j->jc->x, j->jc->y);
+// 			if (dist < best_dist) {
+// 				best_dist = dist;
+// 				res = j->jc;
+// 			}
+// 		}
+// 	}
 
-	return res;
-}
+// 	return res;
+// }
 
 void get_rod_endpoints(fcsim_block_def bdef, double* x0, double* y0, double* x1, double* y1)
 {
@@ -218,18 +223,18 @@ void get_rod_endpoints(fcsim_block_def bdef, double* x0, double* y0, double* x1,
 	*y1 = ft_add(bdef.y, sw);
 }
 
-bool share_block(const std::shared_ptr<ft_sim_state> handle, const joint_collection* jc0, const joint_collection* jc1)
-{
-	for (size_t i = 0; i < handle->blocks.size(); i++) {
-		bool f0 = false, f1 = false;
-		for (joint_collection_list* j = handle->blocks[i].jcs_head; j; j = j->next) {
-			if (j->jc == jc0) f0 = true;
-			if (j->jc == jc1) f1 = true;
-		}
-		if (f0 && f1) return true;
-	}
-	return false;
-}
+// bool share_block(const std::shared_ptr<ft_sim_state> handle, const joint_collection* jc0, const joint_collection* jc1)
+// {
+// 	for (size_t i = 0; i < handle->blocks.size(); i++) {
+// 		bool f0 = false, f1 = false;
+// 		for (joint_collection_list* j = handle->blocks[i].jcs_head; j; j = j->next) {
+// 			if (j->jc == jc0) f0 = true;
+// 			if (j->jc == jc1) f1 = true;
+// 		}
+// 		if (f0 && f1) return true;
+// 	}
+// 	return false;
+// }
 
 static int joint_type(fcsim_piece_type::type block_type)
 {
@@ -240,29 +245,29 @@ static int joint_type(fcsim_piece_type::type block_type)
 	}
 }
 
-static joint_collection_list* create_joint(block* b, double x, double y)
-{
-	joint_collection* jc = new joint_collection;
-	jc->x = x;
-	jc->y = y;
-	jc->top_block = b;
-	jc->joints_head = NULL;
-	jc->joints_tail = NULL;
+// static joint_collection_list* create_joint(block* b, double x, double y)
+// {
+// 	joint_collection* jc = new joint_collection;
+// 	jc->x = x;
+// 	jc->y = y;
+// 	jc->top_block = b;
+// 	jc->joints_head = NULL;
+// 	jc->joints_tail = NULL;
 
-	joint_collection_list* jcl = new joint_collection_list;
-	jcl->jc = jc;
-	jcl->next = NULL;
+// 	joint_collection_list* jcl = new joint_collection_list;
+// 	jcl->jc = jc;
+// 	jcl->next = NULL;
 
-	if (b->jcs_tail) {
-		b->jcs_tail->next = jcl;
-		b->jcs_tail = jcl;
-	} else {
-		b->jcs_head = jcl;
-		b->jcs_tail = jcl;
-	}
+// 	if (b->jcs_tail) {
+// 		b->jcs_tail->next = jcl;
+// 		b->jcs_tail = jcl;
+// 	} else {
+// 		b->jcs_head = jcl;
+// 		b->jcs_tail = jcl;
+// 	}
 
-	return jcl;
-}
+// 	return jcl;
+// }
 
 static bool is_singular_wheel_center(const joint_collection* jc)
 {
@@ -291,182 +296,252 @@ static int get_joint_type(const block* b, const joint_collection* jc)
 	return type;
 }
 
-static joint_collection_list* jcl_swap(joint_collection_list* jcl)
-{
-	joint_collection_list* new_jcl = jcl->next;
+// static joint_collection_list* jcl_swap(joint_collection_list* jcl)
+// {
+// 	joint_collection_list* new_jcl = jcl->next;
 
-	if (!new_jcl)
-		return jcl;
+// 	if (!new_jcl)
+// 		return jcl;
 
-	jcl->next = new_jcl->next;
-	new_jcl->next = jcl;
+// 	jcl->next = new_jcl->next;
+// 	new_jcl->next = jcl;
 
-	return new_jcl;
-}
+// 	return new_jcl;
+// }
 
-static void replace_joint(block* b, joint_collection_list* jcl, joint_collection* jc)
-{
-	delete jcl->jc;
-	jcl->jc = jc;
+// static void replace_joint(block* b, joint_collection_list* jcl, joint_collection* jc)
+// {
+// 	delete jcl->jc;
+// 	jcl->jc = jc;
 
-	if (b->jcs_head == jcl) {
-		b->jcs_head = jcl_swap(b->jcs_head);
+// 	if (b->jcs_head == jcl) {
+// 		b->jcs_head = jcl_swap(b->jcs_head);
+// 	} else {
+// 		for (joint_collection_list* l = b->jcs_head; l; l = l->next) {
+// 			if (l->next == jcl) {
+// 				l->next = jcl_swap(l->next);
+// 				break;
+// 			}
+// 		}
+// 	}
+
+// 	joint* j = new joint;
+// 	j->x = jc->x;
+// 	j->y = jc->y;
+// 	j->type = get_joint_type(b, jc);
+// 	j->generated = false;
+// 	j->block1 = jc->top_block;
+// 	j->block2 = b;
+// 	j->next = NULL;
+
+// 	jc->top_block = b;
+// 	if (jc->joints_tail) {
+// 		jc->joints_tail->next = j;
+// 		jc->joints_tail = j;
+// 	} else {
+// 		jc->joints_head = j;
+// 		jc->joints_tail = j;
+// 	}
+// }
+
+// static void create_rod_joints(block* b, const std::shared_ptr<ft_sim_state> handle)
+// {
+// 	fcsim_block_def bdef = b->bdef;
+// 	double x0, y0, x1, y1;
+
+// 	get_rod_endpoints(bdef, &x0, &y0, &x1, &y1);
+// 	joint_collection* jc0 = get_closest_jc(handle, x0, y0, bdef);
+// 	joint_collection* jc1 = get_closest_jc(handle, x1, y1, bdef);
+
+// 	if (jc0 && jc1 && share_block(handle, jc0, jc1))
+// 		jc1 = NULL;
+
+// 	if (jc0) {
+// 		x0 = jc0->x;
+// 		y0 = jc0->y;
+// 	}
+
+// 	if (jc1) {
+// 		x1 = jc1->x;
+// 		y1 = jc1->y;
+// 	}
+
+// 	bdef.angle = ft_atan2(ft_sub(y1, y0), ft_sub(x1, x0));
+// 	bdef.w = distance(x0, y0, x1, y1);
+// 	bdef.x = ft_add(x0, ft_div(ft_sub(x1, x0), 2.0));
+// 	bdef.y = ft_add(y0, ft_div(ft_sub(y1, y0), 2.0));
+
+// 	joint_collection_list* jcl0 = create_joint(b, x0, y0);
+// 	joint_collection_list* jcl1 = create_joint(b, x1, y1);
+
+// 	if (jc0)
+// 		replace_joint(b, jcl0, jc0);
+
+// 	if (jc1)
+// 		replace_joint(b, jcl1, jc1);
+// }
+
+
+
+// static void create_wheel_joints(block* b, const std::shared_ptr<ft_sim_state> handle)
+// {
+// 	fcsim_block_def bdef = b->bdef;
+// 	double x = bdef.x;
+// 	double y = bdef.y;
+// 	double r = ft_div(bdef.w, 2);
+
+// 	joint_collection* jc = get_closest_jc(handle, x, y, bdef);
+// 	if (jc) {
+// 		x = bdef.x = jc->x;
+// 		y = bdef.y = jc->y;
+// 	}
+
+// 	double a[4] = {
+// 		0.0,
+// 		3.141592653589793 / 2,
+// 		3.141592653589793,
+// 		4.71238898038469,
+// 	};
+
+// 	joint_collection_list* jcl = create_joint(b, bdef.x, bdef.y);
+// 	for (size_t i = 0; i < 4; i++) {
+// 		create_joint(b, ft_add(x, ft_mul(ft_cos(ft_add(bdef.angle, a[i])), r)),
+// 			ft_add(y, ft_mul(ft_sin(ft_add(bdef.angle, a[i])), r)));
+// 	}
+
+// 	if (jc)
+// 		replace_joint(b, jcl, jc);
+// }
+
+// static void create_goal_rect_joints(block* b)
+// {
+// 	fcsim_block_def bdef = b->bdef;
+// 	double x = bdef.x;
+// 	double y = bdef.y;
+// 	double w_half = ft_div(bdef.w, 2);
+// 	double h_half = ft_div(bdef.h, 2);
+
+// 	double x0 = ft_mul(ft_cos(bdef.angle), w_half);
+// 	double y0 = ft_mul(ft_sin(bdef.angle), w_half);
+// 	double x1 = ft_mul(ft_sin(bdef.angle), h_half);
+// 	double y1 = ft_mul(-ft_cos(bdef.angle), h_half);
+
+// 	create_joint(b, x, y);
+// 	create_joint(b, ft_add(ft_add(x, x0), x1), ft_add(ft_add(y, y0), y1));
+// 	create_joint(b, ft_add(ft_sub(x, x0), x1), ft_add(ft_sub(y, y0), y1));
+// 	create_joint(b, ft_sub(ft_add(x, x0), x1), ft_sub(ft_add(y, y0), y1));
+// 	create_joint(b, ft_sub(ft_sub(x, x0), x1), ft_sub(ft_sub(y, y0), y1));
+// }
+
+// static void create_joints(block* b, const std::shared_ptr<ft_sim_state> handle)
+// {
+// 	switch (b->bdef.type) {
+// 	case fcsim_piece_type::GP_RECT:
+// 		create_goal_rect_joints(b);
+// 		return;
+// 	case fcsim_piece_type::GP_CIRC:
+// 	case fcsim_piece_type::UPW:
+// 	case fcsim_piece_type::CW:
+// 	case fcsim_piece_type::CCW:
+// 		create_wheel_joints(b, handle);
+// 		return;
+// 	case fcsim_piece_type::WATER:
+// 	case fcsim_piece_type::WOOD:
+// 		create_rod_joints(b, handle);
+// 		return;
+// 	default:
+// 		return;
+// 	}
+// }
+
+// void add_block(const std::shared_ptr<ft_sim_state> handle, fcsim_block_def bdef)
+// {
+// 	handle->blocks.emplace_back();
+// 	block* block = &handle->blocks.back();
+
+// 	/* TODO: deal with this somewhere else */
+// 	/*
+// 	if (bdef.type == FCSIM_STATIC_CIRC || bdef.type == FCSIM_DYNAMIC_CIRC) {
+// 		bdef.w = ft_mul(bdef.w, 2);
+// 		bdef.h = ft_mul(bdef.h, 2);
+// 	}
+// 	if (bdef.type == FCSIM_DYNAMIC_CIRC) {
+// 		bdef.angle = 0;
+// 	}
+// 	*/
+// 	block->bdef = bdef;
+
+// 	create_joints(block, handle);
+// }
+
+void generate_body(b2World* world, ft_block& block) {
+	if(block.body != nullptr) {
+		return;
+	}
+
+	block_physics phys = block_physics_tbl[block.type];
+
+	b2BoxDef box_def;
+	b2CircleDef circle_def;
+	b2ShapeDef* shape_def;
+	b2BodyDef body_def;
+
+	if (phys.circle) {
+		circle_def.radius = ft_mul(block.w, 0.5);
+		shape_def = &circle_def;
 	} else {
-		for (joint_collection_list* l = b->jcs_head; l; l = l->next) {
-			if (l->next == jcl) {
-				l->next = jcl_swap(l->next);
-				break;
-			}
-		}
+		box_def.extents.Set(ft_mul(block.w, 0.5), ft_mul(block.h, 0.5));
+		shape_def = &box_def;
 	}
 
-	joint* j = new joint;
-	j->x = jc->x;
-	j->y = jc->y;
-	j->type = get_joint_type(b, jc);
-	j->generated = false;
-	j->block1 = jc->top_block;
-	j->block2 = b;
-	j->next = NULL;
+	shape_def->density = phys.density;
+	shape_def->friction = phys.friction;
+	shape_def->restitution = phys.restitution;
+	shape_def->categoryBits = phys.categoryBits;
+	shape_def->maskBits = phys.maskBits;
+	shape_def->userData = &block;
 
-	jc->top_block = b;
-	if (jc->joints_tail) {
-		jc->joints_tail->next = j;
-		jc->joints_tail = j;
+	body_def.position.Set(block.x, block.y);
+	body_def.rotation = block.angle;
+	body_def.linearDamping = phys.linearDamping;
+	body_def.angularDamping = phys.angularDamping;
+	body_def.AddShape(shape_def);
+	block.body = world->CreateBody(&body_def);
+}
+
+//only generate joints from the 2nd joint onwards in a joint stack!!!
+void generate_joint(b2World* world, ft_design& design, ft_joint_stack& js, ft_joint& joint) {
+	if(joint.joint != nullptr) {
+		return;
+	}
+
+	if(joint.block_idx == 0) {
+		return;
+	}
+
+	ft_block block1 = design.design_blocks[joint.block_idx];
+	ft_block block2 = design.design_blocks[joint.block_idx - 1];
+
+	b2RevoluteJointDef joint_def;
+	joint_def.body1 = design.design_blocks[joint.block_idx].body;
+	joint_def.body2 = design.design_blocks[joint.block_idx - 1].body;
+	joint_def.anchorPoint.Set(js.x, js.y);
+	joint_def.collideConnected = true;
+	
+	int jt = JOINT_PIN; //jt is CW or CCW if either block is CW or CCW
+	int jt1 = joint_type(block1.type);
+	if(jt1 != JOINT_PIN) {
+		jt = jt1;
 	} else {
-		jc->joints_head = j;
-		jc->joints_tail = j;
-	}
-}
-
-static void create_rod_joints(block* b, const std::shared_ptr<ft_sim_state> handle)
-{
-	fcsim_block_def bdef = b->bdef;
-	double x0, y0, x1, y1;
-
-	get_rod_endpoints(bdef, &x0, &y0, &x1, &y1);
-	joint_collection* jc0 = get_closest_jc(handle, x0, y0, bdef);
-	joint_collection* jc1 = get_closest_jc(handle, x1, y1, bdef);
-
-	if (jc0 && jc1 && share_block(handle, jc0, jc1))
-		jc1 = NULL;
-
-	if (jc0) {
-		x0 = jc0->x;
-		y0 = jc0->y;
+		jt = joint_type(block2.type);
 	}
 
-	if (jc1) {
-		x1 = jc1->x;
-		y1 = jc1->y;
+	if (jt != JOINT_PIN) {
+		joint_def.motorTorque = 50000000;
+		joint_def.motorSpeed = -5 * jt;
+		joint_def.enableMotor = true;
 	}
-
-	bdef.angle = ft_atan2(ft_sub(y1, y0), ft_sub(x1, x0));
-	bdef.w = distance(x0, y0, x1, y1);
-	bdef.x = ft_add(x0, ft_div(ft_sub(x1, x0), 2.0));
-	bdef.y = ft_add(y0, ft_div(ft_sub(y1, y0), 2.0));
-
-	joint_collection_list* jcl0 = create_joint(b, x0, y0);
-	joint_collection_list* jcl1 = create_joint(b, x1, y1);
-
-	if (jc0)
-		replace_joint(b, jcl0, jc0);
-
-	if (jc1)
-		replace_joint(b, jcl1, jc1);
-}
-
-
-
-static void create_wheel_joints(block* b, const std::shared_ptr<ft_sim_state> handle)
-{
-	fcsim_block_def bdef = b->bdef;
-	double x = bdef.x;
-	double y = bdef.y;
-	double r = ft_div(bdef.w, 2);
-
-	joint_collection* jc = get_closest_jc(handle, x, y, bdef);
-	if (jc) {
-		x = bdef.x = jc->x;
-		y = bdef.y = jc->y;
-	}
-
-	double a[4] = {
-		0.0,
-		3.141592653589793 / 2,
-		3.141592653589793,
-		4.71238898038469,
-	};
-
-	joint_collection_list* jcl = create_joint(b, bdef.x, bdef.y);
-	for (size_t i = 0; i < 4; i++) {
-		create_joint(b, ft_add(x, ft_mul(ft_cos(ft_add(bdef.angle, a[i])), r)),
-			ft_add(y, ft_mul(ft_sin(ft_add(bdef.angle, a[i])), r)));
-	}
-
-	if (jc)
-		replace_joint(b, jcl, jc);
-}
-
-static void create_goal_rect_joints(block* b)
-{
-	fcsim_block_def bdef = b->bdef;
-	double x = bdef.x;
-	double y = bdef.y;
-	double w_half = ft_div(bdef.w, 2);
-	double h_half = ft_div(bdef.h, 2);
-
-	double x0 = ft_mul(ft_cos(bdef.angle), w_half);
-	double y0 = ft_mul(ft_sin(bdef.angle), w_half);
-	double x1 = ft_mul(ft_sin(bdef.angle), h_half);
-	double y1 = ft_mul(-ft_cos(bdef.angle), h_half);
-
-	create_joint(b, x, y);
-	create_joint(b, ft_add(ft_add(x, x0), x1), ft_add(ft_add(y, y0), y1));
-	create_joint(b, ft_add(ft_sub(x, x0), x1), ft_add(ft_sub(y, y0), y1));
-	create_joint(b, ft_sub(ft_add(x, x0), x1), ft_sub(ft_add(y, y0), y1));
-	create_joint(b, ft_sub(ft_sub(x, x0), x1), ft_sub(ft_sub(y, y0), y1));
-}
-
-static void create_joints(block* b, const std::shared_ptr<ft_sim_state> handle)
-{
-	switch (b->bdef.type) {
-	case fcsim_piece_type::GP_RECT:
-		create_goal_rect_joints(b);
-		return;
-	case fcsim_piece_type::GP_CIRC:
-	case fcsim_piece_type::UPW:
-	case fcsim_piece_type::CW:
-	case fcsim_piece_type::CCW:
-		create_wheel_joints(b, handle);
-		return;
-	case fcsim_piece_type::WATER:
-	case fcsim_piece_type::WOOD:
-		create_rod_joints(b, handle);
-		return;
-	default:
-		return;
-	}
-}
-
-void add_block(const std::shared_ptr<ft_sim_state> handle, fcsim_block_def bdef)
-{
-	handle->blocks.emplace_back();
-	block* block = &handle->blocks.back();
-
-	/* TODO: deal with this somewhere else */
-	/*
-	if (bdef.type == FCSIM_STATIC_CIRC || bdef.type == FCSIM_DYNAMIC_CIRC) {
-		bdef.w = ft_mul(bdef.w, 2);
-		bdef.h = ft_mul(bdef.h, 2);
-	}
-	if (bdef.type == FCSIM_DYNAMIC_CIRC) {
-		bdef.angle = 0;
-	}
-	*/
-	block->bdef = bdef;
-
-	create_joints(block, handle);
+	world->CreateJoint(&joint_def);
 }
 
 std::shared_ptr<ft_sim_state> fcsim_new(std::shared_ptr<ft_sim_state> handle, const ft_design_spec& arena, const ft_sim_settings& settings)
@@ -482,26 +557,31 @@ std::shared_ptr<ft_sim_state> fcsim_new(std::shared_ptr<ft_sim_state> handle, co
 	handle->world = new b2World(aabb, gravity, true);
 	handle->world->SetFilter(&fcsim_collision_filter);
 
-	handle->blocks.reserve(arena.blocks.size());
+	// handle->blocks.reserve(arena.blocks.size());
 
-	for (size_t i = 0; i < arena.blocks.size(); i++) {
-		if (is_player(arena.blocks[i].type))
-			add_block(handle, arena.blocks[i]);
-	}
+	// for (size_t i = 0; i < arena.blocks.size(); i++) {
+	// 	if (is_player(arena.blocks[i].type))
+	// 		add_block(handle, arena.blocks[i]);
+	// }
 
-	for (size_t i = 0; i < arena.blocks.size(); i++) {
-		if (!is_player(arena.blocks[i].type))
-			add_block(handle, arena.blocks[i]);
-	}
+	// for (size_t i = 0; i < arena.blocks.size(); i++) {
+	// 	if (!is_player(arena.blocks[i].type))
+	// 		add_block(handle, arena.blocks[i]);
+	// }
 
-	for (size_t i = 0; i < handle->blocks.size(); i++)
-		generate_body(handle->world, &handle->blocks[i]);
+	create_design(&handle->design, arena);
 
-	for (size_t i = 0; i < handle->blocks.size(); i++) {
-		block* b = &handle->blocks[i];
-		for (joint_collection_list* l = b->jcs_head; l; l = l->next) {
-			for (joint* j = l->jc->joints_head; j; j = j->next)
-				generate_joint(handle->world, j);
+	for (auto& block : handle->design.level_blocks)
+		generate_body(handle->world, block);
+
+	for (auto& block : handle->design.design_blocks)
+		generate_body(handle->world, block);
+
+	for(auto& js : handle->design.joints) {
+		//start from 1 because a js of size 1 generates nothing
+		for(size_t i = 1; i < js.joints.size(); i++) {
+			ft_joint& joint = js.joints[i];
+			generate_joint(handle->world, handle->design, js, joint);
 		}
 	}
 
@@ -524,24 +604,59 @@ void fcsim_step(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings& set
 		joint = next;
 	}
 
-	for (size_t i = 0; i < handle->blocks.size(); i++) {
-		block* b = &handle->blocks[i];
-		b2Vec2 pos = b->body->GetOriginPosition();
-		double angle = b->body->GetRotation()._v;
+	for (auto& block : handle->design.level_blocks) {
+		b2Vec2 pos = block.body->GetOriginPosition();
+		float64 angle = block.body->GetRotation();
 
-		b->bdef.x = pos.x._v;
-		b->bdef.y = pos.y._v;
-		b->bdef.angle = angle;
+		block.x = pos.x._v;
+		block.y = pos.y._v;
+		block.angle = angle._v;
 	}
+
+	for (auto& block : handle->design.design_blocks) {
+		b2Vec2 pos = block.body->GetOriginPosition();
+		float64 angle = block.body->GetRotation();
+
+		block.x = pos.x._v;
+		block.y = pos.y._v;
+		block.angle = angle._v;
+	}
+
 	handle->tick++;
 }
 
 #define CHECK_CORNER(valx, valy) {double xx = valx; double yy = valy; if(xx < area_xa || xx > area_xb || yy < area_ya || yy > area_yb)return false;}
 
-bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
-	bool is_circle = block_physics_tbl[bdef.type].circle;
-	double bex = ft_mul(bdef.w, 0.5);
-	double bey = ft_mul(bdef.h, 0.5);
+// bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
+// 	bool is_circle = block_physics_tbl[bdef.type].circle;
+// 	double bex = ft_mul(bdef.w, 0.5);
+// 	double bey = ft_mul(bdef.h, 0.5);
+// 	double area_ex = ft_mul(area.w, 0.5);
+// 	double area_ey = ft_mul(area.h, 0.5);
+// 	double area_xa = ft_sub(area.x, area_ex);
+// 	double area_xb = ft_add(area.x, area_ex);
+// 	double area_ya = ft_sub(area.y, area_ey);
+// 	double area_yb = ft_add(area.y, area_ey);
+// 	if (is_circle) {
+// 		return ft_sub(bdef.x, bex) >= area_xa && ft_add(bdef.x, bex) <= area_xb && ft_sub(bdef.y, bey) >= area_ya && ft_add(bdef.y, bey) <= area_yb;
+// 	}
+// 	double x = bdef.x;
+// 	double y = bdef.y;
+// 	double x0 = ft_mul(ft_cos(bdef.angle), bex);
+// 	double y0 = ft_mul(ft_sin(bdef.angle), bex);
+// 	double x1 = ft_mul(ft_sin(bdef.angle), bey);
+// 	double y1 = ft_mul(-ft_cos(bdef.angle), bey);
+// 	CHECK_CORNER(ft_add(ft_add(x, x0), x1), ft_add(ft_add(y, y0), y1));
+// 	CHECK_CORNER(ft_add(ft_sub(x, x0), x1), ft_add(ft_sub(y, y0), y1));
+// 	CHECK_CORNER(ft_sub(ft_add(x, x0), x1), ft_sub(ft_add(y, y0), y1));
+// 	CHECK_CORNER(ft_sub(ft_sub(x, x0), x1), ft_sub(ft_sub(y, y0), y1));
+// 	return true;
+// }
+
+bool fcsim_in_area(const ft_block& block, const fcsim_rect& area) {
+	bool is_circle = block_physics_tbl[block.type].circle;
+	double bex = ft_mul(block.w, 0.5);
+	double bey = ft_mul(block.h, 0.5);
 	double area_ex = ft_mul(area.w, 0.5);
 	double area_ey = ft_mul(area.h, 0.5);
 	double area_xa = ft_sub(area.x, area_ex);
@@ -549,14 +664,15 @@ bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
 	double area_ya = ft_sub(area.y, area_ey);
 	double area_yb = ft_add(area.y, area_ey);
 	if (is_circle) {
-		return ft_sub(bdef.x, bex) >= area_xa && ft_add(bdef.x, bex) <= area_xb && ft_sub(bdef.y, bey) >= area_ya && ft_add(bdef.y, bey) <= area_yb;
+		return ft_sub(block.x, bex) >= area_xa && ft_add(block.x, bex) <= area_xb && 
+			ft_sub(block.y, bey) >= area_ya && ft_add(block.y, bey) <= area_yb;
 	}
-	double x = bdef.x;
-	double y = bdef.y;
-	double x0 = ft_mul(ft_cos(bdef.angle), bex);
-	double y0 = ft_mul(ft_sin(bdef.angle), bex);
-	double x1 = ft_mul(ft_sin(bdef.angle), bey);
-	double y1 = ft_mul(-ft_cos(bdef.angle), bey);
+	double x = block.x;
+	double y = block.y;
+	double x0 = ft_mul(ft_cos(block.angle), bex);
+	double y0 = ft_mul(ft_sin(block.angle), bex);
+	double x1 = ft_mul(ft_sin(block.angle), bey);
+	double y1 = ft_mul(-ft_cos(block.angle), bey);
 	CHECK_CORNER(ft_add(ft_add(x, x0), x1), ft_add(ft_add(y, y0), y1));
 	CHECK_CORNER(ft_add(ft_sub(x, x0), x1), ft_add(ft_sub(y, y0), y1));
 	CHECK_CORNER(ft_sub(ft_add(x, x0), x1), ft_sub(ft_add(y, y0), y1));
@@ -566,11 +682,10 @@ bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
 
 bool fcsim_is_solved(const std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec) {
 	bool goal_exist = false;
-	for (size_t i = 0; i < sim->blocks.size(); ++i) {
-		fcsim_block_def& bdef = sim->blocks[i].bdef;
-		if (!is_goal_object(bdef.type))continue;
+	for (auto& block : sim->design.design_blocks) {
+		if (!is_goal_object(block.type))continue;
 		goal_exist = true;
-		if (!fcsim_in_area(bdef, spec.goal))return false;
+		if (!fcsim_in_area(block, spec.goal))return false;
 	}
 	return goal_exist;
 }
@@ -760,9 +875,7 @@ void create_joints(ft_design& design, fcsim_block_def bdef) {
 	}
 }
 
-std::unique_ptr<ft_design> create_design(const ft_design_spec& spec) {
-	auto design = std::make_unique<ft_design>();
-
+void create_design (ft_design* design, const ft_design_spec& spec) {
 	for (size_t i = 0; i < spec.blocks.size(); i++) {
 		ft_block ftb {
 			.type = spec.blocks[i].type,
@@ -771,6 +884,7 @@ std::unique_ptr<ft_design> create_design(const ft_design_spec& spec) {
 			.w = spec.blocks[i].w,
 			.h = spec.blocks[i].h,
 			.angle = spec.blocks[i].angle,
+			.design = design,
 		};
 		if (is_player(spec.blocks[i].type)) {
 			design->design_blocks.push_back(ftb);
@@ -785,6 +899,4 @@ std::unique_ptr<ft_design> create_design(const ft_design_spec& spec) {
 
 	design->build = spec.build;
 	design->goal = spec.goal;
-
-	return design;
 }
