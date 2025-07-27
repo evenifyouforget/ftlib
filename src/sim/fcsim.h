@@ -67,7 +67,8 @@ struct ft_block {
 
 struct ft_joint {
 	uint16_t block_idx; //index into design.design_blocks
-	// uint16_t block_joint_idx;
+	uint16_t joint_stack_idx; //index into design.joints which contains this joint's stack
+	uint16_t joint_idx; //index into this js.joints which contains this joint
 	b2Joint* joint; // not managed by us
 };
 

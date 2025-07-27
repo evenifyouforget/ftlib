@@ -515,32 +515,32 @@ void generate_joint(b2World* world, ft_design& design, ft_joint_stack& js, ft_jo
 		return;
 	}
 
-	if(joint.block_idx == 0) {
+	if(joint.joint_idx == 0) {
 		return;
 	}
 
-	ft_block block1 = design.design_blocks[joint.block_idx];
-	ft_block block2 = design.design_blocks[joint.block_idx - 1];
+	const ft_block& block1 = design.design_blocks[design.joints[joint.joint_stack_idx].joints[joint.joint_idx - 1].block_idx]; //the block just before this in the stack
+	const ft_block& block2 = design.design_blocks[joint.block_idx];
 
 	b2RevoluteJointDef joint_def;
-	joint_def.body1 = design.design_blocks[joint.block_idx].body;
-	joint_def.body2 = design.design_blocks[joint.block_idx - 1].body;
+	joint_def.body1 = block1.body;
+	joint_def.body2 = block2.body;
 	joint_def.anchorPoint.Set(js.x, js.y);
 	joint_def.collideConnected = true;
 	
-	int jt = JOINT_PIN; //jt is CW or CCW if either block is CW or CCW
-	int jt1 = joint_type(block1.type);
-	if(jt1 != JOINT_PIN) {
-		jt = jt1;
-	} else {
-		jt = joint_type(block2.type);
-	}
+	// int jt = JOINT_PIN; //jt is CW or CCW if either block is CW or CCW
+	// int jt1 = joint_type(block1.type);
+	// if(jt1 != JOINT_PIN) {
+	// 	jt = jt1;
+	// } else {
+	// 	jt = joint_type(block2.type);
+	// }
 
-	if (jt != JOINT_PIN) {
-		joint_def.motorTorque = 50000000;
-		joint_def.motorSpeed = -5 * jt;
-		joint_def.enableMotor = true;
-	}
+	// if (jt != JOINT_PIN) {
+	// 	joint_def.motorTorque = 50000000;
+	// 	joint_def.motorSpeed = -5 * jt;
+	// 	joint_def.enableMotor = true;
+	// }
 	world->CreateJoint(&joint_def);
 }
 
@@ -579,7 +579,7 @@ std::shared_ptr<ft_sim_state> fcsim_new(std::shared_ptr<ft_sim_state> handle, co
 
 	for(auto& js : handle->design.joints) {
 		//start from 1 because a js of size 1 generates nothing
-		for(size_t i = 1; i < js.joints.size(); i++) {
+		for(size_t i = 0; i < js.joints.size(); i++) {
 			ft_joint& joint = js.joints[i];
 			generate_joint(handle->world, handle->design, js, joint);
 		}
@@ -764,19 +764,33 @@ void create_rod_joints(ft_design& design, fcsim_block_def bdef) {
 	}
 
 	if(js0_idx != FCSIM_NO_JOINT_STACK) {
-		design.joints[js0_idx].joints.emplace_back(ft_joint{bdef.id});
+		design.joints[js0_idx].joints.emplace_back(ft_joint{
+			.block_idx = bdef.id, 
+			.joint_stack_idx = static_cast<uint16_t>(js0_idx),
+			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size() - 1)
+		});
 	} else {
 		design.joints.emplace_back(ft_joint_stack{.x = x0, .y = y0});
-		design.joints[design.joints.size() - 1]
-			.joints.emplace_back(ft_joint{bdef.id});
+		design.joints[design.joints.size() - 1].joints.emplace_back(ft_joint{
+			.block_idx = bdef.id, 
+			.joint_stack_idx = static_cast<uint16_t>(design.joints.size() - 1),
+			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size() - 1)
+		});
 	}
 
 	if(js1_idx != FCSIM_NO_JOINT_STACK) {
-		design.joints[js1_idx].joints.emplace_back(ft_joint{bdef.id});
+		design.joints[js1_idx].joints.emplace_back(ft_joint{
+			.block_idx = bdef.id, 
+			.joint_stack_idx = static_cast<uint16_t>(js1_idx),
+			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size() - 1)
+		});
 	} else {
 		design.joints.emplace_back(ft_joint_stack{.x = x1, .y = y1});
-		design.joints[design.joints.size() - 1]
-			.joints.emplace_back(ft_joint{bdef.id});
+		design.joints[design.joints.size() - 1].joints.emplace_back(ft_joint{
+			.block_idx = bdef.id, 
+			.joint_stack_idx = static_cast<uint16_t>(design.joints.size() - 1),
+			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size() - 1)
+		});
 	}
 }
 
@@ -802,16 +816,26 @@ void create_wheel_joints(ft_design& design, fcsim_block_def bdef) {
 		double jx = ft_add(x, ft_mul(ft_cos(ft_add(bdef.angle, a[i])), r));
 		double jy = ft_add(y, ft_mul(ft_sin(ft_add(bdef.angle, a[i])), r));
 		design.joints.emplace_back(ft_joint_stack{.x = jx, .y = jy});
-		design.joints[design.joints.size() - 1]
-			.joints.emplace_back(ft_joint{bdef.id});
+		design.joints[design.joints.size() - 1].joints.emplace_back(ft_joint{
+			.block_idx = bdef.id, 
+			.joint_stack_idx = static_cast<uint16_t>(design.joints.size() - 1),
+			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size() - 1)
+		});
 	}
 
 	if(js_idx != FCSIM_NO_JOINT_STACK) {
-		design.joints[js_idx].joints.emplace_back(ft_joint{bdef.id});
+		design.joints[js_idx].joints.emplace_back(ft_joint{
+			.block_idx = bdef.id, 
+			.joint_stack_idx = static_cast<uint16_t>(js_idx),
+			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size() - 1)
+		});
 	} else {
 		design.joints.emplace_back(ft_joint_stack{.x = x, .y = y});
-		design.joints[design.joints.size() - 1]
-			.joints.emplace_back(ft_joint{bdef.id});
+		design.joints[design.joints.size() - 1].joints.emplace_back(ft_joint{
+			.block_idx = bdef.id, 
+			.joint_stack_idx = static_cast<uint16_t>(design.joints.size() - 1),
+			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size() - 1)
+		});
 	}
 }
 
@@ -828,31 +852,51 @@ void create_goal_rect_joints(ft_design& design, fcsim_block_def bdef) {
 
 	design.joints.emplace_back(ft_joint_stack{.x = x, .y = y});
 	design.joints[design.joints.size() - 1]
-		.joints.emplace_back(ft_joint{bdef.id});
+		.joints.emplace_back(ft_joint{
+			.block_idx = bdef.id, 
+			.joint_stack_idx = static_cast<uint16_t>(design.joints.size() - 1),
+			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size() - 1)
+		});
 	
 	double xj1 = ft_add(ft_add(x, x0), x1);
 	double yj1 = ft_add(ft_add(y, y0), y1);
 	design.joints.emplace_back(ft_joint_stack{.x = xj1, .y = yj1});
 	design.joints[design.joints.size() - 1]
-		.joints.emplace_back(ft_joint{bdef.id});
+		.joints.emplace_back(ft_joint{
+			.block_idx = bdef.id, 
+			.joint_stack_idx = static_cast<uint16_t>(design.joints.size() - 1),
+			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size() - 1)
+		});
 
 	double xj2 = ft_add(ft_sub(x, x0), x1);
 	double yj2 = ft_add(ft_sub(y, y0), y1);
 	design.joints.emplace_back(ft_joint_stack{.x = xj2, .y = yj2});
 	design.joints[design.joints.size() - 1]
-		.joints.emplace_back(ft_joint{bdef.id});
+		.joints.emplace_back(ft_joint{
+			.block_idx = bdef.id, 
+			.joint_stack_idx = static_cast<uint16_t>(design.joints.size() - 1),
+			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size() - 1)
+		});
 	
 	double xj3 = ft_sub(ft_add(x, x0), x1);
 	double yj3 = ft_sub(ft_add(y, y0), y1);
 	design.joints.emplace_back(ft_joint_stack{.x = xj3, .y = yj3});
 	design.joints[design.joints.size() - 1]
-		.joints.emplace_back(ft_joint{bdef.id});
+		.joints.emplace_back(ft_joint{
+			.block_idx = bdef.id, 
+			.joint_stack_idx = static_cast<uint16_t>(design.joints.size() - 1),
+			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size() - 1)
+		});
 
 	double xj4 = ft_sub(ft_sub(x, x0), x1);
 	double yj4 = ft_sub(ft_sub(y, y0), y1);
 	design.joints.emplace_back(ft_joint_stack{.x = xj4, .y = yj4});
 	design.joints[design.joints.size() - 1]
-		.joints.emplace_back(ft_joint{bdef.id});
+		.joints.emplace_back(ft_joint{
+			.block_idx = bdef.id, 
+			.joint_stack_idx = static_cast<uint16_t>(design.joints.size() - 1),
+			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size() - 1)
+		});
 }
 
 void create_joints(ft_design& design, fcsim_block_def bdef) {
