@@ -269,32 +269,32 @@ static int joint_type(fcsim_piece_type::type block_type)
 // 	return jcl;
 // }
 
-static bool is_singular_wheel_center(const joint_collection* jc)
-{
-	if (jc->joints_head)
-		return false;
+// static bool is_singular_wheel_center(const joint_collection* jc)
+// {
+// 	if (jc->joints_head)
+// 		return false;
 
-	if (!is_wheel(jc->top_block->bdef.type))
-		return false;
+// 	if (!is_wheel(jc->top_block->bdef.type))
+// 		return false;
 
-	return jc->x == jc->top_block->bdef.x &&
-		jc->y == jc->top_block->bdef.y;
-}
+// 	return jc->x == jc->top_block->bdef.x &&
+// 		jc->y == jc->top_block->bdef.y;
+// }
 
-static int get_joint_type(const block* b, const joint_collection* jc)
-{
-	int type;
+// static int get_joint_type(const block* b, const joint_collection* jc)
+// {
+// 	int type;
 
-	if (is_singular_wheel_center(jc))
-		type = joint_type(jc->top_block->bdef.type);
-	else
-		type = joint_type(b->bdef.type);
+// 	if (is_singular_wheel_center(jc))
+// 		type = joint_type(jc->top_block->bdef.type);
+// 	else
+// 		type = joint_type(b->bdef.type);
 
-	if (is_wheel(b->bdef.type))
-		type = -type;
+// 	if (is_wheel(b->bdef.type))
+// 		type = -type;
 
-	return type;
-}
+// 	return type;
+// }
 
 // static joint_collection_list* jcl_swap(joint_collection_list* jcl)
 // {
@@ -740,6 +740,23 @@ bool share_block(const ft_joint_stack& js1, const ft_joint_stack& js2) {
 	return false;
 }
 
+//if js_idx == design.joints.size(), a new joint stack is added
+//js_x and js_y are optional, only relevant if js_idx == design.joints.size()
+void create_joint(ft_design& design, fcsim_block_def bdef, size_t js_idx, double js_x = 0., double js_y = 0.) {
+	if(js_idx == design.joints.size()) {
+		design.joints.emplace_back(ft_joint_stack{
+			.joint_stack_idx = static_cast<uint16_t>(js_idx),
+			.x = js_x,
+			.y = js_y
+		});
+	}
+	design.joints[js_idx].joints.emplace_back(ft_joint{
+		.block_idx = bdef.id, 
+		.joint_stack_idx = static_cast<uint16_t>(js_idx),
+		.joint_idx = static_cast<uint16_t>(design.joints[js_idx].joints.size()) //not size - 1 because its not added yet
+	});
+}
+
 void create_rod_joints(ft_design& design, fcsim_block_def bdef) {
 	double x0, y0, x1, y1;
 	get_rod_endpoints(bdef, &x0, &y0, &x1, &y1);
@@ -764,33 +781,15 @@ void create_rod_joints(ft_design& design, fcsim_block_def bdef) {
 	}
 
 	if(js0_idx != FCSIM_NO_JOINT_STACK) {
-		design.joints[js0_idx].joints.emplace_back(ft_joint{
-			.block_idx = bdef.id, 
-			.joint_stack_idx = static_cast<uint16_t>(js0_idx),
-			.joint_idx = static_cast<uint16_t>(design.joints[js0_idx].joints.size())
-		});
+		create_joint(design, bdef, js0_idx);
 	} else {
-		design.joints.emplace_back(ft_joint_stack{.x = x0, .y = y0});
-		design.joints[design.joints.size() - 1].joints.emplace_back(ft_joint{
-			.block_idx = bdef.id, 
-			.joint_stack_idx = static_cast<uint16_t>(design.joints.size() - 1),
-			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size())
-		});
+		create_joint(design, bdef, design.joints.size(), x0, y0);
 	}
 
 	if(js1_idx != FCSIM_NO_JOINT_STACK) {
-		design.joints[js1_idx].joints.emplace_back(ft_joint{
-			.block_idx = bdef.id, 
-			.joint_stack_idx = static_cast<uint16_t>(js1_idx),
-			.joint_idx = static_cast<uint16_t>(design.joints[js1_idx].joints.size())
-		});
+		create_joint(design, bdef, js1_idx);
 	} else {
-		design.joints.emplace_back(ft_joint_stack{.x = x1, .y = y1});
-		design.joints[design.joints.size() - 1].joints.emplace_back(ft_joint{
-			.block_idx = bdef.id, 
-			.joint_stack_idx = static_cast<uint16_t>(design.joints.size() - 1),
-			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size())
-		});
+		create_joint(design, bdef, design.joints.size(), x1, y1);
 	}
 }
 
@@ -815,27 +814,13 @@ void create_wheel_joints(ft_design& design, fcsim_block_def bdef) {
 	for(size_t i = 0; i < 4; i++) {
 		double jx = ft_add(x, ft_mul(ft_cos(ft_add(bdef.angle, a[i])), r));
 		double jy = ft_add(y, ft_mul(ft_sin(ft_add(bdef.angle, a[i])), r));
-		design.joints.emplace_back(ft_joint_stack{.x = jx, .y = jy});
-		design.joints[design.joints.size() - 1].joints.emplace_back(ft_joint{
-			.block_idx = bdef.id, 
-			.joint_stack_idx = static_cast<uint16_t>(design.joints.size() - 1),
-			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size())
-		});
+		create_joint(design, bdef, design.joints.size(), jx, jy);
 	}
 
 	if(js_idx != FCSIM_NO_JOINT_STACK) {
-		design.joints[js_idx].joints.emplace_back(ft_joint{
-			.block_idx = bdef.id, 
-			.joint_stack_idx = static_cast<uint16_t>(js_idx),
-			.joint_idx = static_cast<uint16_t>(design.joints[js_idx].joints.size())
-		});
+		create_joint(design, bdef, js_idx);
 	} else {
-		design.joints.emplace_back(ft_joint_stack{.x = x, .y = y});
-		design.joints[design.joints.size() - 1].joints.emplace_back(ft_joint{
-			.block_idx = bdef.id, 
-			.joint_stack_idx = static_cast<uint16_t>(design.joints.size() - 1),
-			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size())
-		});
+		create_joint(design, bdef, design.joints.size(), x, y);
 	}
 }
 
@@ -850,53 +835,13 @@ void create_goal_rect_joints(ft_design& design, fcsim_block_def bdef) {
 	double x1 = ft_mul(ft_sin(bdef.angle), h_half);
 	double y1 = ft_mul(-ft_cos(bdef.angle), h_half);
 
-	design.joints.emplace_back(ft_joint_stack{.x = x, .y = y});
-	design.joints[design.joints.size() - 1]
-		.joints.emplace_back(ft_joint{
-			.block_idx = bdef.id, 
-			.joint_stack_idx = static_cast<uint16_t>(design.joints.size() - 1),
-			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size())
-		});
+	create_joint(design, bdef, design.joints.size(), x, y);
 	
-	double xj1 = ft_add(ft_add(x, x0), x1);
-	double yj1 = ft_add(ft_add(y, y0), y1);
-	design.joints.emplace_back(ft_joint_stack{.x = xj1, .y = yj1});
-	design.joints[design.joints.size() - 1]
-		.joints.emplace_back(ft_joint{
-			.block_idx = bdef.id, 
-			.joint_stack_idx = static_cast<uint16_t>(design.joints.size() - 1),
-			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size())
-		});
-
-	double xj2 = ft_add(ft_sub(x, x0), x1);
-	double yj2 = ft_add(ft_sub(y, y0), y1);
-	design.joints.emplace_back(ft_joint_stack{.x = xj2, .y = yj2});
-	design.joints[design.joints.size() - 1]
-		.joints.emplace_back(ft_joint{
-			.block_idx = bdef.id, 
-			.joint_stack_idx = static_cast<uint16_t>(design.joints.size() - 1),
-			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size())
-		});
-	
-	double xj3 = ft_sub(ft_add(x, x0), x1);
-	double yj3 = ft_sub(ft_add(y, y0), y1);
-	design.joints.emplace_back(ft_joint_stack{.x = xj3, .y = yj3});
-	design.joints[design.joints.size() - 1]
-		.joints.emplace_back(ft_joint{
-			.block_idx = bdef.id, 
-			.joint_stack_idx = static_cast<uint16_t>(design.joints.size() - 1),
-			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size())
-		});
-
-	double xj4 = ft_sub(ft_sub(x, x0), x1);
-	double yj4 = ft_sub(ft_sub(y, y0), y1);
-	design.joints.emplace_back(ft_joint_stack{.x = xj4, .y = yj4});
-	design.joints[design.joints.size() - 1]
-		.joints.emplace_back(ft_joint{
-			.block_idx = bdef.id, 
-			.joint_stack_idx = static_cast<uint16_t>(design.joints.size() - 1),
-			.joint_idx = static_cast<uint16_t>(design.joints[design.joints.size() - 1].joints.size())
-		});
+	double xjs[4] = {ft_add(ft_add(x, x0), x1), ft_add(ft_sub(x, x0), x1), ft_sub(ft_add(x, x0), x1), ft_sub(ft_sub(x, x0), x1)};
+	double yjs[4] = {ft_add(ft_add(y, y0), y1), ft_add(ft_sub(y, y0), y1), ft_sub(ft_add(y, y0), y1), ft_sub(ft_sub(y, y0), y1)};
+	for(size_t i = 0; i < 4; i++) {
+		create_joint(design, bdef, design.joints.size(), xjs[i], yjs[i]);
+	}
 }
 
 void create_joints(ft_design& design, fcsim_block_def bdef) {
@@ -922,6 +867,7 @@ void create_joints(ft_design& design, fcsim_block_def bdef) {
 void create_design (ft_design* design, const ft_design_spec& spec) {
 	for (size_t i = 0; i < spec.blocks.size(); i++) {
 		ft_block ftb {
+			.block_idx = spec.blocks[i].id,
 			.type = spec.blocks[i].type,
 			.x = spec.blocks[i].x,
 			.y = spec.blocks[i].y,

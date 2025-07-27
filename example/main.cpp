@@ -51,7 +51,7 @@ int main() {
     //get the example design
     ft_design_spec design = make_the_design();
 
-    print_design(design);
+    // print_design(design);
 
     //create the handle and setings
     std::shared_ptr<ft_sim_state> handle;

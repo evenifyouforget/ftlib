@@ -57,22 +57,28 @@ struct ft_design;
 
 //designed to be reasonable and possible to edit
 struct ft_block {
+	uint16_t block_idx;
 	fcsim_piece_type::type type;
 	double x, y;
 	double w, h;
 	double angle;
-	b2Body* body; // not managed by us
 	ft_design* design;
+	// uint16_t joint_stack_idxs[2]; //indexes into design.joints which contain this block's joint stacks
+	// uint16_t joint_idxs[2]; //indexes into this js.joints which contains this block's joints
+
+	b2Body* body; // not managed by us
 };
 
 struct ft_joint {
 	uint16_t block_idx; //index into design.design_blocks
 	uint16_t joint_stack_idx; //index into design.joints which contains this joint's stack
 	uint16_t joint_idx; //index into this js.joints which contains this joint
+
 	b2Joint* joint; // not managed by us
 };
 
 struct ft_joint_stack {
+	uint16_t joint_stack_idx; //index into design.joints which contains this joint's stack
 	std::vector<ft_joint> joints;
 	double x;
 	double y;
@@ -101,36 +107,36 @@ struct block;
 #define JOINT_CW   1
 #define JOINT_CCW -1
 
-// single body's jointable point
-struct joint {
-	double x, y;
-	int type;
-	bool generated;
-	block* block1;
-	block* block2;
-	joint* next;
-};
+// // single body's jointable point
+// struct joint {
+// 	double x, y;
+// 	int type;
+// 	bool generated;
+// 	block* block1;
+// 	block* block2;
+// 	joint* next;
+// };
 
-// list of "joints" that are joined together to form 1 joint-ish ("joint stack")
-struct joint_collection {
-	double x, y;
-	block* top_block;
-	joint* joints_head;
-	joint* joints_tail;
-};
+// // list of "joints" that are joined together to form 1 joint-ish ("joint stack")
+// struct joint_collection {
+// 	double x, y;
+// 	block* top_block;
+// 	joint* joints_head;
+// 	joint* joints_tail;
+// };
 
-// linked list node for list of joint stacks which this body is a member of
-struct joint_collection_list {
-	joint_collection* jc;
-	joint_collection_list* next;
-};
+// // linked list node for list of joint stacks which this body is a member of
+// struct joint_collection_list {
+// 	joint_collection* jc;
+// 	joint_collection_list* next;
+// };
 
-struct block {
-	fcsim_block_def bdef;
-	b2Body* body; // not managed by us
-	joint_collection_list* jcs_head;
-	joint_collection_list* jcs_tail;
-};
+// struct block {
+// 	fcsim_block_def bdef;
+// 	b2Body* body; // not managed by us
+// 	joint_collection_list* jcs_head;
+// 	joint_collection_list* jcs_tail;
+// };
 
 struct ft_sim_state {
 	b2World* world;
