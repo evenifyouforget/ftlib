@@ -114,7 +114,7 @@ static void get_rod_endpoints(ft_block_def bdef, double* x0, double* y0, double*
 
 // gets the index of the closest joint stack to (x, y) which contains a block which bdef is jointed
 // to
-// WORKS EVEN BEFORE create_joints IS CALLED!!!
+// WORKS EVEN BEFORE create_joints() IS CALLED!!!
 static uint16_t get_closest_joint_stack_idx(const ft_design& design, double x, double y,
                                             ft_block_def bdef) {
     // double best_dist = 10000000.0;
@@ -504,7 +504,6 @@ std::shared_ptr<ft_sim_state> ft_create_sim(std::shared_ptr<ft_sim_state> handle
 
     for (auto& block : handle->design.level_blocks)
         generate_body(handle->world, block);
-
     for (auto& block : handle->design.design_blocks)
         generate_body(handle->world, block);
 
@@ -534,22 +533,17 @@ void ft_step_sim(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings& se
         joint = next;
     }
 
-    for (auto& block : handle->design.level_blocks) {
-        b2Vec2 pos = block.body->GetOriginPosition();
-        float64 angle = block.body->GetRotation();
+    std::vector<ft_block>* block_vecs [2] {&handle->design.level_blocks, &handle->design.design_blocks};
+    for(size_t i = 0; i < 2; i++) {
+        std::vector<ft_block>& blocks = *block_vecs[i];
+        for (auto& block : blocks) {
+            b2Vec2 pos = block.body->GetOriginPosition();
+            float64 angle = block.body->GetRotation();
 
-        block.x = pos.x._v;
-        block.y = pos.y._v;
-        block.angle = angle._v;
-    }
-
-    for (auto& block : handle->design.design_blocks) {
-        b2Vec2 pos = block.body->GetOriginPosition();
-        float64 angle = block.body->GetRotation();
-
-        block.x = pos.x._v;
-        block.y = pos.y._v;
-        block.angle = angle._v;
+            block.x = pos.x._v;
+            block.y = pos.y._v;
+            block.angle = angle._v;
+        }
     }
 
     handle->tick++;
@@ -594,7 +588,7 @@ bool ft_in_area(const ft_block& block, const ft_rect& area) {
 
 bool ft_is_solved(const std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec) {
     bool goal_exist = false;
-    for (auto& block : sim->design.design_blocks) {
+    for (const auto& block : sim->design.design_blocks) {
         if (!ft_is_goal_object(block.type))
             continue;
         goal_exist = true;
