@@ -73,7 +73,6 @@ struct ft_block {
                                               // block's joint stacks
     uint16_t
         joint_idxs[FT_MAX_JOINTS]; // indexes into this js.joints which contains this block's joints
-    ft_design* design;             // the design this block is part of
 
     b2Body* body; // not managed by us
 };
@@ -92,19 +91,19 @@ ft_joint_type::type joint_type(ft_piece_type::type block_type);
 
 // a joint jointing this block with the previous block in the joint stack
 struct ft_joint {
-	uint16_t block_idx; //index into design.design_blocks
-	uint16_t joint_stack_idx; //index into design.joints which contains this joint's stack
-	uint16_t joint_idx; //index into this js.joints which contains this joint
+    uint16_t block_idx;       // index into design.design_blocks
+    uint16_t joint_stack_idx; // index into design.joints which contains this joint's stack
+    uint16_t joint_idx;       // index into this js.joints which contains this joint
 
     b2Joint* joint; // not managed by us
 };
 
 // a "joint stack", which joints any number of blocks together at the same point
 struct ft_joint_stack {
-	uint16_t joint_stack_idx; //index into design.joints which contains this joint's stack
-	std::vector<ft_joint> joints;
-	double x;
-	double y;
+    uint16_t joint_stack_idx; // index into design.joints which contains this joint's stack
+    std::vector<ft_joint> joints;
+    double x;
+    double y;
 };
 
 struct ft_design {

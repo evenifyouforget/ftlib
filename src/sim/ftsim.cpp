@@ -80,7 +80,6 @@ ft_block to_block(ft_block_def bdef, ft_design* design) {
         .joint_stack_idxs = {FT_NO_JOINT_STACK, FT_NO_JOINT_STACK, FT_NO_JOINT_STACK,
                              FT_NO_JOINT_STACK, FT_NO_JOINT_STACK},
         .joint_idxs = {FT_NO_JOINT, FT_NO_JOINT, FT_NO_JOINT, FT_NO_JOINT, FT_NO_JOINT},
-        .design = design,
     };
 }
 
@@ -533,8 +532,9 @@ void ft_step_sim(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings& se
         joint = next;
     }
 
-    std::vector<ft_block>* block_vecs [2] {&handle->design.level_blocks, &handle->design.design_blocks};
-    for(size_t i = 0; i < 2; i++) {
+    std::vector<ft_block>* block_vecs[2]{&handle->design.level_blocks,
+                                         &handle->design.design_blocks};
+    for (size_t i = 0; i < 2; i++) {
         std::vector<ft_block>& blocks = *block_vecs[i];
         for (auto& block : blocks) {
             b2Vec2 pos = block.body->GetOriginPosition();
