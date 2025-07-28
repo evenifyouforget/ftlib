@@ -1,5 +1,5 @@
-#ifndef FCSIM_H_
-#define FCSIM_H_
+#ifndef FTSIM_H_
+#define FTSIM_H_
 
 #include <cstdint>
 #include <memory>
@@ -39,7 +39,7 @@ const uint16_t FT_NO_ID = std::numeric_limits<uint16_t>::max();
 const uint16_t FT_NO_JOINT = std::numeric_limits<uint16_t>::max();
 const uint16_t FT_NO_JOINT_STACK = std::numeric_limits<uint16_t>::max();
 
-struct fcsim_block_def {
+struct ft_block_def {
 	ft_piece_type::type type;
 	uint16_t id;
 	double x, y;
@@ -51,13 +51,15 @@ struct fcsim_block_def {
 
 //a "design spec": a pretty direct translation of design xml
 struct ft_design_spec {
-	std::vector<fcsim_block_def> blocks;
+	std::vector<ft_block_def> blocks;
 	ft_rect build;
 	ft_rect goal;
 };
 
 // a design which can be created from a spec, intended to be possible to edit and easier to simulate
 struct ft_design;
+
+const size_t FT_MAX_JOINTS = 5;
 
 //a single level or design object in a design
 struct ft_block {
@@ -66,16 +68,16 @@ struct ft_block {
 	double x, y;
 	double w, h;
 	double angle;
-	uint16_t joint_stack_idxs[5]; //indexes into design.joints which contain this block's joint stacks
-	uint16_t joint_idxs[5]; //indexes into this js.joints which contains this block's joints
+	uint16_t joint_stack_idxs[FT_MAX_JOINTS]; //indexes into design.joints which contain this block's joint stacks
+	uint16_t joint_idxs[FT_MAX_JOINTS]; //indexes into this js.joints which contains this block's joints
 	ft_design* design; //the design this block is part of
 
 	b2Body* body; // not managed by us
 };
 
-ft_block to_block(fcsim_block_def bdef, ft_design* design);
+ft_block to_block(ft_block_def bdef, ft_design* design);
 
-struct fcsim_joint_type {
+struct ft_joint_type {
 	enum type : int8_t {
 		CCW = -1,
 		UPW = 0,
@@ -83,7 +85,7 @@ struct fcsim_joint_type {
 	};
 };
 
-fcsim_joint_type::type joint_type(ft_piece_type::type block_type);
+ft_joint_type::type joint_type(ft_piece_type::type block_type);
 
 //a joint jointing this block with the previous block in the joint stack
 struct ft_joint {

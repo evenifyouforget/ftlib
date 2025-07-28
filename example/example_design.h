@@ -1,4 +1,4 @@
-#include "fcsim.h"
+#include "ftsim.h"
 
 //a simple 3pc solve for mind the gap
 ft_design_spec make_the_design() {

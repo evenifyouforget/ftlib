@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "sim/fcsim.h"
+#include "sim/ftsim.h"
 #include "example_design.h"
 
 void print_design(const ft_design_spec& spec) {

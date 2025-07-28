@@ -1,4 +1,4 @@
-#include "fcsim.h"
+#include "ftsim.h"
 #include "ftmath.h"
 #include <stdio.h>
 #include <unordered_set>
@@ -67,7 +67,7 @@ bool ft_is_player_deletable(ft_piece_type::type type) {
     }
 }
 
-ft_block to_block(fcsim_block_def bdef, ft_design* design) {
+ft_block to_block(ft_block_def bdef, ft_design* design) {
     return ft_block{
         .block_idx = bdef.id,
         .type = bdef.type,
@@ -79,20 +79,19 @@ ft_block to_block(fcsim_block_def bdef, ft_design* design) {
         // joints initialized later
         .joint_stack_idxs = {FT_NO_JOINT_STACK, FT_NO_JOINT_STACK, FT_NO_JOINT_STACK,
                              FT_NO_JOINT_STACK, FT_NO_JOINT_STACK},
-        .joint_idxs = {FT_NO_JOINT, FT_NO_JOINT, FT_NO_JOINT, FT_NO_JOINT,
-                       FT_NO_JOINT},
-		.design = design,
+        .joint_idxs = {FT_NO_JOINT, FT_NO_JOINT, FT_NO_JOINT, FT_NO_JOINT, FT_NO_JOINT},
+        .design = design,
     };
 }
 
-fcsim_joint_type::type joint_type(ft_piece_type::type block_type) {
+ft_joint_type::type joint_type(ft_piece_type::type block_type) {
     switch (block_type) {
     case ft_piece_type::CW:
-        return fcsim_joint_type::CW;
+        return ft_joint_type::CW;
     case ft_piece_type::CCW:
-        return fcsim_joint_type::CCW;
+        return ft_joint_type::CCW;
     default:
-        return fcsim_joint_type::UPW;
+        return ft_joint_type::UPW;
     }
 }
 
@@ -103,8 +102,7 @@ static double distance(double x1, double y1, double x2, double y2) {
     return ft_sqrt(ft_add(ft_mul(dx, dx), ft_mul(dy, dy)));
 }
 
-static void get_rod_endpoints(fcsim_block_def bdef, double* x0, double* y0, double* x1,
-                              double* y1) {
+static void get_rod_endpoints(ft_block_def bdef, double* x0, double* y0, double* x1, double* y1) {
     double cw = ft_mul(ft_cos(bdef.angle), ft_div(bdef.w, 2));
     double sw = ft_mul(ft_sin(bdef.angle), ft_div(bdef.w, 2));
 
@@ -118,7 +116,7 @@ static void get_rod_endpoints(fcsim_block_def bdef, double* x0, double* y0, doub
 // to
 // WORKS EVEN BEFORE create_joints IS CALLED!!!
 static uint16_t get_closest_joint_stack_idx(const ft_design& design, double x, double y,
-                                 fcsim_block_def bdef) {
+                                            ft_block_def bdef) {
     // double best_dist = 10000000.0;
     double best_dist = 10.0;
     uint16_t res = FT_NO_JOINT_STACK;
@@ -151,28 +149,28 @@ static uint16_t get_closest_joint_stack_idx(const ft_design& design, double x, d
     return res;
 }
 
-//much faster, but ONLY WORKS AFTER BLOCK JOINTS HAVE BEEN POPULATED
+// much faster, but ONLY WORKS AFTER BLOCK JOINTS HAVE BEEN POPULATED
 static uint16_t get_closest_joint_stack_idx_efficient(const ft_design& design, double x, double y,
-                                 fcsim_block_def bdef) {
-	const ft_block& block = design.level_blocks[bdef.id];
-	
+                                                      ft_block_def bdef) {
+    const ft_block& block = design.level_blocks[bdef.id];
+
     // double best_dist = 10000000.0;
     double best_dist = 10.0;
     uint16_t res = FT_NO_JOINT_STACK;
 
     // TODO: make efficient
-	for(size_t j = 0; j < 5; j++) {
-		uint16_t js_idx = block.joint_stack_idxs[j];
-		if(js_idx == FT_NO_JOINT_STACK)
-			break;
+    for (size_t j = 0; j < FT_MAX_JOINTS; j++) {
+        uint16_t js_idx = block.joint_stack_idxs[j];
+        if (js_idx == FT_NO_JOINT_STACK)
+            break;
 
-		const ft_joint_stack& js = design.joint_stacks[js_idx];
-		double dist = distance(x, y, js.x, js.y);
-		if (dist < best_dist) {
-			best_dist = dist;
-			res = j;
-		}
-	}
+        const ft_joint_stack& js = design.joint_stacks[js_idx];
+        double dist = distance(x, y, js.x, js.y);
+        if (dist < best_dist) {
+            best_dist = dist;
+            res = j;
+        }
+    }
 
     return res;
 }
@@ -197,7 +195,7 @@ static bool share_block(const ft_joint_stack& js1, const ft_joint_stack& js2) {
 
 // if js_idx == design.joints.size(), a new joint stack is added
 // js_x and js_y are optional, only relevant if js_idx == design.joints.size()
-static void create_joint(ft_design& design, fcsim_block_def bdef, size_t js_idx, double js_x = 0.,
+static void create_joint(ft_design& design, ft_block_def bdef, size_t js_idx, double js_x = 0.,
                          double js_y = 0.) {
     uint16_t joint_stack_idx = static_cast<uint16_t>(js_idx);
     if (js_idx == design.joint_stacks.size()) {
@@ -216,7 +214,7 @@ static void create_joint(ft_design& design, fcsim_block_def bdef, size_t js_idx,
     });
 
     ft_block& block = design.design_blocks[bdef.id];
-    for (size_t i = 0; i < 5; i++) {
+    for (size_t i = 0; i < FT_MAX_JOINTS; i++) {
         if (block.joint_stack_idxs[i] != FT_NO_JOINT_STACK)
             continue;
         block.joint_stack_idxs[i] = joint_stack_idx;
@@ -225,7 +223,7 @@ static void create_joint(ft_design& design, fcsim_block_def bdef, size_t js_idx,
     }
 }
 
-static void create_rod_joints(ft_design& design, fcsim_block_def bdef) {
+static void create_rod_joints(ft_design& design, ft_block_def bdef) {
     double x0, y0, x1, y1;
     get_rod_endpoints(bdef, &x0, &y0, &x1, &y1);
 
@@ -261,7 +259,7 @@ static void create_rod_joints(ft_design& design, fcsim_block_def bdef) {
     }
 }
 
-static void create_wheel_joints(ft_design& design, fcsim_block_def bdef) {
+static void create_wheel_joints(ft_design& design, ft_block_def bdef) {
     double x = bdef.x;
     double y = bdef.y;
     double r = ft_div(bdef.w, 2);
@@ -292,7 +290,7 @@ static void create_wheel_joints(ft_design& design, fcsim_block_def bdef) {
     }
 }
 
-static void create_goal_rect_joints(ft_design& design, fcsim_block_def bdef) {
+static void create_goal_rect_joints(ft_design& design, ft_block_def bdef) {
     double x = bdef.x;
     double y = bdef.y;
     double w_half = ft_div(bdef.w, 2);
@@ -314,7 +312,7 @@ static void create_goal_rect_joints(ft_design& design, fcsim_block_def bdef) {
     }
 }
 
-static void create_joints(ft_design& design, fcsim_block_def bdef) {
+static void create_joints(ft_design& design, ft_block_def bdef) {
     switch (bdef.type) {
     case ft_piece_type::GP_RECT:
         create_goal_rect_joints(design, bdef);
@@ -438,16 +436,16 @@ void generate_joint(
     joint_def.anchorPoint.Set(js.x, js.y);
     joint_def.collideConnected = true;
 
-    fcsim_joint_type::type jt = fcsim_joint_type::UPW;
-    fcsim_joint_type::type jt1 = joint_type(block1.type);
-    if (jt1 != fcsim_joint_type::UPW) {
+    ft_joint_type::type jt = ft_joint_type::UPW;
+    ft_joint_type::type jt1 = joint_type(block1.type);
+    if (jt1 != ft_joint_type::UPW) {
         jt = jt1;
     } else {
         // negative because block1 and block2 are jointed in the opposite order as in the first case
-        jt = static_cast<fcsim_joint_type::type>(-joint_type(block2.type));
+        jt = static_cast<ft_joint_type::type>(-joint_type(block2.type));
     }
 
-    if (jt != fcsim_joint_type::UPW) {
+    if (jt != ft_joint_type::UPW) {
         joint_def.motorTorque = 50000000;
         joint_def.motorSpeed = -5 * jt;
         joint_def.enableMotor = true;
@@ -486,11 +484,11 @@ class collision_filter : public b2CollisionFilter {
     }
 };
 
-static collision_filter fcsim_collision_filter;
+static collision_filter ft_collision_filter;
 
 std::shared_ptr<ft_sim_state> ft_create_sim(std::shared_ptr<ft_sim_state> handle,
-                                        const ft_design_spec& spec,
-                                        const ft_sim_settings& settings) {
+                                            const ft_design_spec& spec,
+                                            const ft_sim_settings& settings) {
     if (!handle) {
         handle = std::make_shared<ft_sim_state>();
     }
@@ -500,7 +498,7 @@ std::shared_ptr<ft_sim_state> ft_create_sim(std::shared_ptr<ft_sim_state> handle
     aabb.minVertex.Set(-ARENA_WIDTH, -ARENA_HEIGHT);
     aabb.maxVertex.Set(ARENA_WIDTH, ARENA_HEIGHT);
     handle->world = new b2World(aabb, gravity, true);
-    handle->world->SetFilter(&fcsim_collision_filter);
+    handle->world->SetFilter(&ft_collision_filter);
 
     ft_create_design(&handle->design, spec);
 
@@ -578,18 +576,18 @@ bool ft_in_area(const ft_block& block, const ft_rect& area) {
     double x1 = ft_mul(ft_sin(block.angle), bey);
     double y1 = ft_mul(-ft_cos(block.angle), bey);
 
-#define fcsim_in_area_CHECK_CORNER(valx, valy)                                                     \
+#define ft_in_area_CHECK_CORNER(valx, valy)                                                        \
     {                                                                                              \
         double xx = valx;                                                                          \
         double yy = valy;                                                                          \
         if (xx < area_xa || xx > area_xb || yy < area_ya || yy > area_yb)                          \
             return false;                                                                          \
     }
-    fcsim_in_area_CHECK_CORNER(ft_add(ft_add(x, x0), x1), ft_add(ft_add(y, y0), y1));
-    fcsim_in_area_CHECK_CORNER(ft_add(ft_sub(x, x0), x1), ft_add(ft_sub(y, y0), y1));
-    fcsim_in_area_CHECK_CORNER(ft_sub(ft_add(x, x0), x1), ft_sub(ft_add(y, y0), y1));
-    fcsim_in_area_CHECK_CORNER(ft_sub(ft_sub(x, x0), x1), ft_sub(ft_sub(y, y0), y1));
-#undef fcsim_in_area_CHECK_CORNER
+    ft_in_area_CHECK_CORNER(ft_add(ft_add(x, x0), x1), ft_add(ft_add(y, y0), y1));
+    ft_in_area_CHECK_CORNER(ft_add(ft_sub(x, x0), x1), ft_add(ft_sub(y, y0), y1));
+    ft_in_area_CHECK_CORNER(ft_sub(ft_add(x, x0), x1), ft_sub(ft_add(y, y0), y1));
+    ft_in_area_CHECK_CORNER(ft_sub(ft_sub(x, x0), x1), ft_sub(ft_sub(y, y0), y1));
+#undef ft_in_area_CHECK_CORNER
 
     return true;
 }
