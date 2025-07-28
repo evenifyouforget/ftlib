@@ -262,7 +262,7 @@ bin/
 .fc_design_cache
 
 # Local live test run history
-test/history/live/
+test/test/history/live/
 
 # Custom
 .editorconfig
