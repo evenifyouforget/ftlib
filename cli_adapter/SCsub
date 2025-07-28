@@ -15,8 +15,12 @@ run_single_design_env = env.Clone()
 run_single_design_env.Append(
     CCFLAGS=[
         "-Wall" if not env.get('msvc', False) else "-W3",
+        "-pedantic",
         "-O2",
         "-flto"
+    ],
+    CXXFLAGS=[
+        "-std=c++20"
     ],
     LINKFLAGS=["-O2", "-flto"]
 )
