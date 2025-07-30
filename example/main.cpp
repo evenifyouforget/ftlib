@@ -40,7 +40,7 @@ void print_design(const ft_design_spec& spec) {
     printf("JOINTS:\n");
     for(size_t i = 0; i < design.joint_stacks.size(); i++) {
         const ft_joint_stack& js = design.joint_stacks[i];
-        printf("\tjoint stack: id: %lu, x: %f, y: %f\n", i, js.x, js.y);
+        printf("\tjoint stack: id: %lu, x: %f, y: %f\n", js.joint_stack_idx, js.x, js.y);
         for(const auto& joint : js.joints) {
             printf("\t\tblock_idx: %d, joint_stack_idx: %d, joint_idx: %d\n", joint.block_idx, joint.joint_stack_idx, joint.joint_idx);
         }

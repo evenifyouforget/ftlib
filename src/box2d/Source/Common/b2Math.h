@@ -28,11 +28,12 @@
 
 inline bool b2IsValid(float64 x)
 {
-#ifdef _MSC_VER
-	return _finite(x._v) != 0;
-#else
-	return finite(x._v) != 0;
-#endif
+// #ifdef _MSC_VER
+// 	return _finite(x._v) != 0;
+// #else
+// 	return finite(x._v) != 0;
+// #endif
+	return std::isfinite(x._v);
 }
 
 inline float64 b2InvSqrt(float64 x)
