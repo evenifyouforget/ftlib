@@ -77,7 +77,7 @@ struct ft_block {
     b2Body* body; // not managed by us
 };
 
-ft_block to_block(ft_block_def bdef, ft_design* design);
+ft_block to_block(ft_block_def bdef, std::shared_ptr<ft_design> design);
 
 struct ft_joint_type {
     enum type : int8_t {
@@ -116,7 +116,8 @@ struct ft_design {
 };
 
 // make the design from the spec
-void ft_create_design(ft_design* design, const ft_design_spec& spec);
+std::shared_ptr<ft_design> ft_create_design(std::shared_ptr<ft_design> design,
+                                            const ft_design_spec& spec);
 
 const double ARENA_WIDTH = 2000;
 const double ARENA_HEIGHT = 1450;
@@ -135,7 +136,7 @@ struct ft_sim_settings {};
 
 // make a ft_sim_state from a spec and settings
 std::shared_ptr<ft_sim_state> ft_create_sim(std::shared_ptr<ft_sim_state> handle,
-                                            const ft_design_spec& spec,
+                                            const ft_design& design,
                                             const ft_sim_settings& settings);
 
 // step the sim state forward 1 tick
@@ -147,7 +148,7 @@ bool ft_in_area(const ft_block& block, const ft_rect& area);
 // check if a design has solved (if all the gps are within the goal)
 bool ft_is_solved(const std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec);
 
-//design editing
+// design editing
 void ft_splice_joint_stack(ft_design& design, uint16_t js_idx, uint16_t joint_idx);
 
 #endif

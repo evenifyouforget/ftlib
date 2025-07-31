@@ -67,7 +67,7 @@ bool ft_is_player_deletable(ft_piece_type::type type) {
     }
 }
 
-ft_block to_block(ft_block_def bdef, ft_design* design) {
+ft_block to_block(ft_block_def bdef, std::shared_ptr<ft_design> design) {
     return ft_block{
         .block_idx = bdef.id,
         .type = bdef.type,
@@ -331,7 +331,12 @@ static void create_joints(ft_design& design, ft_block_def bdef) {
     }
 }
 
-void ft_create_design(ft_design* design, const ft_design_spec& spec) {
+std::shared_ptr<ft_design> ft_create_design(std::shared_ptr<ft_design> design,
+                                            const ft_design_spec& spec) {
+    if(design == nullptr) {
+        design = std::make_shared<ft_design>();
+    }
+
     for (size_t i = 0; i < spec.blocks.size(); i++) {
         ft_block ftb = to_block(spec.blocks[i], design);
 
@@ -486,7 +491,7 @@ class collision_filter : public b2CollisionFilter {
 static collision_filter ft_collision_filter;
 
 std::shared_ptr<ft_sim_state> ft_create_sim(std::shared_ptr<ft_sim_state> handle,
-                                            const ft_design_spec& spec,
+                                            const ft_design& design,
                                             const ft_sim_settings& settings) {
     if (!handle) {
         handle = std::make_shared<ft_sim_state>();
@@ -499,7 +504,8 @@ std::shared_ptr<ft_sim_state> ft_create_sim(std::shared_ptr<ft_sim_state> handle
     handle->world = new b2World(aabb, gravity, true);
     handle->world->SetFilter(&ft_collision_filter);
 
-    ft_create_design(&handle->design, spec);
+    //copies design over
+    handle->design = design;
 
     for (auto& block : handle->design.level_blocks)
         generate_body(handle->world, block);
