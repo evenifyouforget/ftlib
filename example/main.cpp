@@ -3,9 +3,7 @@
 #include "sim/ftsim.h"
 #include "example_design.h"
 
-void print_design(const ft_design_spec& spec) {
-    ft_design design;
-    ft_create_design(&design, spec);
+void print_design(const ft_design& design) {
 
     printf("LEVEL BLOCKS:\n");
     for(const auto& block : design.level_blocks) {
@@ -47,27 +45,29 @@ void print_design(const ft_design_spec& spec) {
     }
 
     printf("BUILD: x: %f, y: %f, w: %f, h: %f\n",
-        spec.build.x, spec.build.y, spec.build.w, spec.build.h);
+        design.build.x, design.build.y, design.build.w, design.build.h);
     
     printf("GOAL: x: %f, y: %f, w: %f, h: %f\n",
-        spec.goal.x, spec.goal.y, spec.goal.w, spec.goal.h);
+        design.goal.x, design.goal.y, design.goal.w, design.goal.h);
 }
 
 int main() {
     //get the example design
-    ft_design_spec design = make_the_design();
+    ft_design_spec spec = make_the_design();
 
-    print_design(design);
+    std::shared_ptr<ft_design> design = ft_create_design(nullptr, spec);
+
+    print_design(*design);
 
     //create the handle and setings
     std::shared_ptr<ft_sim_state> handle;
     ft_sim_settings settings;
 
     //initialize the handle
-    handle = ft_create_sim(handle, design, settings);
+    handle = ft_create_sim(handle, *design, settings);
 
     //step the simulation until it solves
-    while(!ft_is_solved(handle, design)) {
+    while(!ft_is_solved(handle, spec)) {
         ft_step_sim(handle, settings);
     }
 

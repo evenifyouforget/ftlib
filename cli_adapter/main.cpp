@@ -31,16 +31,19 @@ int main() {
     int64_t max_ticks;
     std::cin >> max_ticks;
     // read design data from stdin
-    ft_design_spec design;
-    std::cin >> design;
+    ft_design_spec spec;
+    std::cin >> spec;
+    std::shared_ptr<ft_design> design = ft_create_design(nullptr, spec);
+
     // run up to max ticks
     std::shared_ptr<ft_sim_state> handle;
     ft_sim_settings settings;
-    handle = ft_create_sim(handle, design, settings);
+    
+    handle = ft_create_sim(handle, *design, settings);
     int64_t solve_tick = -1;
     while(handle->tick != max_ticks) {
         ft_step_sim(handle, settings);
-        if(ft_is_solved(handle, design)) {
+        if(ft_is_solved(handle, spec)) {
             // stop early on solve
             solve_tick = handle->tick;
             break;

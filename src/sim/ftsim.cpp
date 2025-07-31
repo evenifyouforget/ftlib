@@ -353,6 +353,8 @@ std::shared_ptr<ft_design> ft_create_design(std::shared_ptr<ft_design> design,
 
     design->build = spec.build;
     design->goal = spec.goal;
+
+    return design;
 }
 
 struct block_physics {
@@ -493,7 +495,7 @@ static collision_filter ft_collision_filter;
 std::shared_ptr<ft_sim_state> ft_create_sim(std::shared_ptr<ft_sim_state> handle,
                                             const ft_design& design,
                                             const ft_sim_settings& settings) {
-    if (!handle) {
+    if (handle == nullptr) {
         handle = std::make_shared<ft_sim_state>();
     }
 
