@@ -597,3 +597,46 @@ bool ft_is_solved(const std::shared_ptr<ft_sim_state> sim, const ft_design_spec&
     }
     return goal_exist;
 }
+
+// design editing
+
+// splits a joint stack in 2, such that [..joint_idx] makes one stack and [joint_idx].. makes
+// another
+void ft_splice_joint_stack(ft_design& design, uint16_t js_idx, uint16_t joint_idx) {
+    ft_joint_stack& old_js = design.joint_stacks[js_idx];
+    uint16_t new_js_idx = static_cast<uint16_t>(design.joint_stacks.size());
+
+    // make the new joint stack
+    design.joint_stacks.emplace_back();
+    ft_joint_stack& new_js = design.joint_stacks[new_js_idx];
+    new_js.joint_stack_idx = new_js_idx;
+    new_js.x = old_js.x;
+    new_js.y = old_js.y;
+
+    // add the new joints
+    for (size_t i = joint_idx; i < old_js.joints.size(); i++) {
+        ft_joint joint_copy = old_js.joints[i];
+        joint_copy.joint_idx = i - joint_idx;
+        joint_copy.joint_stack_idx = new_js_idx;
+        new_js.joints.push_back(joint_copy);
+    }
+
+    // fix the old joint stack
+    old_js.joints.resize(js_idx);
+
+    // fix the design blocks
+    for (auto& block : design.design_blocks) {
+        for (size_t i = 0; i < FT_MAX_JOINTS; i++) {
+            if (block.joint_idxs[i] == FT_NO_JOINT)
+                break;
+
+            uint16_t& block_js_idx = block.joint_stack_idxs[i];
+            uint16_t& block_joint_idx = block.joint_idxs[i];
+
+            if (block_js_idx == js_idx && block_joint_idx >= joint_idx) {
+                block_js_idx = new_js_idx;
+                block_joint_idx -= joint_idx; // make it count from 0 instead of joint_idx basically
+            }
+        }
+    }
+}

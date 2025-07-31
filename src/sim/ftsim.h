@@ -147,4 +147,7 @@ bool ft_in_area(const ft_block& block, const ft_rect& area);
 // check if a design has solved (if all the gps are within the goal)
 bool ft_is_solved(const std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec);
 
+//design editing
+void ft_splice_joint_stack(ft_design& design, uint16_t js_idx, uint16_t joint_idx);
+
 #endif
