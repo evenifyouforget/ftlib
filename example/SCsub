@@ -19,9 +19,6 @@ example_env.Append(
         "-O2",
         "-flto"
     ],
-    CXXFLAGS=[
-        "-std=c++20"
-    ],
     LINKFLAGS=["-O2", "-flto"]
 )
 

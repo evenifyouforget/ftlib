@@ -68,19 +68,20 @@ bool ft_is_player_deletable(ft_piece_type::type type) {
 }
 
 ft_block to_block(ft_block_spec bdef, std::shared_ptr<ft_design> design) {
-    return ft_block{
-        .block_idx = bdef.id,
-        .type = bdef.type,
-        .x = bdef.x,
-        .y = bdef.y,
-        .w = bdef.w,
-        .h = bdef.h,
-        .angle = bdef.angle,
-        // joints initialized later
-        .joint_stack_idxs = {FT_NO_JOINT_STACK, FT_NO_JOINT_STACK, FT_NO_JOINT_STACK,
-                             FT_NO_JOINT_STACK, FT_NO_JOINT_STACK},
-        .joint_idxs = {FT_NO_JOINT, FT_NO_JOINT, FT_NO_JOINT, FT_NO_JOINT, FT_NO_JOINT},
-    };
+    ft_block b;
+    b.block_idx = bdef.id;
+    b.type = bdef.type;
+    b.x = bdef.x;
+    b.y = bdef.y;
+    b.w = bdef.w;
+    b.h = bdef.h;
+    b.angle = bdef.angle;
+    // joints initialized later
+    for(size_t i = 0; i < FT_MAX_JOINTS; i++) {
+        b.joint_stack_idxs[i] = FT_NO_JOINT_STACK;
+        b.joint_idxs[i] = FT_NO_JOINT_STACK;
+    }
+    return b;
 }
 
 ft_joint_type::type joint_type(ft_piece_type::type block_type) {
@@ -198,19 +199,19 @@ static void create_joint(ft_design& design, ft_block_spec bdef, size_t js_idx, d
                          double js_y = 0.) {
     uint16_t joint_stack_idx = static_cast<uint16_t>(js_idx);
     if (js_idx == design.joint_stacks.size()) {
-        design.joint_stacks.emplace_back(ft_joint_stack{
-            .joint_stack_idx = joint_stack_idx,
-            .x = js_x,
-            .y = js_y,
-        });
+        ft_joint_stack j;
+        j.joint_stack_idx = joint_stack_idx;
+        j.x = js_x;
+        j.y = js_y;
+        design.joint_stacks.push_back(j);
     }
     uint16_t joint_idx = design.joint_stacks[js_idx].joints.size();
 
-    design.joint_stacks[js_idx].joints.emplace_back(ft_joint{
-        .block_idx = bdef.id,
-        .joint_stack_idx = joint_stack_idx,
-        .joint_idx = joint_idx, // not size - 1 because its not added yet
-    });
+    ft_joint j;
+    j.block_idx = bdef.id;
+    j.joint_stack_idx = joint_stack_idx;
+    j.joint_idx = joint_idx;
+    design.joint_stacks[js_idx].joints.push_back(j);
 
     ft_block& block = design.design_blocks[bdef.id];
     for (size_t i = 0; i < FT_MAX_JOINTS; i++) {
@@ -333,7 +334,7 @@ static void create_joints(ft_design& design, ft_block_spec bdef) {
 
 std::shared_ptr<ft_design> ft_create_design(std::shared_ptr<ft_design> design,
                                             const ft_design_spec& spec) {
-    if(design == nullptr) {
+    if (design == nullptr) {
         design = std::make_shared<ft_design>();
     }
 
@@ -506,7 +507,7 @@ std::shared_ptr<ft_sim_state> ft_create_sim(std::shared_ptr<ft_sim_state> handle
     handle->world = new b2World(aabb, gravity, true);
     handle->world->SetFilter(&ft_collision_filter);
 
-    //copies design over
+    // copies design over
     handle->design = design;
 
     for (auto& block : handle->design.level_blocks)
