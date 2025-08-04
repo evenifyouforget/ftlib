@@ -2,7 +2,7 @@
 #include <cstdint>
 #include "ftsim.h"
 
-std::istream& operator>>(std::istream& is, ft_block_def& block) {
+std::istream& operator>>(std::istream& is, ft_block_spec& block) {
     int64_t block_type;
     is >> block_type >> block.id >> block.x >> block.y >> block.w >> block.h >> block.angle >> block.joints[0] >> block.joints[1];
     block.type = static_cast<ft_piece_type::type>(block_type);
@@ -17,7 +17,7 @@ std::istream& operator>>(std::istream& is, ft_design_spec& design) {
     int64_t num_blocks;
     is >> num_blocks;
     for(int64_t i = 0; i < num_blocks; ++i) {
-        ft_block_def block;
+        ft_block_spec block;
         is >> block;
         design.blocks.push_back(block);
     }

@@ -67,7 +67,7 @@ bool ft_is_player_deletable(ft_piece_type::type type) {
     }
 }
 
-ft_block to_block(ft_block_def bdef, std::shared_ptr<ft_design> design) {
+ft_block to_block(ft_block_spec bdef, std::shared_ptr<ft_design> design) {
     return ft_block{
         .block_idx = bdef.id,
         .type = bdef.type,
@@ -101,7 +101,7 @@ static double distance(double x1, double y1, double x2, double y2) {
     return ft_sqrt(ft_add(ft_mul(dx, dx), ft_mul(dy, dy)));
 }
 
-static void get_rod_endpoints(ft_block_def bdef, double* x0, double* y0, double* x1, double* y1) {
+static void get_rod_endpoints(ft_block_spec bdef, double* x0, double* y0, double* x1, double* y1) {
     double cw = ft_mul(ft_cos(bdef.angle), ft_div(bdef.w, 2));
     double sw = ft_mul(ft_sin(bdef.angle), ft_div(bdef.w, 2));
 
@@ -115,7 +115,7 @@ static void get_rod_endpoints(ft_block_def bdef, double* x0, double* y0, double*
 // to
 // WORKS EVEN BEFORE create_joints() IS CALLED!!!
 static uint16_t get_closest_joint_stack_idx(const ft_design& design, double x, double y,
-                                            ft_block_def bdef) {
+                                            ft_block_spec bdef) {
     // double best_dist = 10000000.0;
     double best_dist = 10.0;
     uint16_t res = FT_NO_JOINT_STACK;
@@ -150,7 +150,7 @@ static uint16_t get_closest_joint_stack_idx(const ft_design& design, double x, d
 
 // much faster, but ONLY WORKS AFTER BLOCK JOINTS HAVE BEEN POPULATED
 static uint16_t get_closest_joint_stack_idx_efficient(const ft_design& design, double x, double y,
-                                                      ft_block_def bdef) {
+                                                      ft_block_spec bdef) {
     const ft_block& block = design.level_blocks[bdef.id];
 
     // double best_dist = 10000000.0;
@@ -194,7 +194,7 @@ static bool share_block(const ft_joint_stack& js1, const ft_joint_stack& js2) {
 
 // if js_idx == design.joints.size(), a new joint stack is added
 // js_x and js_y are optional, only relevant if js_idx == design.joints.size()
-static void create_joint(ft_design& design, ft_block_def bdef, size_t js_idx, double js_x = 0.,
+static void create_joint(ft_design& design, ft_block_spec bdef, size_t js_idx, double js_x = 0.,
                          double js_y = 0.) {
     uint16_t joint_stack_idx = static_cast<uint16_t>(js_idx);
     if (js_idx == design.joint_stacks.size()) {
@@ -222,7 +222,7 @@ static void create_joint(ft_design& design, ft_block_def bdef, size_t js_idx, do
     }
 }
 
-static void create_rod_joints(ft_design& design, ft_block_def bdef) {
+static void create_rod_joints(ft_design& design, ft_block_spec bdef) {
     double x0, y0, x1, y1;
     get_rod_endpoints(bdef, &x0, &y0, &x1, &y1);
 
@@ -258,7 +258,7 @@ static void create_rod_joints(ft_design& design, ft_block_def bdef) {
     }
 }
 
-static void create_wheel_joints(ft_design& design, ft_block_def bdef) {
+static void create_wheel_joints(ft_design& design, ft_block_spec bdef) {
     double x = bdef.x;
     double y = bdef.y;
     double r = ft_div(bdef.w, 2);
@@ -289,7 +289,7 @@ static void create_wheel_joints(ft_design& design, ft_block_def bdef) {
     }
 }
 
-static void create_goal_rect_joints(ft_design& design, ft_block_def bdef) {
+static void create_goal_rect_joints(ft_design& design, ft_block_spec bdef) {
     double x = bdef.x;
     double y = bdef.y;
     double w_half = ft_div(bdef.w, 2);
@@ -311,7 +311,7 @@ static void create_goal_rect_joints(ft_design& design, ft_block_def bdef) {
     }
 }
 
-static void create_joints(ft_design& design, ft_block_def bdef) {
+static void create_joints(ft_design& design, ft_block_spec bdef) {
     switch (bdef.type) {
     case ft_piece_type::GP_RECT:
         create_goal_rect_joints(design, bdef);

@@ -40,7 +40,7 @@ const uint16_t FT_NO_ID = std::numeric_limits<uint16_t>::max();
 const uint16_t FT_NO_JOINT = std::numeric_limits<uint16_t>::max();
 const uint16_t FT_NO_JOINT_STACK = std::numeric_limits<uint16_t>::max();
 
-struct ft_block_def {
+struct ft_block_spec {
     ft_piece_type::type type;
     uint16_t id;
     double x, y;
@@ -52,7 +52,7 @@ struct ft_block_def {
 
 // a "design spec": a pretty direct translation of design xml
 struct ft_design_spec {
-    std::vector<ft_block_def> blocks;
+    std::vector<ft_block_spec> blocks;
     ft_rect build;
     ft_rect goal;
 };
@@ -77,7 +77,7 @@ struct ft_block {
     b2Body* body; // not managed by us
 };
 
-ft_block to_block(ft_block_def bdef, std::shared_ptr<ft_design> design);
+ft_block to_block(ft_block_spec bdef, std::shared_ptr<ft_design> design);
 
 struct ft_joint_type {
     enum type : int8_t {
