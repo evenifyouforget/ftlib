@@ -1,5 +1,5 @@
-#ifndef FTSIM_H_
-#define FTSIM_H_
+#ifndef FTSIM_H
+#define FTSIM_H
 
 #include "box2d/Include/Box2D.h"
 #include <cstdint>
@@ -11,10 +11,8 @@ struct ft_rect {
     double w, h;
 };
 
-// intentionally in the same order as the render enum, so they can be converted back and forth, and
-// the render bindings can be used for this
 struct ft_piece_type {
-    enum type : uint16_t {
+    enum type : uint8_t {
         STATIC_RECT,
         STATIC_CIRC,
         DYNAMIC_RECT,
