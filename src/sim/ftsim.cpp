@@ -68,7 +68,7 @@ bool ft_is_player_deletable(ft_piece_type::type type) {
 }
 
 ft_block to_block(ft_block_spec bdef, std::shared_ptr<ft_design> design) {
-    ft_block b;
+    ft_block b = {};
     b.block_idx = bdef.id;
     b.type = bdef.type;
     b.x = bdef.x;
@@ -76,10 +76,9 @@ ft_block to_block(ft_block_spec bdef, std::shared_ptr<ft_design> design) {
     b.w = bdef.w;
     b.h = bdef.h;
     b.angle = bdef.angle;
-    // joints initialized later
-    for(size_t i = 0; i < FT_MAX_JOINTS; i++) {
+    for (size_t i = 0; i < FT_MAX_JOINTS; i++) {
         b.joint_stack_idxs[i] = FT_NO_JOINT_STACK;
-        b.joint_idxs[i] = FT_NO_JOINT_STACK;
+        b.joint_idxs[i] = FT_NO_JOINT;
     }
     return b;
 }
@@ -199,15 +198,15 @@ static void create_joint(ft_design& design, ft_block_spec bdef, size_t js_idx, d
                          double js_y = 0.) {
     uint16_t joint_stack_idx = static_cast<uint16_t>(js_idx);
     if (js_idx == design.joint_stacks.size()) {
-        ft_joint_stack j;
-        j.joint_stack_idx = joint_stack_idx;
-        j.x = js_x;
-        j.y = js_y;
-        design.joint_stacks.push_back(j);
+        ft_joint_stack js = {};
+        js.joint_stack_idx = joint_stack_idx;
+        js.x = js_x;
+        js.y = js_y;
+        design.joint_stacks.push_back(js);
     }
     uint16_t joint_idx = design.joint_stacks[js_idx].joints.size();
 
-    ft_joint j;
+    ft_joint j = {};
     j.block_idx = bdef.id;
     j.joint_stack_idx = joint_stack_idx;
     j.joint_idx = joint_idx;
