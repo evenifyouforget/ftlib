@@ -22,6 +22,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        submodules: true # This line is added to initialize and update submodules
 
     - name: Set up Python and Install Dependencies
       run: |
