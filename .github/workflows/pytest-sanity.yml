@@ -1,0 +1,105 @@
+name: Pytest Percentage Pass Check
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      test_pass_threshold:
+        description: 'Minimum percentage of tests that must pass for the workflow to succeed (e.g., 80.0 for 80%)'
+        required: false
+        default: '81.7' # 683/835 as of PR #26
+        type: number
+  # This event triggers the workflow whenever a pull request is opened,
+  # synchronized (new commits pushed), or reopened.
+  pull_request:
+    branches:
+      - main # Or your main development branch, e.g., 'master', 'develop'
+
+jobs:
+  run-tests-with-threshold:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: true # This line is added to initialize and update submodules
+
+    - name: Set up Python and Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-json-report pytest-xdist
+        # Install scons, valgrind, and other build dependencies as system packages
+        sudo apt-get update
+        sudo apt-get install -y jq scons clang libx11-dev libgl-dev lld valgrind
+
+    - name: Run Pytest and generate JSON report
+      id: run_pytest
+      # The '|| true' ensures that this step doesn't fail the workflow immediately
+      # if tests fail, allowing the report to be processed.
+      # Added --rootdir . to explicitly set pytest's root to the repo root
+      run: pytest --rootdir . -s -n auto --json-report --json-report-file=pytest_report.json test --all || true
+
+    - name: Evaluate Test Results based on Percentage
+      id: evaluate_results
+      run: |
+        REPORT_FILE="pytest_report.json"
+        # Get the threshold from workflow inputs, defaulting to 80.0 if not provided.
+        THRESHOLD=${{ inputs.test_pass_threshold || 80.0 }}
+
+        # Check if the report file exists
+        if [ ! -f "$REPORT_FILE" ]; then
+            echo "Error: Pytest report file '$REPORT_FILE' not found."
+            echo "This usually means pytest did not run or failed to generate the report."
+            echo "test_status=failure" >> "$GITHUB_OUTPUT"
+            exit 1
+        fi
+
+        # Extract counts using jq (default to 0 if key is missing)
+        PASSED=$(jq '.summary.passed // 0' "$REPORT_FILE")
+        FAILED=$(jq '.summary.failed // 0' "$REPORT_FILE")
+        ERROR=$(jq '.summary.error // 0' "$REPORT_FILE")
+        TOTAL=$(jq '.summary.total // 0' "$REPORT_FILE")
+        SKIPPED=$(jq '.summary.skipped // 0' "$REPORT_FILE")
+        XFAILED=$(jq '.summary.xfailed // 0' "$REPORT_FILE")
+        XPASSED=$(jq '.summary.xpassed // 0' "$REPORT_FILE")
+
+        # Calculate effective total tests for percentage
+        # We consider passed, failed, and error tests as the base for percentage.
+        EFFECTIVE_TOTAL=$((PASSED + FAILED + ERROR))
+
+        PASS_PERCENTAGE=0.0
+        if [ "$EFFECTIVE_TOTAL" -gt 0 ]; then
+            # Use awk for floating point division and formatting to 2 decimal places
+            PASS_PERCENTAGE=$(awk "BEGIN { printf \"%.2f\", ($PASSED / $EFFECTIVE_TOTAL) * 100 }")
+        fi
+
+        echo "--- Pytest Summary ---"
+        echo "Total tests found: ${TOTAL}"
+        echo "Tests considered for percentage (Passed + Failed + Errors): ${EFFECTIVE_TOTAL}"
+        echo "Passed tests: ${PASSED}"
+        echo "Failed tests: ${FAILED}"
+        echo "Error tests: ${ERROR}"
+        echo "Skipped tests: ${SKIPPED}"
+        echo "XFailed tests (expected to fail): ${XFAILED}"
+        echo "XPassed tests (unexpectedly passed): ${XPASSED}"
+        echo "----------------------"
+        echo "Calculated Pass Percentage: ${PASS_PERCENTAGE}%"
+        echo "Required Pass Threshold: ${THRESHOLD}%"
+
+        # Compare percentages using awk for floating-point comparison
+        if awk -v pp="$PASS_PERCENTAGE" -v th="$THRESHOLD" 'BEGIN {exit !(pp >= th)}'; then
+            echo "Test run meets the required pass percentage. Workflow will SUCCEED."
+            echo "test_status=success" >> "$GITHUB_OUTPUT"
+        else
+            echo "Test run DOES NOT meet the required pass percentage. Workflow will FAIL."
+            echo "test_status=failure" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Final Workflow Status Check
+      # This step will explicitly fail the workflow if the 'evaluate_results' step
+      # determined that the pass percentage was below the threshold.
+      if: steps.evaluate_results.outputs.test_status == 'failure'
+      run: |
+        echo "The test pass percentage was below the required threshold. Failing the workflow."
+        exit 1

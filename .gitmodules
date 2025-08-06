@@ -1,0 +1,3 @@
+[submodule "fcsim"]
+	path = fcsim
+	url = git@github.com:evenifyouforget/fcsim.git
