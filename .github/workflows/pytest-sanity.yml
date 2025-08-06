@@ -29,9 +29,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pytest pytest-json-report pytest-xdist
-        # Install scons and other build dependencies as system packages
+        # Install scons, valgrind, and other build dependencies as system packages
         sudo apt-get update
-        sudo apt-get install -y jq scons clang libx11-dev libgl-dev lld
+        sudo apt-get install -y jq scons clang libx11-dev libgl-dev lld valgrind
 
     - name: Run Pytest and generate JSON report
       id: run_pytest
