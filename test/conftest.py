@@ -187,8 +187,8 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         fix_text_table_alignment(comparison_table)
         
         # determine color based on backend agreement
-        disagreements = backend_table[0][1] + backend_table[1][0]
-        backend_color = 'green' if disagreements == 0 else 'yellow' if disagreements <= 2 else 'red'
+        backend_color = [['green', 'yellow'],
+                         ['cyan', 'red']][bool(backend_table[1][0])][bool(backend_table[0][1])]
         
         for comp_row in comparison_table:
             terminalreporter.write_line(' '.join(comp_row), **{backend_color: True})
