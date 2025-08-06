@@ -26,7 +26,7 @@ def generate_test_single_design_data():
     test_dir = Path() / 'test'
     fc_data_path = test_dir / 'fc_data.tsv'
     # test cases that apparently hang
-    taboo_ids = {'4870828', '12709506', '12709499', '12707293', '4560157', '12709517', '12708180'}
+    taboo_ids = {'4870828', '4560157', '12707293', '12708180'}
     # read user submitted design info from sheet
     with open(fc_data_path, newline='') as file:
         reader = csv.reader(file, delimiter='\t')
