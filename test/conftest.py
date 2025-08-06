@@ -21,6 +21,8 @@ pass_rate_colors = [
     ]
 
 def fix_text_table_alignment(table):
+    if not table:
+        return
     num_columns = max(map(len, table))
     for column_i in range(num_columns):
         max_len = max(len(row[column_i]) for row in table)

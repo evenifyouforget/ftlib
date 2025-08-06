@@ -33,7 +33,19 @@ def run_design(design_struct, max_ticks, command_prepend=None, command_append=No
     serialized_input = ' '.join(map(str, serialized_input))
     # run the executable
     if backend == 'fcsim':
-        exec_path = Path(__file__).parent.parent / 'fcsim' / 'run_single_design'
+        # Look for fcsim executable in multiple locations (supports both symlink and direct paths)
+        base_dir = Path(__file__).parent.parent
+        candidates = [
+            base_dir / 'fcsim' / 'run_single_design',  # As symlink/submodule
+            base_dir.parent / 'fcsim' / 'run_single_design',  # As sibling directory
+        ]
+        exec_path = None
+        for candidate in candidates:
+            if candidate.exists():
+                exec_path = candidate
+                break
+        if exec_path is None:
+            raise FileNotFoundError(f"fcsim executable not found. Tried: {candidates}")
     else:
         exec_path = Path(__file__).parent.parent / 'bin' / 'run_single_design'
     command_prepend = command_prepend or []
