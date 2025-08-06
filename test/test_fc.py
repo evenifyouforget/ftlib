@@ -25,8 +25,6 @@ def extract_design_id(link_or_id):
 def generate_test_single_design_data():
     test_dir = Path() / 'test'
     fc_data_path = test_dir / 'fc_data.tsv'
-    # test cases that apparently hang
-    taboo_ids = {'4870828', '4560157', '12707293', '12708180'}
     # read user submitted design info from sheet
     with open(fc_data_path, newline='') as file:
         reader = csv.reader(file, delimiter='\t')
@@ -54,8 +52,6 @@ def generate_test_single_design_data():
         level_id, design_id, solve_ticks, design_max_ticks, user_comment, spectre_override, cpu_name, p2_solve_ticks, *_ = itertools.chain(row, [None]*10)
         level_id = extract_design_id(level_id)
         design_id = extract_design_id(design_id)
-        if level_id in taboo_ids or design_id in taboo_ids:
-            continue
         solve_ticks = int_or_none(solve_ticks)
         design_max_ticks = int_or_none(design_max_ticks)
         if solve_ticks is None and design_max_ticks is None:
