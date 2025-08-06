@@ -55,16 +55,13 @@ int main() {
     //get the example design
     ft_design_spec spec = make_the_design();
 
-    std::shared_ptr<ft_design> design = ft_create_design(nullptr, spec);
+    ft_design design = ft_create_design(spec);
 
-    print_design(*design);
+    print_design(design);
 
     //create the handle and setings
-    std::shared_ptr<ft_sim_state> handle;
     ft_sim_settings settings;
-
-    //initialize the handle
-    handle = ft_create_sim(handle, *design, settings);
+    ft_sim_state handle = ft_create_sim(design, settings);
 
     //step the simulation until it solves
     while(!ft_is_solved(handle, spec)) {
@@ -72,6 +69,6 @@ int main() {
     }
 
     //behold: a solve
-    std::cout << "Design solved at " << handle->tick << " ticks" << std::endl;
+    std::cout << "Design solved at " << handle.tick << " ticks" << std::endl;
     return 0;
 }

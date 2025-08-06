@@ -331,28 +331,25 @@ static void create_joints(ft_design& design, ft_block_spec bdef) {
     }
 }
 
-std::shared_ptr<ft_design> ft_create_design(std::shared_ptr<ft_design> design,
-                                            const ft_design_spec& spec) {
-    if (design == nullptr) {
-        design = std::make_shared<ft_design>();
-    }
+ft_design ft_create_design(const ft_design_spec& spec) {
+    ft_design design = {};
 
     for (size_t i = 0; i < spec.blocks.size(); i++) {
         ft_block ftb = to_block(spec.blocks[i]);
 
         if (ft_is_player_movable(spec.blocks[i].type)) {
-            design->design_blocks.push_back(ftb);
+            design.design_blocks.push_back(ftb);
         } else {
-            design->level_blocks.push_back(ftb);
+            design.level_blocks.push_back(ftb);
         }
     }
 
     for (size_t i = 0; i < spec.blocks.size(); i++) {
-        create_joints(*design, spec.blocks[i]);
+        create_joints(design, spec.blocks[i]);
     }
 
-    design->build = spec.build;
-    design->goal = spec.goal;
+    design.build = spec.build;
+    design.goal = spec.goal;
 
     return design;
 }
@@ -492,56 +489,52 @@ class collision_filter : public b2CollisionFilter {
 
 static collision_filter ft_collision_filter;
 
-std::shared_ptr<ft_sim_state> ft_create_sim(std::shared_ptr<ft_sim_state> handle,
-                                            const ft_design& design,
-                                            const ft_sim_settings& settings) {
-    if (handle == nullptr) {
-        handle = std::make_shared<ft_sim_state>();
-    }
+ft_sim_state ft_create_sim(const ft_design& design, const ft_sim_settings& settings) {
+    ft_sim_state handle = {};
 
     b2Vec2 gravity(0, 300);
     b2AABB aabb;
     aabb.minVertex.Set(-ARENA_WIDTH, -ARENA_HEIGHT);
     aabb.maxVertex.Set(ARENA_WIDTH, ARENA_HEIGHT);
-    handle->world = new b2World(aabb, gravity, true);
-    handle->world->SetFilter(&ft_collision_filter);
+    handle.world = new b2World(aabb, gravity, true);
+    handle.world->SetFilter(&ft_collision_filter);
 
     // copies design over
-    handle->design = design;
+    handle.design = design;
 
-    for (auto& block : handle->design.level_blocks)
-        generate_body(handle->world, block);
-    for (auto& block : handle->design.design_blocks)
-        generate_body(handle->world, block);
+    for (auto& block : handle.design.level_blocks)
+        generate_body(handle.world, block);
+    for (auto& block : handle.design.design_blocks)
+        generate_body(handle.world, block);
 
-    for (auto& js : handle->design.joint_stacks) {
+    for (auto& js : handle.design.joint_stacks) {
         // start from 1 because a js of size 1 generates nothing
         for (size_t i = 0; i < js.joints.size(); i++) {
             ft_joint& joint = js.joints[i];
-            generate_joint(handle->world, handle->design, js, joint);
+            generate_joint(handle.world, handle.design, js, joint);
         }
     }
 
     return handle;
 }
 
-void ft_step_sim(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings& settings) {
-    handle->world->Step(TIME_STEP, ITERATIONS);
+void ft_step_sim(ft_sim_state& handle, const ft_sim_settings& settings) {
+    handle.world->Step(TIME_STEP, ITERATIONS);
 
     // joint breaking
-    b2Joint* joint = handle->world->GetJointList();
+    b2Joint* joint = handle.world->GetJointList();
     while (joint) {
         b2Joint* next = joint->GetNext();
         b2Vec2 a1 = joint->GetAnchor1();
         b2Vec2 a2 = joint->GetAnchor2();
         b2Vec2 d = a1 - a2;
         if (fabs(d.x) + fabs(d.y) > 50.0)
-            handle->world->DestroyJoint(joint);
+            handle.world->DestroyJoint(joint);
         joint = next;
     }
 
-    std::vector<ft_block>* block_vecs[2]{&handle->design.level_blocks,
-                                         &handle->design.design_blocks};
+    std::vector<ft_block>* block_vecs[2]{&handle.design.level_blocks,
+                                         &handle.design.design_blocks};
     for (size_t i = 0; i < 2; i++) {
         std::vector<ft_block>& blocks = *block_vecs[i];
         for (auto& block : blocks) {
@@ -554,7 +547,7 @@ void ft_step_sim(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings& se
         }
     }
 
-    handle->tick++;
+    handle.tick++;
 }
 
 bool ft_in_area(const ft_block& block, const ft_rect& area) {
@@ -594,9 +587,9 @@ bool ft_in_area(const ft_block& block, const ft_rect& area) {
     return true;
 }
 
-bool ft_is_solved(const std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec) {
+bool ft_is_solved(const ft_sim_state& sim, const ft_design_spec& spec) {
     bool goal_exist = false;
-    for (const auto& block : sim->design.design_blocks) {
+    for (const auto& block : sim.design.design_blocks) {
         if (!ft_is_goal_object(block.type))
             continue;
         goal_exist = true;
