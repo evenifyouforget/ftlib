@@ -44,9 +44,14 @@ def global_max_ticks(pytestconfig):
     return 2000
 
 def pytest_sessionstart(session):
+    root_dir = Path()
+    # sanity check that this looks like the root dir for ftlib
+    if not {'cli_adapter', 'example', 'fcsim', 'src', 'test'} <= set(child.name for child in root_dir.iterdir()):
+        raise RuntimeError('ftlib tests should be run from the root directory, and the current working directory seems wrong')
     # build once the binary we will run for every test
-    cli_adapter_dir = Path() / 'cli_adapter'
-    subprocess.run(['scons']) #TODO: add build option to only build cli adapter
+    fcsim_dir = root_dir / 'fcsim'
+    subprocess.run(['scons'])
+    subprocess.run(['scons'], cwd=fcsim_dir)
 
 def pytest_runtest_logreport(report):
     """
