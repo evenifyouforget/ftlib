@@ -1,0 +1,124 @@
+name: Pytest Percentage Pass Check
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      test_pass_threshold:
+        description: 'Minimum percentage of tests that must pass for the workflow to succeed (e.g., 80.0 for 80%)'
+        required: false
+        default: '80.0'
+        type: number
+  # This event triggers the workflow whenever a pull request is opened,
+  # synchronized (new commits pushed), or reopened.
+  pull_request:
+    branches:
+      - main # Or your main development branch, e.g., 'master', 'develop'
+
+jobs:
+  run-tests-with-threshold:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12' # Use your desired Python version
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-json-report
+
+    - name: Run Pytest and generate JSON report
+      id: run_pytest
+      # The '|| true' ensures that this step doesn't fail the workflow immediately
+      # if tests fail, allowing the report to be processed.
+      run: pytest --json-report --json-report-file=pytest_report.json || true
+
+    - name: Evaluate Test Results based on Percentage
+      id: evaluate_results
+      run: |
+        # Define the path to the pytest JSON report
+        REPORT_FILE="pytest_report.json"
+        # Get the threshold from workflow inputs, defaulting to 80.0 if not provided
+        # For pull_request events, you might want to hardcode the threshold or
+        # retrieve it from a repository secret/variable if it's dynamic.
+        THRESHOLD=${{ inputs.test_pass_threshold || 80.0 }}
+
+        # Python script to parse the JSON report and calculate the pass percentage
+        python -c "
+import json
+import os
+
+report_file = os.getenv('REPORT_FILE')
+threshold = float(os.getenv('THRESHOLD'))
+
+try:
+    with open(report_file, 'r') as f:
+        report = json.load(f)
+
+    summary = report.get('summary', {})
+    total_tests = summary.get('total', 0)
+    passed_tests = summary.get('passed', 0)
+    failed_tests = summary.get('failed', 0)
+    skipped_tests = summary.get('skipped', 0)
+    error_tests = summary.get('error', 0)
+    xfailed_tests = summary.get('xfailed', 0)
+    xpassed_tests = summary.get('xpassed', 0)
+
+    # Calculate effective total tests for percentage.
+    # We'll consider passed, failed, and error tests as the base for percentage.
+    # You might adjust this definition based on your specific needs (e.g., exclude skipped).
+    effective_total = passed_tests + failed_tests + error_tests
+
+    pass_percentage = 0.0
+    if effective_total > 0:
+        pass_percentage = (passed_tests / effective_total) * 100
+
+    print(f'--- Pytest Summary ---')
+    print(f'Total tests found: {total_tests}')
+    print(f'Tests considered for percentage (Passed + Failed + Errors): {effective_total}')
+    print(f'Passed tests: {passed_tests}')
+    print(f'Failed tests: {failed_tests}')
+    print(f'Error tests: {error_tests}')
+    print(f'Skipped tests: {skipped_tests}')
+    print(f'XFailed tests (expected to fail): {xfailed_tests}')
+    print(f'XPassed tests (unexpectedly passed): {xpassed_tests}')
+    print(f'----------------------')
+    print(f'Calculated Pass Percentage: {pass_percentage:.2f}%')
+    print(f'Required Pass Threshold: {threshold:.2f}%')
+
+    # Set workflow output based on the comparison
+    if pass_percentage >= threshold:
+        print('Test run meets the required pass percentage. Workflow will SUCCEED.')
+        print(f'test_status=success' >> $GITHUB_OUTPUT)
+    else:
+        print('Test run DOES NOT meet the required pass percentage. Workflow will FAIL.')
+        print(f'test_status=failure' >> $GITHUB_OUTPUT)
+
+except FileNotFoundError:
+    print(f'Error: Pytest report file "{report_file}" not found.')
+    print('This usually means pytest did not run or failed to generate the report.')
+    print(f'test_status=failure' >> $GITHUB_OUTPUT)
+except json.JSONDecodeError:
+    print(f'Error: Could not decode JSON from "{report_file}". Is the report corrupted?')
+    print(f'test_status=failure' >> $GITHUB_OUTPUT)
+except Exception as e:
+    print(f'An unexpected error occurred during report evaluation: {e}')
+    print(f'test_status=failure' >> $GITHUB_OUTPUT)
+        "
+      env:
+        REPORT_FILE: ${{ env.REPORT_FILE }} # Pass the report file path as an environment variable
+        THRESHOLD: ${{ env.THRESHOLD }}     # Pass the threshold as an environment variable
+
+    - name: Final Workflow Status Check
+      # This step will explicitly fail the workflow if the 'evaluate_results' step
+      # determined that the pass percentage was below the threshold.
+      if: steps.evaluate_results.outputs.test_status == 'failure'
+      run: |
+        echo "The test pass percentage was below the required threshold. Failing the workflow."
+        exit 1
