@@ -78,7 +78,7 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize('design_uid,design_data', generate_test_single_design_data())
 
 # test single designs
-def test_single_design(design_uid, design_data, global_max_ticks):
+def test_single_design(design_uid, design_data, global_max_ticks, use_classic_timeout):
     # unpack tuple
     design_struct = design_data.design_struct
     expect_solve_ticks = design_data.expect_solve_ticks
@@ -116,9 +116,12 @@ def test_single_design(design_uid, design_data, global_max_ticks):
             raise AssertionError(error_message)
         if real_solve_ticks != expect_solve_ticks:
             raise AssertionError(error_message)
+    if not use_classic_timeout and real_solve_ticks == -1 and real_end_ticks < (expect_solve_ticks if expect_solve_ticks is not None else design_max_ticks):
+        # still uncertain
+        pytest.skip(f'Ran to {real_end_ticks} and still no solve (expected: {correct_result_message}){post_message}')
 
 # test single designs using fcsim backend
-def test_single_design_fcsim(design_uid, design_data, global_max_ticks):
+def test_single_design_fcsim(design_uid, design_data, global_max_ticks, use_classic_timeout):
     # unpack tuple
     design_struct = design_data.design_struct
     expect_solve_ticks = design_data.expect_solve_ticks
@@ -156,6 +159,9 @@ def test_single_design_fcsim(design_uid, design_data, global_max_ticks):
             raise AssertionError(error_message)
         if real_solve_ticks != expect_solve_ticks:
             raise AssertionError(error_message)
+    if not use_classic_timeout and real_solve_ticks == -1 and real_end_ticks < (expect_solve_ticks if expect_solve_ticks is not None else design_max_ticks):
+        # still uncertain
+        pytest.skip(f'Ran to {real_end_ticks} and still no solve (expected: {correct_result_message}){post_message}')
 
 # test memory safety
 def test_valgrind(design_uid, design_data, global_max_ticks):

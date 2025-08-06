@@ -37,6 +37,7 @@ def fix_text_table_alignment(table):
 def pytest_addoption(parser):
     parser.addoption("--all", action="store_true", help="Run all tests, and disable global tick limit. (slow)")
     parser.addoption("--max-ticks", type=int, default=None, help="Override max ticks limit per design. Has priority over --all")
+    parser.addoption("--classic", action="store_true", help="Switch to old behaviour of passing on incomplete tests, rather than skipping")
 
 @pytest.fixture(scope='session')
 def global_max_ticks(pytestconfig):
@@ -47,6 +48,10 @@ def global_max_ticks(pytestconfig):
     if use_all:
         return None
     return 2000
+
+@pytest.fixture(scope='session')
+def use_classic_timeout(pytestconfig):
+    return pytestconfig.getoption('--classic')
 
 def pytest_sessionstart(session):
     root_dir = Path()
@@ -148,22 +153,23 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
 
         # add regression table below
         ref_per_test_results = reference_run_results.get(function_name, {})
-        pf_table = [[0] * 3 for _ in range(2)]
+        pf_table = [[0] * 4 for _ in range(3)]
         for params, result in per_test_results.items():
             ref_result = ref_per_test_results.get(params, None)
-            y = 0 if result == 'passed' else 1 if result == 'failed' else None
-            x = 0 if ref_result == 'passed' else 1 if ref_result == 'failed' else 2
+            y = 0 if result == 'passed' else 1 if result == 'failed' else 2 if result == 'skipped' else None
+            x = 0 if ref_result == 'passed' else 1 if ref_result == 'failed' else 2 if ref_result == 'skipped' else 3
             if y is not None:
                 pf_table[y][x] += 1
         regression_table = []
-        regression_table.append(['Now \\ Ref', 'Pass', 'Fail', 'No data'])
+        regression_table.append(['Now \\ Ref', 'Pass', 'Fail', 'Skip', 'No data'])
         regression_table.append(['Pass'] + list(map(str, pf_table[0])))
         regression_table.append(['Fail'] + list(map(str, pf_table[1])))
+        regression_table.append(['Skip'] + list(map(str, pf_table[2])))
         fix_text_table_alignment(regression_table)
         caused_regression = pf_table[1][0] != 0
         regression_color = 'red' if caused_regression else color
         for regression_row in regression_table:
-            regression_settings = {color: True}
+            regression_settings = {regression_color: True}
             terminalreporter.write_line(' '.join(regression_row), **regression_settings)
     
     # backend comparison between test_single_design (ftlib) and test_single_design_fcsim
@@ -174,7 +180,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         fcsim_results = current_run_results['test_single_design_fcsim']
         
         # build comparison table
-        backend_table = [[0] * 2 for _ in range(2)]
+        backend_table = [[0] * 3 for _ in range(3)]
         all_params = set(ftlib_results.keys()) | set(fcsim_results.keys())
         
         # also build disagreements list
@@ -188,13 +194,14 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
             x = 0 if fcsim_result == 'passed' else 1 if fcsim_result == 'failed' else None
             if y is not None and x is not None:
                 backend_table[y][x] += 1
-                if x != y:
+                if x != y and x + y == 1:
                     [ftlib_better, fcsim_better][y].append(f'{params} - ftlib {ftlib_result}, fcsim {fcsim_result}')
         
         comparison_table = []
-        comparison_table.append(['ftlib \\ fcsim', 'Pass', 'Fail'])
+        comparison_table.append(['ftlib \\ fcsim', 'Pass', 'Fail', 'Skip'])
         comparison_table.append(['Pass'] + list(map(str, backend_table[0])))
         comparison_table.append(['Fail'] + list(map(str, backend_table[1])))
+        comparison_table.append(['Skip'] + list(map(str, backend_table[2])))
         fix_text_table_alignment(comparison_table)
         
         # determine color based on backend agreement
