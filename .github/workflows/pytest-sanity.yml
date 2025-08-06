@@ -33,7 +33,8 @@ jobs:
       id: run_pytest
       # The '|| true' ensures that this step doesn't fail the workflow immediately
       # if tests fail, allowing the report to be processed.
-      run: pytest -s -n auto --json-report --json-report-file=pytest_report.json test --all || true
+      # Added --rootdir . to explicitly set pytest's root to the repo root
+      run: pytest --rootdir . -s -n auto --json-report --json-report-file=pytest_report.json test --all || true
 
     - name: Evaluate Test Results based on Percentage
       id: evaluate_results
