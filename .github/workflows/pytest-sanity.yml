@@ -26,9 +26,9 @@ jobs:
     - name: Set up Python and Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        # Added scons to the pip install command
-        pip install pytest pytest-json-report pytest-xdist scons
-        sudo apt-get update && sudo apt-get install -y jq # Install jq for JSON parsing
+        pip install pytest pytest-json-report pytest-xdist
+        # Install scons as a system package to ensure its executable is found
+        sudo apt-get update && sudo apt-get install -y jq scons
 
     - name: Run Pytest and generate JSON report
       id: run_pytest
