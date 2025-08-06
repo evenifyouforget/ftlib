@@ -20,7 +20,14 @@ pass_rate_colors = [
     ('blue', 1)
     ]
 
+def abbreviate_list(lines, max_lines=3):
+    if len(lines) > max_lines:
+        return lines[:max_lines] + [f'... ({len(lines) - max_lines} more lines)']
+    return lines
+
 def fix_text_table_alignment(table):
+    if not table:
+        return
     num_columns = max(map(len, table))
     for column_i in range(num_columns):
         max_len = max(len(row[column_i]) for row in table)
@@ -30,6 +37,7 @@ def fix_text_table_alignment(table):
 def pytest_addoption(parser):
     parser.addoption("--all", action="store_true", help="Run all tests, and disable global tick limit. (slow)")
     parser.addoption("--max-ticks", type=int, default=None, help="Override max ticks limit per design. Has priority over --all")
+    parser.addoption("--classic", action="store_true", help="Switch to old behaviour of passing on incomplete tests, rather than skipping")
 
 @pytest.fixture(scope='session')
 def global_max_ticks(pytestconfig):
@@ -41,10 +49,19 @@ def global_max_ticks(pytestconfig):
         return None
     return 2000
 
+@pytest.fixture(scope='session')
+def use_classic_timeout(pytestconfig):
+    return pytestconfig.getoption('--classic')
+
 def pytest_sessionstart(session):
+    root_dir = Path()
+    # sanity check that this looks like the root dir for ftlib
+    if not {'cli_adapter', 'example', 'fcsim', 'src', 'test'} <= set(child.name for child in root_dir.iterdir()):
+        raise RuntimeError('ftlib tests should be run from the root directory, and the current working directory seems wrong')
     # build once the binary we will run for every test
-    cli_adapter_dir = Path() / 'cli_adapter'
-    subprocess.run(['scons']) #TODO: add build option to only build cli adapter
+    fcsim_dir = root_dir / 'fcsim'
+    subprocess.run(['scons'])
+    subprocess.run(['scons'], cwd=fcsim_dir)
 
 def pytest_runtest_logreport(report):
     """
@@ -136,20 +153,68 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
 
         # add regression table below
         ref_per_test_results = reference_run_results.get(function_name, {})
-        pf_table = [[0] * 3 for _ in range(2)]
+        pf_table = [[0] * 4 for _ in range(3)]
         for params, result in per_test_results.items():
             ref_result = ref_per_test_results.get(params, None)
-            y = 0 if result == 'passed' else 1 if result == 'failed' else None
-            x = 0 if ref_result == 'passed' else 1 if ref_result == 'failed' else 2
+            y = 0 if result == 'passed' else 1 if result == 'failed' else 2 if result == 'skipped' else None
+            x = 0 if ref_result == 'passed' else 1 if ref_result == 'failed' else 2 if ref_result == 'skipped' else 3
             if y is not None:
                 pf_table[y][x] += 1
         regression_table = []
-        regression_table.append(['Now \\ Ref', 'Pass', 'Fail', 'No data'])
+        regression_table.append(['Now \\ Ref', 'Pass', 'Fail', 'Skip', 'No data'])
         regression_table.append(['Pass'] + list(map(str, pf_table[0])))
         regression_table.append(['Fail'] + list(map(str, pf_table[1])))
+        regression_table.append(['Skip'] + list(map(str, pf_table[2])))
         fix_text_table_alignment(regression_table)
         caused_regression = pf_table[1][0] != 0
         regression_color = 'red' if caused_regression else color
         for regression_row in regression_table:
-            regression_settings = {color: True}
+            regression_settings = {regression_color: True}
             terminalreporter.write_line(' '.join(regression_row), **regression_settings)
+    
+    # backend comparison between test_single_design (ftlib) and test_single_design_fcsim
+    if 'test_single_design' in current_run_results and 'test_single_design_fcsim' in current_run_results:
+        terminalreporter.write_sep("=", "backend comparison: ftlib vs fcsim")
+        
+        ftlib_results = current_run_results['test_single_design']
+        fcsim_results = current_run_results['test_single_design_fcsim']
+        
+        # build comparison table
+        backend_table = [[0] * 3 for _ in range(3)]
+        all_params = set(ftlib_results.keys()) | set(fcsim_results.keys())
+        
+        # also build disagreements list
+        ftlib_better = []
+        fcsim_better = []
+        
+        for params in all_params:
+            ftlib_result = ftlib_results.get(params, None)
+            fcsim_result = fcsim_results.get(params, None)
+            y = 0 if ftlib_result == 'passed' else 1 if ftlib_result == 'failed' else 2 if ftlib_result == 'skipped' else None
+            x = 0 if fcsim_result == 'passed' else 1 if fcsim_result == 'failed' else 2 if fcsim_result == 'skipped' else None
+            if y is not None and x is not None:
+                backend_table[y][x] += 1
+                if x != y and x + y == 1:
+                    [ftlib_better, fcsim_better][y].append(f'{params} - ftlib {ftlib_result}, fcsim {fcsim_result}')
+        
+        comparison_table = []
+        comparison_table.append(['ftlib \\ fcsim', 'Pass', 'Fail', 'Skip'])
+        comparison_table.append(['Pass'] + list(map(str, backend_table[0])))
+        comparison_table.append(['Fail'] + list(map(str, backend_table[1])))
+        comparison_table.append(['Skip'] + list(map(str, backend_table[2])))
+        fix_text_table_alignment(comparison_table)
+        
+        # determine color based on backend agreement
+        backend_color = [['green', 'cyan'],
+                         ['yellow', 'red']][bool(backend_table[1][0])][bool(backend_table[0][1])]
+        
+        for comp_row in comparison_table:
+            terminalreporter.write_line(' '.join(comp_row), **{backend_color: True})
+        
+        if ftlib_better:
+            print('### Tests where ftlib did better')
+            print('\n'.join(abbreviate_list(ftlib_better)))
+        
+        if fcsim_better:
+            print('### Tests where fcsim did better')
+            print('\n'.join(abbreviate_list(fcsim_better)))
