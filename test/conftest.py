@@ -20,6 +20,11 @@ pass_rate_colors = [
     ('blue', 1)
     ]
 
+def abbreviate_list(lines, max_lines=3):
+    if len(lines) > max_lines:
+        return lines[:max_lines] + [f'... ({len(lines) - max_lines} more lines)']
+    return lines
+
 def fix_text_table_alignment(table):
     if not table:
         return
@@ -172,6 +177,10 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         backend_table = [[0] * 2 for _ in range(2)]
         all_params = set(ftlib_results.keys()) | set(fcsim_results.keys())
         
+        # also build disagreements list
+        ftlib_better = []
+        fcsim_better = []
+        
         for params in all_params:
             ftlib_result = ftlib_results.get(params, None)
             fcsim_result = fcsim_results.get(params, None)
@@ -179,6 +188,8 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
             x = 0 if fcsim_result == 'passed' else 1 if fcsim_result == 'failed' else None
             if y is not None and x is not None:
                 backend_table[y][x] += 1
+                if x != y:
+                    [ftlib_better, fcsim_better][y].append(f'{params} - ftlib {ftlib_result}, fcsim {fcsim_result}')
         
         comparison_table = []
         comparison_table.append(['ftlib \\ fcsim', 'Pass', 'Fail'])
@@ -192,3 +203,11 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         
         for comp_row in comparison_table:
             terminalreporter.write_line(' '.join(comp_row), **{backend_color: True})
+        
+        if ftlib_better:
+            print('### Tests where ftlib did better')
+            print('\n'.join(abbreviate_list(ftlib_better)))
+        
+        if fcsim_better:
+            print('### Tests where fcsim did better')
+            print('\n'.join(abbreviate_list(fcsim_better)))
