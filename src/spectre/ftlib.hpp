@@ -17,4 +17,6 @@ std::string ft_math_hash();
 double _as_double(uint64_t i);
 uint64_t _as_int(double f);
 
+double fcsim_strtod(std::string);
+
 #endif

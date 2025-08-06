@@ -1,6 +1,8 @@
 from enum import Enum
 from collections import namedtuple
 import requests
+import struct
+import subprocess
 from xml.dom import minidom
 from pathlib import Path
 import warnings
@@ -41,6 +43,33 @@ class XMLBadDataWarning(UserWarning):
 
 FCPieceStruct = namedtuple('FCPieceStruct', ['type_id', 'piece_id', 'x', 'y', 'w', 'h', 'angle', 'joints'])
 FCDesignStruct = namedtuple('FCDesignStruct', ['name', 'base_level_id', 'goal_pieces', 'design_pieces', 'level_pieces', 'build_area', 'goal_area'])
+
+fcsim_strtod_query_server = None
+
+def fcsim_strtod_query_server_clear():
+    """
+    Clear the server if any is being used.
+    """
+    global fcsim_strtod_query_server
+    fcsim_strtod_query_server.kill()
+    fcsim_strtod_query_server = None
+
+def fcsim_strtod(istr):
+    """
+    Convert a string to double using the janky and slightly incorrect method.
+    Warning: starts a subprocess (the "server") the first time this is called,
+    so we can reuse it
+    """
+    global fcsim_strtod_query_server
+    if not fcsim_strtod_query_server:
+        exec_path = Path() / 'bin' / 'fcsim_strtod'
+        command = [exec_path]
+        fcsim_strtod_query_server = subprocess.Popen(command, text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    fcsim_strtod_query_server.stdin.write(istr + '\n')
+    fcsim_strtod_query_server.stdin.flush()
+    stdout = fcsim_strtod_query_server.stdout.readline()
+    x_as_int = int(stdout.strip())
+    return struct.unpack("d", struct.pack("Q", x_as_int))[0]
 
 def retrieveLevel(levelId, is_design=False, cache=None):
     # try to get it from cache first
@@ -83,7 +112,8 @@ def retrieveLevel(levelId, is_design=False, cache=None):
 def retrieveDesign(designId):
     return retrieveLevel(designId, is_design=True)
 
-def pieceDomToStruct(dom):
+def pieceDomToStruct(dom, use_fcsim_strtod=True):
+    to_float = fcsim_strtod if use_fcsim_strtod else float
     xml_type = dom.nodeName
     # get numerical piece type
     try:
@@ -94,19 +124,22 @@ def pieceDomToStruct(dom):
         piece_type = fcxml_piece_types.FCSIM_GP_CIRC__SPECIAL_CASE
     if piece_type is not None:
         piece_type = piece_type.value
+    # get id if present
+    piece_id = dom.getAttribute("id")
+    piece_id = int(piece_id) if piece_id is not None and piece_id != '' else None
     # get joints
     joints = []
     if len(dom.getElementsByTagName("joints")) > 0:
         for joint in dom.getElementsByTagName("joints")[0].getElementsByTagName("jointedTo"):
             joints.append(int(joint.firstChild.nodeValue))
     # get xywhr
-    x = float(dom.getElementsByTagName("position")[0].getElementsByTagName("x")[0].firstChild.nodeValue)
-    y = float(dom.getElementsByTagName("position")[0].getElementsByTagName("y")[0].firstChild.nodeValue)
-    w = float(dom.getElementsByTagName("width")[0].firstChild.nodeValue)
-    h = float(dom.getElementsByTagName("height")[0].firstChild.nodeValue)
+    x = to_float(dom.getElementsByTagName("position")[0].getElementsByTagName("x")[0].firstChild.nodeValue)
+    y = to_float(dom.getElementsByTagName("position")[0].getElementsByTagName("y")[0].firstChild.nodeValue)
+    w = to_float(dom.getElementsByTagName("width")[0].firstChild.nodeValue)
+    h = to_float(dom.getElementsByTagName("height")[0].firstChild.nodeValue)
     angle = 0
     if(len(dom.getElementsByTagName("rotation")) > 0):
-        angle = float(dom.getElementsByTagName("rotation")[0].firstChild.nodeValue)
+        angle = to_float(dom.getElementsByTagName("rotation")[0].firstChild.nodeValue)
     # static circles and dynamic circles use radius instead of diameter like every other piece. let's fix that
     use_radius = piece_type in (fcsim_piece_types.FCSIM_STATIC_CIRC.value, fcsim_piece_types.FCSIM_DYNAMIC_CIRC.value)
     if use_radius:
@@ -115,7 +148,7 @@ def pieceDomToStruct(dom):
     # return struct
     return FCPieceStruct(
         type_id=piece_type,
-        piece_id=None,
+        piece_id=piece_id,
         x=x,
         y=y,
         w=w,
