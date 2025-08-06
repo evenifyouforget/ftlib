@@ -75,7 +75,7 @@ struct ft_block {
     b2Body* body; // not managed by us
 };
 
-ft_block to_block(ft_block_spec bdef, std::shared_ptr<ft_design> design);
+ft_block to_block(ft_block_spec bdef);
 
 struct ft_joint_type {
     enum type : int8_t {

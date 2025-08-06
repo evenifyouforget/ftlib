@@ -67,7 +67,7 @@ bool ft_is_player_deletable(ft_piece_type::type type) {
     }
 }
 
-ft_block to_block(ft_block_spec bdef, std::shared_ptr<ft_design> design) {
+ft_block to_block(ft_block_spec bdef) {
     ft_block b = {};
     b.block_idx = bdef.id;
     b.type = bdef.type;
@@ -338,7 +338,7 @@ std::shared_ptr<ft_design> ft_create_design(std::shared_ptr<ft_design> design,
     }
 
     for (size_t i = 0; i < spec.blocks.size(); i++) {
-        ft_block ftb = to_block(spec.blocks[i], design);
+        ft_block ftb = to_block(spec.blocks[i]);
 
         if (ft_is_player_movable(spec.blocks[i].type)) {
             design->design_blocks.push_back(ftb);
