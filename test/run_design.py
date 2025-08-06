@@ -5,7 +5,7 @@ import subprocess
 
 RunDesignResult = namedtuple('RunDesignResult', ['proc', 'real_solve_ticks', 'real_end_ticks'])
 
-def run_design(design_struct, max_ticks, command_prepend=None, command_append=None):
+def run_design(design_struct, max_ticks, command_prepend=None, command_append=None, backend='ftlib'):
     # generate serialized input
     serialized_input = []
     serialized_input.append(max_ticks)
@@ -32,7 +32,10 @@ def run_design(design_struct, max_ticks, command_prepend=None, command_append=No
     serialized_input.append(design_struct.goal_area.h)
     serialized_input = ' '.join(map(str, serialized_input))
     # run the executable
-    exec_path = Path() / 'bin' / 'run_single_design'
+    if backend == 'fcsim':
+        exec_path = Path(__file__).parent.parent / 'fcsim' / 'run_single_design'
+    else:
+        exec_path = Path(__file__).parent.parent / 'bin' / 'run_single_design'
     command_prepend = command_prepend or []
     command_append = command_append or []
     command = command_prepend + [exec_path] + command_append
