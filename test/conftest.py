@@ -190,8 +190,8 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         for params in all_params:
             ftlib_result = ftlib_results.get(params, None)
             fcsim_result = fcsim_results.get(params, None)
-            y = 0 if ftlib_result == 'passed' else 1 if ftlib_result == 'failed' else None
-            x = 0 if fcsim_result == 'passed' else 1 if fcsim_result == 'failed' else None
+            y = 0 if ftlib_result == 'passed' else 1 if ftlib_result == 'failed' else 2 if ftlib_result == 'skipped' else None
+            x = 0 if fcsim_result == 'passed' else 1 if fcsim_result == 'failed' else 2 if fcsim_result == 'skipped' else None
             if y is not None and x is not None:
                 backend_table[y][x] += 1
                 if x != y and x + y == 1:
