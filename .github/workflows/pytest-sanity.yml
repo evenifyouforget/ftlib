@@ -23,15 +23,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10' # Updated to a specific, commonly used Python version
-
-    - name: Install dependencies
+    - name: Set up Python and Install Dependencies
       run: |
         python -m pip install --upgrade pip
         pip install pytest pytest-json-report
+        sudo apt-get update && sudo apt-get install -y jq # Install jq for JSON parsing
 
     - name: Run Pytest and generate JSON report
       id: run_pytest
@@ -41,78 +37,64 @@ jobs:
 
     - name: Evaluate Test Results based on Percentage
       id: evaluate_results
-      env:
-        REPORT_FILE: pytest_report.json # Directly set the report file path for the step's environment
-        # Get the threshold from workflow inputs, defaulting to 80.0 if not provided.
-        # This value is now correctly passed as an environment variable to the Python script.
-        THRESHOLD: ${{ inputs.test_pass_threshold || 80.0 }}
       run: |
-        # Python script to parse the JSON report and calculate the pass percentage
-        python -c "
-import json
-import os
+        REPORT_FILE="pytest_report.json"
+        # Get the threshold from workflow inputs, defaulting to 80.0 if not provided.
+        THRESHOLD=${{ inputs.test_pass_threshold || 80.0 }}
 
-# Retrieve REPORT_FILE and THRESHOLD from environment variables set for this step
-report_file = os.getenv('REPORT_FILE')
-threshold = float(os.getenv('THRESHOLD'))
+        # Check if the report file exists
+        if [ ! -f "$REPORT_FILE" ]; then
+            echo "Error: Pytest report file '$REPORT_FILE' not found."
+            echo "This usually means pytest did not run or failed to generate the report."
+            echo "test_status=failure" >> "$GITHUB_OUTPUT"
+            exit 1
+        fi
 
-try:
-    with open(report_file, 'r') as f:
-        report = json.load(f)
+        # Extract counts using jq (default to 0 if key is missing)
+        PASSED=$(jq '.summary.passed // 0' "$REPORT_FILE")
+        FAILED=$(jq '.summary.failed // 0' "$REPORT_FILE")
+        ERROR=$(jq '.summary.error // 0' "$REPORT_FILE")
+        TOTAL=$(jq '.summary.total // 0' "$REPORT_FILE")
+        SKIPPED=$(jq '.summary.skipped // 0' "$REPORT_FILE")
+        XFAILED=$(jq '.summary.xfailed // 0' "$REPORT_FILE")
+        XPASSED=$(jq '.summary.xpassed // 0' "$REPORT_FILE")
 
-    summary = report.get('summary', {})
-    total_tests = summary.get('total', 0)
-    passed_tests = summary.get('passed', 0)
-    failed_tests = summary.get('failed', 0)
-    skipped_tests = summary.get('skipped', 0)
-    error_tests = summary.get('error', 0)
-    xfailed_tests = summary.get('xfailed', 0)
-    xpassed_tests = summary.get('xpassed', 0)
+        # Calculate effective total tests for percentage
+        # We consider passed, failed, and error tests as the base for percentage.
+        EFFECTIVE_TOTAL=$((PASSED + FAILED + ERROR))
 
-    # Calculate effective total tests for percentage.
-    # We'll consider passed, failed, and error tests as the base for percentage.
-    # You might adjust this definition based on your specific needs (e.g., exclude skipped).
-    effective_total = passed_tests + failed_tests + error_tests
+        PASS_PERCENTAGE=0.0
+        if [ "$EFFECTIVE_TOTAL" -gt 0 ]; then
+            # Use awk for floating point division and formatting to 2 decimal places
+            PASS_PERCENTAGE=$(awk "BEGIN { printf \"%.2f\", ($PASSED / $EFFECTIVE_TOTAL) * 100 }")
+        fi
 
-    pass_percentage = 0.0
-    if effective_total > 0:
-        pass_percentage = (passed_tests / effective_total) * 100
+        echo "--- Pytest Summary ---"
+        echo "Total tests found: ${TOTAL}"
+        echo "Tests considered for percentage (Passed + Failed + Errors): ${EFFECTIVE_TOTAL}"
+        echo "Passed tests: ${PASSED}"
+        echo "Failed tests: ${FAILED}"
+        echo "Error tests: ${ERROR}"
+        echo "Skipped tests: ${SKIPPED}"
+        echo "XFailed tests (expected to fail): ${XFAILED}"
+        echo "XPassed tests (unexpectedly passed): ${XPASSED}"
+        echo "----------------------"
+        echo "Calculated Pass Percentage: ${PASS_PERCENTAGE}%"
+        echo "Required Pass Threshold: ${THRESHOLD}%"
 
-    print(f'--- Pytest Summary ---')
-    print(f'Total tests found: {total_tests}')
-    print(f'Tests considered for percentage (Passed + Failed + Errors): {effective_total}')
-    print(f'Passed tests: {passed_tests}')
-    print(f'Failed tests: {failed_tests}')
-    print(f'Error tests: {error_tests}')
-    print(f'Skipped tests: {skipped_tests}')
-    print(f'XFailed tests (expected to fail): {xfailed_tests}')
-    print(f'XPassed tests (unexpectedly passed): {xpassed_tests}')
-    print(f'----------------------')
-    print(f'Calculated Pass Percentage: {pass_percentage:.2f}%')
-    print(f'Required Pass Threshold: {threshold:.2f}%')
+        # Compare percentages using awk for floating-point comparison
+        if awk -v pp="$PASS_PERCENTAGE" -v th="$THRESHOLD" 'BEGIN {exit !(pp >= th)}'; then
+            echo "Test run meets the required pass percentage. Workflow will SUCCEED."
+            echo "test_status=success" >> "$GITHUB_OUTPUT"
+        else
+            echo "Test run DOES NOT meet the required pass percentage. Workflow will FAIL."
+            echo "test_status=failure" >> "$GITHUB_OUTPUT"
+        fi
 
-    # Set workflow output based on the comparison
-    # Access GITHUB_OUTPUT via os.environ for Python
-    if pass_percentage >= threshold:
-        print('Test run meets the required pass percentage. Workflow will SUCCEED.')
-        with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-            f.write(f'test_status=success\n')
-    else:
-        print('Test run DOES NOT meet the required pass percentage. Workflow will FAIL.')
-        with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-            f.write(f'test_status=failure\n')
-
-except FileNotFoundError:
-    print(f'Error: Pytest report file "{report_file}" not found.')
-    print('This usually means pytest did not run or failed to generate the report.')
-    with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-        f.write(f'test_status=failure\n')
-except json.JSONDecodeError:
-    print(f'Error: Could not decode JSON from "{report_file}". Is the report corrupted?')
-    with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-        f.write(f'test_status=failure\n')
-except Exception as e:
-    print(f'An unexpected error occurred during report evaluation: {e}')
-    with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-        f.write(f'test_status=failure\n')
-        "
+    - name: Final Workflow Status Check
+      # This step will explicitly fail the workflow if the 'evaluate_results' step
+      # determined that the pass percentage was below the threshold.
+      if: steps.evaluate_results.outputs.test_status == 'failure'
+      run: |
+        echo "The test pass percentage was below the required threshold. Failing the workflow."
+        exit 1
