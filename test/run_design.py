@@ -13,7 +13,7 @@ def run_design(design_struct, max_ticks, command_prepend=None, command_append=No
     serialized_input.append(len(all_pieces))
     for i, piece_struct in enumerate(all_pieces):
         serialized_input.append(piece_struct.type_id)
-        serialized_input.append(i)
+        serialized_input.append(piece_struct.piece_id if piece_struct.piece_id is not None else i + 1000)
         serialized_input.append(piece_struct.x)
         serialized_input.append(piece_struct.y)
         serialized_input.append(piece_struct.w)

@@ -124,6 +124,9 @@ def pieceDomToStruct(dom, use_fcsim_strtod=True):
         piece_type = fcxml_piece_types.FCSIM_GP_CIRC__SPECIAL_CASE
     if piece_type is not None:
         piece_type = piece_type.value
+    # get id if present
+    piece_id = dom.getAttribute("id")
+    piece_id = int(piece_id) if piece_id is not None and piece_id != '' else None
     # get joints
     joints = []
     if len(dom.getElementsByTagName("joints")) > 0:
@@ -145,7 +148,7 @@ def pieceDomToStruct(dom, use_fcsim_strtod=True):
     # return struct
     return FCPieceStruct(
         type_id=piece_type,
-        piece_id=None,
+        piece_id=piece_id,
         x=x,
         y=y,
         w=w,
