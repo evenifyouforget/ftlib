@@ -153,3 +153,61 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         for regression_row in regression_table:
             regression_settings = {color: True}
             terminalreporter.write_line(' '.join(regression_row), **regression_settings)
+    
+    # Add backend comparison table between test_single_design (ftlib) and test_single_design_fcsim
+    if 'test_single_design' in current_run_results and 'test_single_design_fcsim' in current_run_results:
+        terminalreporter.write_sep("=", "backend comparison: ftlib vs fcsim")
+        
+        ftlib_results = current_run_results['test_single_design']
+        fcsim_results = current_run_results['test_single_design_fcsim']
+        
+        # Create comparison table showing which tests pass/fail for each backend
+        backend_table = [[0] * 3 for _ in range(2)]  # [ftlib][fcsim] outcomes
+        
+        # Get all unique test parameters
+        all_params = set(ftlib_results.keys()) | set(fcsim_results.keys())
+        
+        for params in all_params:
+            ftlib_result = ftlib_results.get(params, None)
+            fcsim_result = fcsim_results.get(params, None)
+            
+            # Map results to indices: 0=pass, 1=fail, 2=no data
+            ftlib_idx = 0 if ftlib_result == 'passed' else 1 if ftlib_result == 'failed' else 2
+            fcsim_idx = 0 if fcsim_result == 'passed' else 1 if fcsim_result == 'failed' else 2
+            
+            if ftlib_idx < 2 and fcsim_idx < 2:  # Only count if both have data
+                backend_table[ftlib_idx][fcsim_idx] += 1
+        
+        # Build comparison table
+        comparison_table = []
+        comparison_table.append(['ftlib \\ fcsim', 'Pass', 'Fail', 'Total'])
+        ftlib_pass_total = backend_table[0][0] + backend_table[0][1]
+        ftlib_fail_total = backend_table[1][0] + backend_table[1][1]
+        comparison_table.append(['Pass'] + list(map(str, backend_table[0])) + [str(ftlib_pass_total)])
+        comparison_table.append(['Fail'] + list(map(str, backend_table[1])) + [str(ftlib_fail_total)])
+        
+        # Add totals row
+        fcsim_pass_total = backend_table[0][0] + backend_table[1][0]
+        fcsim_fail_total = backend_table[0][1] + backend_table[1][1]
+        grand_total = ftlib_pass_total + ftlib_fail_total
+        comparison_table.append(['Total', str(fcsim_pass_total), str(fcsim_fail_total), str(grand_total)])
+        
+        fix_text_table_alignment(comparison_table)
+        
+        # Determine color based on agreement
+        disagreement_count = backend_table[0][1] + backend_table[1][0]  # ftlib pass/fcsim fail + ftlib fail/fcsim pass
+        if disagreement_count == 0:
+            backend_color = 'green'
+        elif disagreement_count <= 2:
+            backend_color = 'yellow'
+        else:
+            backend_color = 'red'
+            
+        for comp_row in comparison_table:
+            terminalreporter.write_line(' '.join(comp_row), **{backend_color: True})
+        
+        # Add summary line
+        if disagreement_count == 0:
+            terminalreporter.write_line("✅ Perfect agreement: Both backends pass/fail the same tests", green=True)
+        else:
+            terminalreporter.write_line(f"⚠️  {disagreement_count} test(s) disagree between backends", **{backend_color: True})
