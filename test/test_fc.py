@@ -54,6 +54,8 @@ def generate_test_single_design_data():
         design_id = extract_design_id(design_id)
         solve_ticks = int_or_none(solve_ticks)
         design_max_ticks = int_or_none(design_max_ticks)
+        if solve_ticks is None and design_max_ticks is None:
+            raise ValueError(f'No time to solve or time to not solve specified for: {design_uid}')
         # generate basic data
         design_uid = f'D{design_id}' if design_id else f'L{level_id}'
         # placeholder
