@@ -122,9 +122,8 @@ const double TIME_STEP = 0.03333333333333333;
 const int32_t ITERATIONS = 10;
 
 // the state of the simulation. contains box2d stuff and the design.
-// world is a shared ptr so the sim state can be copied/moved without the world getting destructed
 struct ft_sim_state {
-    std::shared_ptr<b2World> world;
+    b2World* world;
     ft_design design;
     int tick = 0;
     ~ft_sim_state();

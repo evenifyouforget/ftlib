@@ -457,9 +457,8 @@ void generate_joint(
 }
 
 ft_sim_state::~ft_sim_state() {
-    if (world.use_count() == 1) {
-        world->CleanBodyList();
-    }
+    world->CleanBodyList();
+    delete world;
 }
 
 class collision_filter : public b2CollisionFilter {
@@ -497,22 +496,22 @@ ft_sim_state ft_create_sim(const ft_design& design, const ft_sim_settings& setti
     b2AABB aabb;
     aabb.minVertex.Set(-ARENA_WIDTH, -ARENA_HEIGHT);
     aabb.maxVertex.Set(ARENA_WIDTH, ARENA_HEIGHT);
-    handle.world = std::make_shared<b2World>(aabb, gravity, true);
+    handle.world = new b2World(aabb, gravity, true);
     handle.world->SetFilter(&ft_collision_filter);
 
     // copies design over
     handle.design = design;
 
     for (auto& block : handle.design.level_blocks)
-        generate_body(&*handle.world, block);
+        generate_body(handle.world, block);
     for (auto& block : handle.design.design_blocks)
-        generate_body(&*handle.world, block);
+        generate_body(handle.world, block);
 
     for (auto& js : handle.design.joint_stacks) {
         // start from 1 because a js of size 1 generates nothing
         for (size_t i = 0; i < js.joints.size(); i++) {
             ft_joint& joint = js.joints[i];
-            generate_joint(&*handle.world, handle.design, js, joint);
+            generate_joint(handle.world, handle.design, js, joint);
         }
     }
 
@@ -534,7 +533,8 @@ void ft_step_sim(ft_sim_state& handle, const ft_sim_settings& settings) {
         joint = next;
     }
 
-    std::vector<ft_block>* block_vecs[2]{&handle.design.level_blocks, &handle.design.design_blocks};
+    std::vector<ft_block>* block_vecs[2]{&handle.design.level_blocks,
+                                         &handle.design.design_blocks};
     for (size_t i = 0; i < 2; i++) {
         std::vector<ft_block>& blocks = *block_vecs[i];
         for (auto& block : blocks) {
