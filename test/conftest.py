@@ -60,8 +60,8 @@ def pytest_sessionstart(session):
         raise RuntimeError('ftlib tests should be run from the root directory, and the current working directory seems wrong')
     # build once the binary we will run for every test
     fcsim_dir = root_dir / 'fcsim'
-    subprocess.run(['scons'])
-    subprocess.run(['scons'], cwd=fcsim_dir)
+    subprocess.check_call(['scons'])
+    subprocess.check_call(['scons'], cwd=fcsim_dir)
 
 def pytest_runtest_logreport(report):
     """
