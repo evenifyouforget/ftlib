@@ -114,7 +114,8 @@ struct ft_design {
 };
 
 // make the design from the spec
-ft_design ft_create_design(const ft_design_spec& spec);
+std::shared_ptr<ft_design> ft_create_design(std::shared_ptr<ft_design> design,
+                                            const ft_design_spec& spec);
 
 const double ARENA_WIDTH = 2000;
 const double ARENA_HEIGHT = 1450;
@@ -132,16 +133,18 @@ struct ft_sim_state {
 struct ft_sim_settings {};
 
 // make a ft_sim_state from a spec and settings
-ft_sim_state ft_create_sim(const ft_design& design, const ft_sim_settings& settings);
+std::shared_ptr<ft_sim_state> ft_create_sim(std::shared_ptr<ft_sim_state> handle,
+                                            const ft_design& design,
+                                            const ft_sim_settings& settings);
 
 // step the sim state forward 1 tick
-void ft_step_sim(ft_sim_state& handle, const ft_sim_settings& settings);
+void ft_step_sim(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings& settings);
 
 // check if a block is within an area
 bool ft_in_area(const ft_block& block, const ft_rect& area);
 
 // check if a design has solved (if all the gps are within the goal)
-bool ft_is_solved(const ft_sim_state& sim, const ft_design_spec& spec);
+bool ft_is_solved(const std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec);
 
 // design editing
 void ft_splice_joint_stack(ft_design& design, uint16_t js_idx, uint16_t joint_idx);
