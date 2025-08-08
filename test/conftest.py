@@ -54,7 +54,7 @@ def use_classic_timeout(pytestconfig):
     return pytestconfig.getoption('--classic')
 
 def pytest_sessionstart(session):
-    root_dir = Path(__file__).parent
+    root_dir = Path(__file__).parent.parent
     # sanity check that this looks like the root dir for ftlib
     if not {'cli_adapter', 'example', 'fcsim', 'src', 'test'} <= set(child.name for child in root_dir.iterdir()):
         raise RuntimeError('ftlib tests should be run from the root directory, and the current working directory seems wrong')
@@ -97,14 +97,14 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
     You may still need to scroll up a bit to see the output.
     """
     # write results
-    live_results_dir = Path(__file__).parent / 'test' / 'history' / 'live'
+    live_results_dir = Path(__file__).parent.parent / 'test' / 'history' / 'live'
     live_results_dir.mkdir(parents=True, exist_ok=True)
     with open(live_results_dir / f'{current_run_uid}.json', 'w') as file:
         json.dump(current_run_results, file, indent=2, sort_keys=True)
 
     # get reference results if available
     reference_run_results = {}
-    reference_run_dir = Path(__file__).parent / 'test' / 'history' / 'reference'
+    reference_run_dir = Path(__file__).parent.parent / 'test' / 'history' / 'reference'
     reference_run_dir.mkdir(parents=True, exist_ok=True)
     reference_run_paths = sorted(reference_run_dir.glob('*.json'))
     if reference_run_paths:

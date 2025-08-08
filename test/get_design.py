@@ -62,7 +62,7 @@ def fcsim_strtod(istr):
     """
     global fcsim_strtod_query_server
     if not fcsim_strtod_query_server:
-        exec_path = Path(__file__).parent / 'bin' / 'fcsim_strtod'
+        exec_path = Path(__file__).parent.parent / 'bin' / 'fcsim_strtod'
         command = [exec_path]
         fcsim_strtod_query_server = subprocess.Popen(command, text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     fcsim_strtod_query_server.stdin.write(istr + '\n')
@@ -78,7 +78,7 @@ def retrieveLevel(levelId, is_design=False, cache=None):
         if cache:
             cache_dir = Path(cache)
         else:
-            cache_dir = Path(__file__).parent / '.fc_design_cache'
+            cache_dir = Path(__file__).parent.parent / '.fc_design_cache'
         cache_dir.mkdir(parents=True, exist_ok=True)
         design_uid = f'D{levelId}' if is_design else f'L{levelId}'
         design_file_path = cache_dir / design_uid

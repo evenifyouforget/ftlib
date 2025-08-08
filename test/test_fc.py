@@ -23,7 +23,7 @@ def extract_design_id(link_or_id):
     return None
 
 def generate_test_single_design_data():
-    test_dir = Path(__file__).parent / 'test'
+    test_dir = Path(__file__).parent.parent / 'test'
     fc_data_path = test_dir / 'fc_data.tsv'
     # read user submitted design info from sheet
     with open(fc_data_path, newline='') as file:
