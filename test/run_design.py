@@ -33,10 +33,10 @@ def run_design(design_struct, max_ticks, command_prepend=None, command_append=No
     serialized_input = ' '.join(map(str, serialized_input))
     # run the executable
     if backend == 'fcsim':
-        base_dir = Path(__file__).parent.parent
+        base_dir = Path(__file__).parent
         exec_path = base_dir / 'fcsim' / 'run_single_design'
     else:
-        exec_path = Path(__file__).parent.parent.parent.parent / 'bin' / 'run_single_design'
+        exec_path = Path(__file__).parent.parent.parent / 'bin' / 'run_single_design'
     command_prepend = command_prepend or []
     command_append = command_append or []
     command = command_prepend + [exec_path] + command_append
