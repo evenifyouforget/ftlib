@@ -37,7 +37,7 @@ def run_design(design_struct, max_ticks, command_prepend=None, command_append=No
         base_dir = get_ftlib_dir()
         exec_path = base_dir / 'fcsim' / 'run_single_design'
     else:
-        exec_path = get_ftlib_dir().parent.parent / 'bin' / 'run_single_design'
+        exec_path = get_ftlib_dir() / 'bin' / 'run_single_design'
     command_prepend = command_prepend or []
     command_append = command_append or []
     command = command_prepend + [exec_path] + command_append
