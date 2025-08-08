@@ -7,7 +7,7 @@ on:
       test_pass_threshold:
         description: 'Minimum percentage of tests that must pass for the workflow to succeed (e.g., 80.0 for 80%)'
         required: false
-        default: '83.9' # 701/835 as of PR #23
+        default: '82.8' # 891/1075 as of PR #28
         type: number
   # This event triggers the workflow whenever a pull request is opened,
   # synchronized (new commits pushed), or reopened.
