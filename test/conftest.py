@@ -56,8 +56,9 @@ def use_classic_timeout(pytestconfig):
 def pytest_sessionstart(session):
     root_dir = Path(__file__).parent.parent
     # sanity check that this looks like the root dir for ftlib
-    if not {'cli_adapter', 'example', 'fcsim', 'src', 'test'} <= set(child.name for child in root_dir.iterdir()):
-        raise RuntimeError('ftlib tests should be run from the root directory, and the current working directory seems wrong')
+    root_children = set(child.name for child in root_dir.iterdir())
+    if not {'cli_adapter', 'example', 'fcsim', 'src', 'test'} <= root_children:
+        raise RuntimeError('ftlib tests should be run from the root directory, and the current working directory seems wrong: {root_dir} with children {root_children}')
     # build once the binary we will run for every test
     fcsim_dir = root_dir / 'fcsim'
     subprocess.check_call(['scons'])
