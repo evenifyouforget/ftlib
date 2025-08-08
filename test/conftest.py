@@ -4,6 +4,7 @@ import pytest
 from pathlib import Path
 import re
 import subprocess
+from get_ftlib_dir import get_ftlib_dir
 
 # assign (probably) unique and sequential ID to current run
 now = datetime.datetime.now(tz=datetime.timezone.utc)
@@ -54,10 +55,11 @@ def use_classic_timeout(pytestconfig):
     return pytestconfig.getoption('--classic')
 
 def pytest_sessionstart(session):
-    root_dir = Path()
+    root_dir = get_ftlib_dir()
     # sanity check that this looks like the root dir for ftlib
-    if not {'cli_adapter', 'example', 'fcsim', 'src', 'test'} <= set(child.name for child in root_dir.iterdir()):
-        raise RuntimeError('ftlib tests should be run from the root directory, and the current working directory seems wrong')
+    root_children = set(child.name for child in root_dir.iterdir())
+    if not {'cli_adapter', 'example', 'fcsim', 'src', 'test'} <= root_children:
+        raise RuntimeError(f'ftlib tests should be run from the root directory, and the current working directory seems wrong: {root_dir} with children {root_children}')
     # build once the binary we will run for every test
     fcsim_dir = root_dir / 'fcsim'
     subprocess.check_call(['scons'])
@@ -97,14 +99,14 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
     You may still need to scroll up a bit to see the output.
     """
     # write results
-    live_results_dir = Path() / 'test' / 'history' / 'live'
+    live_results_dir = get_ftlib_dir() / 'test' / 'history' / 'live'
     live_results_dir.mkdir(parents=True, exist_ok=True)
     with open(live_results_dir / f'{current_run_uid}.json', 'w') as file:
         json.dump(current_run_results, file, indent=2, sort_keys=True)
 
     # get reference results if available
     reference_run_results = {}
-    reference_run_dir = Path() / 'test' / 'history' / 'reference'
+    reference_run_dir = get_ftlib_dir() / 'test' / 'history' / 'reference'
     reference_run_dir.mkdir(parents=True, exist_ok=True)
     reference_run_paths = sorted(reference_run_dir.glob('*.json'))
     if reference_run_paths:

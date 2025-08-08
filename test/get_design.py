@@ -6,6 +6,7 @@ import subprocess
 from xml.dom import minidom
 from pathlib import Path
 import warnings
+from get_ftlib_dir import get_ftlib_dir
 
 DISABLE_CACHE = 'DISABLE_CACHE'
 
@@ -62,7 +63,7 @@ def fcsim_strtod(istr):
     """
     global fcsim_strtod_query_server
     if not fcsim_strtod_query_server:
-        exec_path = Path() / 'bin' / 'fcsim_strtod'
+        exec_path = get_ftlib_dir() / 'bin' / 'fcsim_strtod'
         command = [exec_path]
         fcsim_strtod_query_server = subprocess.Popen(command, text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     fcsim_strtod_query_server.stdin.write(istr + '\n')
@@ -78,7 +79,7 @@ def retrieveLevel(levelId, is_design=False, cache=None):
         if cache:
             cache_dir = Path(cache)
         else:
-            cache_dir = Path() / '.fc_design_cache'
+            cache_dir = get_ftlib_dir() / '.fc_design_cache'
         cache_dir.mkdir(parents=True, exist_ok=True)
         design_uid = f'D{levelId}' if is_design else f'L{levelId}'
         design_file_path = cache_dir / design_uid

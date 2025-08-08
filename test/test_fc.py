@@ -8,6 +8,7 @@ import re
 import subprocess
 from get_design import retrieveLevel, retrieveDesign, designDomToStruct
 from run_design import run_design
+from get_ftlib_dir import get_ftlib_dir
 
 SingleDesignData = namedtuple('SingleDesignData', ['design_uid', 'design_struct', 'expect_solve_ticks', 'design_max_ticks', 'user_comment'])
 
@@ -23,7 +24,7 @@ def extract_design_id(link_or_id):
     return None
 
 def generate_test_single_design_data():
-    test_dir = Path() / 'test'
+    test_dir = get_ftlib_dir() / 'test'
     fc_data_path = test_dir / 'fc_data.tsv'
     # read user submitted design info from sheet
     with open(fc_data_path, newline='') as file:
