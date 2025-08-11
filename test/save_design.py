@@ -63,6 +63,7 @@ def save_design(design_struct: FCDesignStruct, user_id: Optional[int] = None, na
     """
     if user_id is None:
         raise ValueError('user_id is required')
+    
     # Convert FCDesignStruct to XML DOM
     dom = _struct_to_save_design_xml(design_struct, user_id, name, description)
     
@@ -74,17 +75,12 @@ def save_design(design_struct: FCDesignStruct, user_id: Optional[int] = None, na
         response = requests.post(url, data=params)
         result = response.text.strip()
         
-        print(f"Server response: '{result}'")  # Debug
-        print(f"Status code: {response.status_code}")  # Debug
-        
         # Parse response - FC returns the new design ID as a number, or error message
         if result.isdigit():
             return int(result)
         else:
-            print(f"Save failed: {result}")
             return None
     except Exception as e:
-        print(f"Save error: {e}")
         return None
 
 def _struct_to_save_design_xml(design_struct: FCDesignStruct, user_id: Optional[int], name: str, description: str) -> minidom.Document:
