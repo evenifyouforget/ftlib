@@ -561,34 +561,10 @@ bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
 	double area_ya = ft_sub(area.y, area_ey);
 	double area_yb = ft_add(area.y, area_ey);
 	if (is_circle) {
-		// Project Fairy: Apply TDD V5 StrictBoundaries (82.6% accuracy) to both X and Y axes
-		// V5 uses truncation at 0.1 scale and STRICT > < boundaries (not >= <=)
-		
-		double trunc_scale = 0.1;
-		
-		// Apply truncation to all values like V5
-		double truncated_circle_x = ft_trunc_scale(bdef.x, trunc_scale);
-		double truncated_circle_y = ft_trunc_scale(bdef.y, trunc_scale);
-		double truncated_radius_x = ft_trunc_scale(bex, trunc_scale);
-		double truncated_radius_y = ft_trunc_scale(bey, trunc_scale);
-		double truncated_goal_x = ft_trunc_scale(area.x, trunc_scale);
-		double truncated_goal_y = ft_trunc_scale(area.y, trunc_scale);
-		double truncated_goal_w = ft_trunc_scale(area.w, trunc_scale);
-		double truncated_goal_h = ft_trunc_scale(area.h, trunc_scale);
-		
-		double circle_left = ft_sub(truncated_circle_x, truncated_radius_x);
-		double circle_right = ft_add(truncated_circle_x, truncated_radius_x);
-		double circle_top = ft_sub(truncated_circle_y, truncated_radius_y);
-		double circle_bottom = ft_add(truncated_circle_y, truncated_radius_y);
-		
-		double goal_left = ft_sub(truncated_goal_x, ft_mul(truncated_goal_w, 0.5));
-		double goal_right = ft_add(truncated_goal_x, ft_mul(truncated_goal_w, 0.5));
-		double goal_top = ft_sub(truncated_goal_y, ft_mul(truncated_goal_h, 0.5));
-		double goal_bottom = ft_add(truncated_goal_y, ft_mul(truncated_goal_h, 0.5));
-		
-		// V5 STRICT boundaries: > and < (exact touching fails)
-		return (circle_left > goal_left && circle_right < goal_right && 
-		        circle_top > goal_top && circle_bottom < goal_bottom);
+		// Project Fairy: CONSERVATIVE - Just fix the critical && bug, keep original logic
+		// Original had: >= area_xa && <= area_xb && >= area_ya & <= area_yb (note the single &!)
+		// Fixed to:     >= area_xa && <= area_xb && >= area_ya && <= area_yb
+		return ft_sub(bdef.x, bex) >= area_xa && ft_add(bdef.x, bex) <= area_xb && ft_sub(bdef.y, bey) >= area_ya && ft_add(bdef.y, bey) <= area_yb;
 	}
 	double x = bdef.x;
 	double y = bdef.y;
