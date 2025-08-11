@@ -47,7 +47,7 @@ def fc_login(username: str, password: str) -> FCLoginResult:
     except Exception as e:
         return FCLoginResult(success=False, user_id=None, username=None, email=None, md5password=None, error=f"Network error: {e}")
 
-def save_design(design_struct: FCDesignStruct, user_id: Optional[int] = None, name: str = "Test Design", description: str = "") -> Optional[int]:
+def save_design(design_struct: FCDesignStruct, user_id: Optional[int] = None, name: str = "", description: str = "") -> Optional[int]:
     """
     Upload a design to the FC servers.
     If it is successful, it will return the new design ID.
