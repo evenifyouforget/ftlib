@@ -543,6 +543,11 @@ void fcsim_step(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings& set
 	handle->tick++;
 }
 
+// Project Fairy: TDD V5 truncation function
+static double ft_trunc_scale(double value, double scale) {
+	return (double)((int)(value / scale)) * scale;
+}
+
 #define CHECK_CORNER(valx, valy) {double xx = valx; double yy = valy; if(xx < area_xa || xx > area_xb || yy < area_ya || yy > area_yb)return false;}
 
 bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
@@ -556,20 +561,34 @@ bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
 	double area_ya = ft_sub(area.y, area_ey);
 	double area_yb = ft_add(area.y, area_ey);
 	if (is_circle) {
-		// Project Fairy: Apply TDD V7 Mixed Boundaries to BOTH X and Y axes independently
-		// Original TDD V7: >= for left boundary, < for right boundary (84.3% accuracy on 1D X-axis)
-		// Now apply same logic to both X and Y axes in 2D
+		// Project Fairy: Apply TDD V5 StrictBoundaries (82.6% accuracy) to both X and Y axes
+		// V5 uses truncation at 0.1 scale and STRICT > < boundaries (not >= <=)
 		
-		double circle_left = ft_sub(bdef.x, bex);
-		double circle_right = ft_add(bdef.x, bex);
-		double circle_top = ft_sub(bdef.y, bey);
-		double circle_bottom = ft_add(bdef.y, bey);
+		double trunc_scale = 0.1;
 		
-		// TDD V7 Mixed boundaries applied to both axes:
-		// >= for left/top boundaries (allows exact contact)
-		// < for right/bottom boundaries (strict)
-		return (circle_left >= area_xa && circle_right < area_xb && 
-		        circle_top >= area_ya && circle_bottom < area_yb);
+		// Apply truncation to all values like V5
+		double truncated_circle_x = ft_trunc_scale(bdef.x, trunc_scale);
+		double truncated_circle_y = ft_trunc_scale(bdef.y, trunc_scale);
+		double truncated_radius_x = ft_trunc_scale(bex, trunc_scale);
+		double truncated_radius_y = ft_trunc_scale(bey, trunc_scale);
+		double truncated_goal_x = ft_trunc_scale(area.x, trunc_scale);
+		double truncated_goal_y = ft_trunc_scale(area.y, trunc_scale);
+		double truncated_goal_w = ft_trunc_scale(area.w, trunc_scale);
+		double truncated_goal_h = ft_trunc_scale(area.h, trunc_scale);
+		
+		double circle_left = ft_sub(truncated_circle_x, truncated_radius_x);
+		double circle_right = ft_add(truncated_circle_x, truncated_radius_x);
+		double circle_top = ft_sub(truncated_circle_y, truncated_radius_y);
+		double circle_bottom = ft_add(truncated_circle_y, truncated_radius_y);
+		
+		double goal_left = ft_sub(truncated_goal_x, ft_mul(truncated_goal_w, 0.5));
+		double goal_right = ft_add(truncated_goal_x, ft_mul(truncated_goal_w, 0.5));
+		double goal_top = ft_sub(truncated_goal_y, ft_mul(truncated_goal_h, 0.5));
+		double goal_bottom = ft_add(truncated_goal_y, ft_mul(truncated_goal_h, 0.5));
+		
+		// V5 STRICT boundaries: > and < (exact touching fails)
+		return (circle_left > goal_left && circle_right < goal_right && 
+		        circle_top > goal_top && circle_bottom < goal_bottom);
 	}
 	double x = bdef.x;
 	double y = bdef.y;
