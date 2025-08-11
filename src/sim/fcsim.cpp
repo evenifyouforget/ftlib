@@ -543,6 +543,11 @@ void fcsim_step(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings& set
 	handle->tick++;
 }
 
+// Project Fairy: TDD V5 truncation function
+static double ft_trunc_scale(double value, double scale) {
+	return (double)((int)(value / scale)) * scale;
+}
+
 #define CHECK_CORNER(valx, valy) {double xx = valx; double yy = valy; if(xx < area_xa || xx > area_xb || yy < area_ya || yy > area_yb)return false;}
 
 bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
@@ -556,7 +561,34 @@ bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
 	double area_ya = ft_sub(area.y, area_ey);
 	double area_yb = ft_add(area.y, area_ey);
 	if (is_circle) {
-		return ft_sub(bdef.x, bex) >= area_xa && ft_add(bdef.x, bex) <= area_xb && ft_sub(bdef.y, bey) >= area_ya & ft_add(bdef.y, bey) <= area_yb;
+		// Project Fairy: TDD V5 Winner Implementation (82.6% accuracy)
+		// Apply truncation at 0.1 scale to match FC's precision behavior
+		double trunc_scale = 0.1;
+		
+		// Truncate all relevant values like our winning TDD checker
+		double truncated_circle_x = ft_trunc_scale(bdef.x, trunc_scale);
+		double truncated_circle_y = ft_trunc_scale(bdef.y, trunc_scale);
+		double truncated_radius_x = ft_trunc_scale(bex, trunc_scale);
+		double truncated_radius_y = ft_trunc_scale(bey, trunc_scale);
+		double truncated_goal_x = ft_trunc_scale(area.x, trunc_scale);
+		double truncated_goal_y = ft_trunc_scale(area.y, trunc_scale);
+		double truncated_goal_w = ft_trunc_scale(area.w, trunc_scale);
+		double truncated_goal_h = ft_trunc_scale(area.h, trunc_scale);
+		
+		// Calculate boundaries with truncated values
+		double circle_left = ft_sub(truncated_circle_x, truncated_radius_x);
+		double circle_right = ft_add(truncated_circle_x, truncated_radius_x);
+		double circle_top = ft_sub(truncated_circle_y, truncated_radius_y);
+		double circle_bottom = ft_add(truncated_circle_y, truncated_radius_y);
+		
+		double goal_left = ft_sub(truncated_goal_x, ft_mul(truncated_goal_w, 0.5));
+		double goal_right = ft_add(truncated_goal_x, ft_mul(truncated_goal_w, 0.5));
+		double goal_top = ft_sub(truncated_goal_y, ft_mul(truncated_goal_h, 0.5));
+		double goal_bottom = ft_add(truncated_goal_y, ft_mul(truncated_goal_h, 0.5));
+		
+		// TDD V5: STRICT boundaries - circles touching edges fail (> and < instead of >= and <=)
+		return (circle_left > goal_left && circle_right < goal_right && 
+		        circle_top > goal_top && circle_bottom < goal_bottom);
 	}
 	double x = bdef.x;
 	double y = bdef.y;
