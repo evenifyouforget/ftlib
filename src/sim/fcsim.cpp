@@ -543,99 +543,45 @@ void fcsim_step(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings& set
 	handle->tick++;
 }
 
-// Project Fairy: Improved goal checking based on TDD research
-// Circle TDD V7 (84.3% accuracy) and Rectangle TDD V14 (73.9% accuracy)
-static double ft_trunc_scale(double value, double scale) {
-	return (double)((int)(value / scale)) * scale;
-}
-
-#define CHECK_CORNER_TDD(valx, valy) {double xx = valx; double yy = valy; if(!(goal_left < xx && xx < goal_right && goal_top < yy && yy < goal_bottom))return false;}
+#define CHECK_CORNER(valx, valy) {double xx = valx; double yy = valy; if(xx < area_xa || xx > area_xb || yy < area_ya || yy > area_yb)return false;}
 
 bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
 	bool is_circle = block_physics_tbl[bdef.type].circle;
-	
+	double bex = ft_mul(bdef.w, 0.5);
+	double bey = ft_mul(bdef.h, 0.5);
+	double area_ex = ft_mul(area.w, 0.5);
+	double area_ey = ft_mul(area.h, 0.5);
+	double area_xa = ft_sub(area.x, area_ex);
+	double area_xb = ft_add(area.x, area_ex);
+	double area_ya = ft_sub(area.y, area_ey);
+	double area_yb = ft_add(area.y, area_ey);
 	if (is_circle) {
-		// Circle TDD V7: Mixed Boundaries with Truncation (84.3% accuracy)
-		// Based on empirical discovery that FC uses >= for left boundary, < for right boundary
-		double trunc_scale = 0.1;
+		// Project Fairy: Apply TDD V7 Mixed Boundaries to BOTH X and Y axes independently
+		// Original TDD V7: >= for left boundary, < for right boundary (84.3% accuracy on 1D X-axis)
+		// Now apply same logic to both X and Y axes in 2D
 		
-		double truncated_circle_x = ft_trunc_scale(bdef.x, trunc_scale);
-		double truncated_radius = ft_trunc_scale(ft_mul(bdef.w, 0.5), trunc_scale);
-		double truncated_goal_x = ft_trunc_scale(area.x, trunc_scale);
-		double truncated_goal_w = ft_trunc_scale(area.w, trunc_scale);
+		double circle_left = ft_sub(bdef.x, bex);
+		double circle_right = ft_add(bdef.x, bex);
+		double circle_top = ft_sub(bdef.y, bey);
+		double circle_bottom = ft_add(bdef.y, bey);
 		
-		double circle_left = ft_sub(truncated_circle_x, truncated_radius);
-		double circle_right = ft_add(truncated_circle_x, truncated_radius);
-		
-		double goal_left = ft_sub(truncated_goal_x, ft_mul(truncated_goal_w, 0.5));
-		double goal_right = ft_add(truncated_goal_x, ft_mul(truncated_goal_w, 0.5));
-		
-		// Mixed boundaries: >= for left (allows exact), < for right (strict)
-		return (circle_left >= goal_left) && (circle_right < goal_right);
-	} else {
-		// Rectangle TDD V14: Community Hypotheses with Tunable Parameters (73.9% accuracy)
-		// Based on rotation clamping, joint padding, truncation, and strict boundaries
-		
-		// Zero-dimension handling (return false for ghost blocks)
-		if (bdef.w <= 0.0 || bdef.h <= 0.0) {
-			return false;
-		}
-		
-		// TDD V14 optimized parameters: clamp=6.28, pad=2.0, trunc=0.10, strict=True
-		double rotation_clamp = 6.28318; // 2*PI
-		double joint_padding = 2.0;
-		double truncation_scale = 0.1;
-		
-		// Apply truncation/quantization
-		double rect_w = ft_trunc_scale(bdef.w, truncation_scale);
-		double rect_h = ft_trunc_scale(bdef.h, truncation_scale);
-		
-		// Rotation magnitude clamping
-		double clamped_rotation = bdef.angle;
-		if (clamped_rotation < -rotation_clamp) clamped_rotation = -rotation_clamp;
-		if (clamped_rotation > rotation_clamp) clamped_rotation = rotation_clamp;
-		double rect_rot = ft_trunc_scale(clamped_rotation, truncation_scale);
-		
-		// Calculate corners
-		double half_w = ft_mul(rect_w, 0.5);
-		double half_h = ft_mul(rect_h, 0.5);
-		
-		double cos_r = ft_cos(rect_rot);
-		double sin_r = ft_sin(rect_rot);
-		
-		// Apply joint padding to goal area
-		double goal_left = ft_sub(area.x, ft_mul(ft_sub(area.w, joint_padding), 0.5));
-		double goal_right = ft_add(area.x, ft_mul(ft_sub(area.w, joint_padding), 0.5));
-		double goal_top = ft_sub(area.y, ft_mul(ft_sub(area.h, joint_padding), 0.5));
-		double goal_bottom = ft_add(area.y, ft_mul(ft_sub(area.h, joint_padding), 0.5));
-		
-		// Check all 4 corners with strict boundaries (LT: strict <)
-		// Corner 1: (-half_w, -half_h)
-		double cx = -half_w, cy = -half_h;
-		double rx = ft_add(ft_sub(ft_mul(cx, cos_r), ft_mul(cy, sin_r)), bdef.x);
-		double ry = ft_add(ft_add(ft_mul(cx, sin_r), ft_mul(cy, cos_r)), bdef.y);
-		CHECK_CORNER_TDD(rx, ry);
-		
-		// Corner 2: (half_w, -half_h)
-		cx = half_w; cy = -half_h;
-		rx = ft_add(ft_sub(ft_mul(cx, cos_r), ft_mul(cy, sin_r)), bdef.x);
-		ry = ft_add(ft_add(ft_mul(cx, sin_r), ft_mul(cy, cos_r)), bdef.y);
-		CHECK_CORNER_TDD(rx, ry);
-		
-		// Corner 3: (half_w, half_h)
-		cx = half_w; cy = half_h;
-		rx = ft_add(ft_sub(ft_mul(cx, cos_r), ft_mul(cy, sin_r)), bdef.x);
-		ry = ft_add(ft_add(ft_mul(cx, sin_r), ft_mul(cy, cos_r)), bdef.y);
-		CHECK_CORNER_TDD(rx, ry);
-		
-		// Corner 4: (-half_w, half_h)
-		cx = -half_w; cy = half_h;
-		rx = ft_add(ft_sub(ft_mul(cx, cos_r), ft_mul(cy, sin_r)), bdef.x);
-		ry = ft_add(ft_add(ft_mul(cx, sin_r), ft_mul(cy, cos_r)), bdef.y);
-		CHECK_CORNER_TDD(rx, ry);
-		
-		return true;
+		// TDD V7 Mixed boundaries applied to both axes:
+		// >= for left/top boundaries (allows exact contact)
+		// < for right/bottom boundaries (strict)
+		return (circle_left >= area_xa && circle_right < area_xb && 
+		        circle_top >= area_ya && circle_bottom < area_yb);
 	}
+	double x = bdef.x;
+	double y = bdef.y;
+	double x0 = ft_mul(ft_cos(bdef.angle), bex);
+	double y0 = ft_mul(ft_sin(bdef.angle), bex);
+	double x1 = ft_mul(ft_sin(bdef.angle), bey);
+	double y1 = ft_mul(-ft_cos(bdef.angle), bey);
+	CHECK_CORNER(ft_add(ft_add(x, x0), x1), ft_add(ft_add(y, y0), y1));
+	CHECK_CORNER(ft_add(ft_sub(x, x0), x1), ft_add(ft_sub(y, y0), y1));
+	CHECK_CORNER(ft_sub(ft_add(x, x0), x1), ft_sub(ft_add(y, y0), y1));
+	CHECK_CORNER(ft_sub(ft_sub(x, x0), x1), ft_sub(ft_sub(y, y0), y1));
+	return true;
 }
 
 bool fcsim_is_solved(const std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec) {
