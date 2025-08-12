@@ -556,7 +556,9 @@ bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
 	double area_ya = ft_sub(area.y, area_ey);
 	double area_yb = ft_add(area.y, area_ey);
 	if (is_circle) {
-		return ft_sub(bdef.x, bex) >= area_xa && ft_add(bdef.x, bex) <= area_xb && ft_sub(bdef.y, bey) >= area_ya & ft_add(bdef.y, bey) <= area_yb;
+		// Simple fcsim-matching algorithm - direct bounds checking like fcsim's block_inside_area
+		return ft_sub(bdef.x, bex) >= area_xa && ft_add(bdef.x, bex) <= area_xb && 
+		       ft_sub(bdef.y, bey) >= area_ya && ft_add(bdef.y, bey) <= area_yb;
 	}
 	double x = bdef.x;
 	double y = bdef.y;
