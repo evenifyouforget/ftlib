@@ -1,6 +1,6 @@
 import os
 
-env = Environment(CXX='g++', CXXFLAGS='-std=c++17', CPPPATH=['src'], LIBS=[], LIBPATH=[])
+env = Environment(CXX='g++', CXXFLAGS='-std=c++17', CPPDEFINES=['HARDFLOAT_TOGGLE'], CPPPATH=['src'], LIBS=[], LIBPATH=[])
 
 env['godot'] = False  # Custom flag for shared SConscript logic
 
