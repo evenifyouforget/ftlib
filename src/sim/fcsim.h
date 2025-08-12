@@ -53,7 +53,7 @@ struct ft_design_spec {
 
 #define ARENA_WIDTH	2000
 #define ARENA_HEIGHT	1450
-#define TIME_STEP	0.03333333333333333
+#define TIME_STEP	(1.0 / 30.0)
 #define ITERATIONS	10
 
 struct block;
