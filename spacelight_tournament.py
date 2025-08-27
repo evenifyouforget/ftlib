@@ -5,6 +5,8 @@ Generation 5 TDD checker research
 """
 
 import argparse
+import ast
+import inspect
 import sys
 import time
 from abc import ABC, abstractmethod
@@ -22,6 +24,15 @@ import json
 
 # Add test directory to path for imports
 sys.path.append(str(Path(__file__).parent / 'test'))
+
+def count_ast_nodes(func) -> int:
+    """Count the number of AST nodes in a function as a complexity measure"""
+    try:
+        source = inspect.getsource(func)
+        tree = ast.parse(source)
+        return sum(1 for _ in ast.walk(tree))
+    except Exception:
+        return -1  # Unable to analyze
 from get_design import retrieveLevel, retrieveDesign, designDomToStruct, fcsim_piece_types
 
 @dataclass
@@ -101,6 +112,9 @@ class SpaceLightTournament:
             correct_predictions = 0
             total_predictions = 0
             
+            # Count AST nodes for complexity measure
+            ast_nodes = count_ast_nodes(contestant.guess_does_solve)
+            
             for level in self.easy_levels:
                 if level.expected_result is not None:
                     prediction = contestant.guess_does_solve(level)
@@ -115,10 +129,12 @@ class SpaceLightTournament:
                 'pass_rate': pass_rate,
                 'correct': correct_predictions,
                 'total': total_predictions,
-                'time_seconds': contestant_time
+                'time_seconds': contestant_time,
+                'ast_nodes': ast_nodes
             }
             
-            print(f"{contestant.name():<60} | Pass Rate: {pass_rate:.4f} ({correct_predictions}/{total_predictions}) | Time: {contestant_time:.3f}s")
+            ast_display = f"{ast_nodes}" if ast_nodes >= 0 else "N/A"
+            print(f"{contestant.name():<60} | Pass Rate: {pass_rate:.4f} ({correct_predictions}/{total_predictions}) | Time: {contestant_time:.3f}s | AST: {ast_display}")
         
         total_time = time.time() - start_time
         print("=" * 80)
@@ -662,19 +678,86 @@ def autotune_contestant(contestant: ParameterizedContestant,
     
     start_time = time.time()
     
-    # Use scipy.optimize with timeout
-    def timeout_callback():
-        return time.time() - start_time > max_time_seconds
-    
     try:
-        # Use differential evolution for global optimization
-        result = optimize.differential_evolution(
-            objective_function, 
-            param_bounds,
-            maxiter=1000,
-            workers=1,
-            seed=42
-        )
+        # Hybrid optimization: use multiple algorithms to fully utilize time budget
+        def time_remaining():
+            return max(0, max_time_seconds - (time.time() - start_time))
+        
+        best_result = None
+        best_score = float('inf')
+        
+        # Phase 1: Differential Evolution (global search)
+        if time_remaining() > 1.0:
+            print(f"🔍 Phase 1: Differential Evolution ({time_remaining():.1f}s remaining)")
+            def callback_function(xk, convergence):
+                return time_remaining() < max_time_seconds * 0.7  # Save 30% time for other methods
+            
+            result1 = optimize.differential_evolution(
+                objective_function, 
+                param_bounds,
+                maxiter=10000,
+                workers=1,
+                callback=callback_function
+            )
+            
+            if result1.fun < best_score:
+                best_result = result1
+                best_score = result1.fun
+                print(f"   📈 DE best score: {-best_score:.4f}")
+        
+        # Phase 2: Basin Hopping (escape local minima)
+        if time_remaining() > 0.5 and best_result is not None:
+            print(f"🔍 Phase 2: Basin Hopping ({time_remaining():.1f}s remaining)")
+            
+            # Use best result from DE as starting point
+            x0 = best_result.x
+            
+            def accept_test(f_new=None, x_new=None, f_old=None, x_old=None):
+                return time_remaining() > max_time_seconds * 0.2  # Save 20% time
+            
+            result2 = optimize.basinhopping(
+                objective_function,
+                x0,
+                niter=100,
+                accept_test=accept_test
+            )
+            
+            if result2.fun < best_score:
+                best_result = result2
+                best_score = result2.fun
+                print(f"   📈 BH best score: {-best_score:.4f}")
+        
+        # Phase 3: Fine-tuning with L-BFGS-B (local refinement)
+        if time_remaining() > 0.1 and best_result is not None:
+            print(f"🔍 Phase 3: L-BFGS-B fine-tuning ({time_remaining():.1f}s remaining)")
+            
+            # Multiple random starts from best solution with noise
+            attempts = min(5, int(time_remaining() * 10))  # ~0.1s per attempt
+            
+            for attempt in range(attempts):
+                if time_remaining() < 0.05:
+                    break
+                    
+                # Add small random perturbation to best solution
+                x0_perturbed = best_result.x + np.random.normal(0, 0.1, size=len(best_result.x))
+                # Clip to bounds
+                for i, (low, high) in enumerate(param_bounds):
+                    x0_perturbed[i] = np.clip(x0_perturbed[i], low, high)
+                
+                result3 = optimize.minimize(
+                    objective_function,
+                    x0_perturbed,
+                    method='L-BFGS-B',
+                    bounds=param_bounds,
+                    options={'maxiter': 50}
+                )
+                
+                if result3.fun < best_score:
+                    best_result = result3
+                    best_score = result3.fun
+                    print(f"   📈 LBFGS attempt {attempt+1} best score: {-best_score:.4f}")
+        
+        result = best_result
         
         if result.success:
             optimized_params = dict(zip(param_names, result.x))
@@ -799,7 +882,8 @@ def main():
     print("🏆 Final Rankings:")
     sorted_results = sorted(results.items(), key=lambda x: x[1]['pass_rate'], reverse=True)
     for i, (name, result) in enumerate(sorted_results, 1):
-        print(f"{i:2d}. {name:<60} | {result['pass_rate']:.4f}")
+        ast_display = f"{result['ast_nodes']}" if result['ast_nodes'] >= 0 else "N/A"
+        print(f"{i:2d}. {name:<60} | {result['pass_rate']:.4f} | AST: {ast_display}")
     
     return 0
 
