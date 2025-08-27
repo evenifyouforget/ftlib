@@ -86,7 +86,7 @@ class SpaceLightTournament:
         """Add a contestant to the tournament"""
         self.contestants.append(contestant)
     
-    def run_tournament(self, timeout_seconds: Optional[float] = None) -> Dict[str, Any]:
+    def run_tournament(self) -> Dict[str, Any]:
         """Run tournament and return results"""
         results = {}
         
@@ -96,9 +96,6 @@ class SpaceLightTournament:
         start_time = time.time()
         
         for contestant in self.contestants:
-            if timeout_seconds and (time.time() - start_time) > timeout_seconds:
-                print(f"⏰ Tournament timeout reached, stopping at {contestant.name()}")
-                break
                 
             contestant_start = time.time()
             correct_predictions = 0
@@ -680,8 +677,6 @@ def autotune_contestant(contestant: ParameterizedContestant,
 
 def main():
     parser = argparse.ArgumentParser(description='Spacelight Tournament for goal rectangle research')
-    parser.add_argument('--timeout', '-t', type=float, default=300, 
-                       help='Maximum timeout for tournament in seconds (default: 300)')
     parser.add_argument('--autotune-time', '-a', type=float, default=60,
                        help='Time to spend auto-tuning parameterized contestants (default: 60)')
     parser.add_argument('--max-levels', '-m', type=int, default=None,
@@ -764,7 +759,7 @@ def main():
     
     print()
     # Run tournament
-    results = tournament.run_tournament(timeout_seconds=args.timeout)
+    results = tournament.run_tournament()
     
     # Print final summary
     print()
