@@ -28,8 +28,11 @@ sys.path.append(str(Path(__file__).parent / 'test'))
 def count_ast_nodes(func) -> int:
     """Count the number of AST nodes in a function as a complexity measure"""
     try:
+        import textwrap
         source = inspect.getsource(func)
-        tree = ast.parse(source)
+        # Remove indentation to avoid IndentationError
+        dedented_source = textwrap.dedent(source)
+        tree = ast.parse(dedented_source)
         return sum(1 for _ in ast.walk(tree))
     except Exception:
         return -1  # Unable to analyze
