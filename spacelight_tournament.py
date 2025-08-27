@@ -620,6 +620,22 @@ def autotune_contestant(contestant: ParameterizedContestant,
     """Autotune a parameterized contestant using scipy optimization"""
     print(f"🔧 Auto-tuning {contestant.__class__.__name__} for {max_time_seconds}s...")
     
+    # Calculate initial pass rate
+    initial_correct = 0
+    initial_total = 0
+    for level in easy_levels:
+        if level.expected_result is not None:
+            prediction = contestant.guess_does_solve(level)
+            if prediction == level.expected_result:
+                initial_correct += 1
+            initial_total += 1
+    
+    initial_pass_rate = initial_correct / initial_total if initial_total > 0 else 0
+    initial_params = contestant.params.copy()
+    
+    print(f"📊 Initial: {initial_params}")
+    print(f"📈 Initial pass rate: {initial_pass_rate:.4f} ({initial_correct}/{initial_total})")
+    
     bounds = contestant.get_param_bounds()
     param_names = list(bounds.keys())
     param_bounds = [bounds[name] for name in param_names]
@@ -663,7 +679,24 @@ def autotune_contestant(contestant: ParameterizedContestant,
         if result.success:
             optimized_params = dict(zip(param_names, result.x))
             contestant.set_params(optimized_params)
-            print(f"✅ Optimization succeeded: {optimized_params}")
+            
+            # Calculate final pass rate
+            final_correct = 0
+            final_total = 0
+            for level in easy_levels:
+                if level.expected_result is not None:
+                    prediction = contestant.guess_does_solve(level)
+                    if prediction == level.expected_result:
+                        final_correct += 1
+                    final_total += 1
+            
+            final_pass_rate = final_correct / final_total if final_total > 0 else 0
+            improvement = final_pass_rate - initial_pass_rate
+            
+            print(f"📊 Final: {optimized_params}")
+            print(f"📈 Final pass rate: {final_pass_rate:.4f} ({final_correct}/{final_total})")
+            print(f"🎯 Improvement: {improvement:+.4f} ({improvement/initial_pass_rate*100:+.1f}%)" if initial_pass_rate > 0 else f"🎯 Improvement: {improvement:+.4f}")
+            
         else:
             print(f"⚠️  Optimization failed: {result.message}")
             
