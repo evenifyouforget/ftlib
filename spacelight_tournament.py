@@ -695,6 +695,172 @@ class ExtremeAngleClampContestant(Contestant):
         
         return True
 
+class FtlibExactContestant(Contestant):
+    """Mimics ftlib's exact goal checking logic"""
+    
+    def name(self) -> str:
+        return "FtlibExact"
+    
+    def guess_does_solve(self, level: EasyLevel) -> bool:
+        # Mimic ftlib's fcsim_in_area for rectangles
+        bdef_x, bdef_y = level.rect_x, level.rect_y
+        bdef_w, bdef_h = level.rect_w, level.rect_h
+        angle = level.rect_angle
+        
+        area_x, area_y = level.goal_x, level.goal_y  
+        area_w, area_h = level.goal_w, level.goal_h
+        
+        # Calculate area bounds (ftlib style)
+        area_ex = area_w * 0.5
+        area_ey = area_h * 0.5
+        area_xa = area_x - area_ex
+        area_xb = area_x + area_ex
+        area_ya = area_y - area_ey
+        area_yb = area_y + area_ey
+        
+        # Calculate rectangle half extents
+        bex = bdef_w * 0.5
+        bey = bdef_h * 0.5
+        
+        # Calculate rotated corner offsets (ftlib style)
+        x = bdef_x
+        y = bdef_y
+        x0 = math.cos(angle) * bex
+        y0 = math.sin(angle) * bex
+        x1 = math.sin(angle) * bey
+        y1 = -math.cos(angle) * bey
+        
+        # Check all 4 corners are in bounds (ftlib CHECK_CORNER macro)
+        corners = [
+            (x + x0 + x1, y + y0 + y1),  # Corner 1
+            (x - x0 + x1, y - y0 + y1),  # Corner 2
+            (x + x0 - x1, y + y0 - y1),  # Corner 3
+            (x - x0 - x1, y - y0 - y1),  # Corner 4
+        ]
+        
+        for xx, yy in corners:
+            if xx < area_xa or xx > area_xb or yy < area_ya or yy > area_yb:
+                return False
+        
+        return True
+
+class FtlibNoRotationContestant(Contestant):
+    """Simplified ftlib check: axis-aligned rectangles only"""
+    
+    def name(self) -> str:
+        return "FtlibNoRotation"
+    
+    def guess_does_solve(self, level: EasyLevel) -> bool:
+        # Same as ftlib but assume angle = 0 (no rotation)
+        bdef_x, bdef_y = level.rect_x, level.rect_y
+        bdef_w, bdef_h = level.rect_w, level.rect_h
+        
+        area_x, area_y = level.goal_x, level.goal_y  
+        area_w, area_h = level.goal_w, level.goal_h
+        
+        # Calculate bounds
+        area_ex = area_w * 0.5
+        area_ey = area_h * 0.5
+        area_xa = area_x - area_ex
+        area_xb = area_x + area_ex
+        area_ya = area_y - area_ey
+        area_yb = area_y + area_ey
+        
+        bex = bdef_w * 0.5
+        bey = bdef_h * 0.5
+        
+        # Axis-aligned corners (no rotation)
+        corners = [
+            (bdef_x + bex, bdef_y + bey),  # Top-right
+            (bdef_x - bex, bdef_y + bey),  # Top-left
+            (bdef_x + bex, bdef_y - bey),  # Bottom-right
+            (bdef_x - bex, bdef_y - bey),  # Bottom-left
+        ]
+        
+        for xx, yy in corners:
+            if xx < area_xa or xx > area_xb or yy < area_ya or yy > area_yb:
+                return False
+        
+        return True
+
+class FtlibBoundingBoxContestant(Contestant):
+    """Simplified ftlib: just check if centers are close enough"""
+    
+    def name(self) -> str:
+        return "FtlibBoundingBox"
+    
+    def guess_does_solve(self, level: EasyLevel) -> bool:
+        # Simple bounding box check (most permissive)
+        rect_half_diag = math.sqrt((level.rect_w/2)**2 + (level.rect_h/2)**2)
+        goal_half_diag = math.sqrt((level.goal_w/2)**2 + (level.goal_h/2)**2) 
+        
+        center_distance = math.sqrt(
+            (level.rect_x - level.goal_x)**2 + 
+            (level.rect_y - level.goal_y)**2
+        )
+        
+        # Rectangle fits if its diagonal + center distance <= goal diagonal
+        return center_distance + rect_half_diag <= goal_half_diag
+
+class FtlibWithClampingContestant(Contestant):
+    """Ftlib exact logic + rotation clamping experiment (abs(angle) > 2^15° → -2^15°)"""
+    
+    def name(self) -> str:
+        return "FtlibWithClamping"
+    
+    def guess_does_solve(self, level: EasyLevel) -> bool:
+        # Apply rotation clamping first
+        angle = level.rect_angle
+        angle_degrees = math.degrees(angle)
+        
+        # Rotation clamping: if abs(angle) >= 2^15 degrees, treat as -2^15 degrees
+        CLAMP_THRESHOLD = 2**15  # 32768 degrees
+        CLAMP_VALUE = -2**15     # -32768 degrees
+        
+        if abs(angle_degrees) >= CLAMP_THRESHOLD:
+            angle = math.radians(CLAMP_VALUE)
+        
+        # Now apply ftlib logic with clamped angle
+        bdef_x, bdef_y = level.rect_x, level.rect_y
+        bdef_w, bdef_h = level.rect_w, level.rect_h
+        
+        area_x, area_y = level.goal_x, level.goal_y  
+        area_w, area_h = level.goal_w, level.goal_h
+        
+        # Calculate area bounds (ftlib style)
+        area_ex = area_w * 0.5
+        area_ey = area_h * 0.5
+        area_xa = area_x - area_ex
+        area_xb = area_x + area_ex
+        area_ya = area_y - area_ey
+        area_yb = area_y + area_ey
+        
+        # Calculate rectangle half extents
+        bex = bdef_w * 0.5
+        bey = bdef_h * 0.5
+        
+        # Calculate rotated corner offsets (ftlib style)
+        x = bdef_x
+        y = bdef_y
+        x0 = math.cos(angle) * bex
+        y0 = math.sin(angle) * bex
+        x1 = math.sin(angle) * bey
+        y1 = -math.cos(angle) * bey
+        
+        # Check all 4 corners are in bounds (ftlib CHECK_CORNER macro)
+        corners = [
+            (x + x0 + x1, y + y0 + y1),  # Corner 1
+            (x - x0 + x1, y - y0 + y1),  # Corner 2
+            (x + x0 - x1, y + y0 - y1),  # Corner 3
+            (x - x0 - x1, y - y0 - y1),  # Corner 4
+        ]
+        
+        for xx, yy in corners:
+            if xx < area_xa or xx > area_xb or yy < area_ya or yy > area_yb:
+                return False
+        
+        return True
+
 def autotune_contestant(contestant: ParameterizedContestant, 
                        easy_levels: List[EasyLevel], 
                        max_time_seconds: float = 60) -> ParameterizedContestant:
