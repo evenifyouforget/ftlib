@@ -567,7 +567,8 @@ bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
         angle = -32768;
     } else {
         // truncate to 1 degree
-        angle = (int)angle;
+        // angle = (int)angle;
+		// this wasn't pushed in the end because it didn't prove enough benefit
     }
 
     // convert back to radians
