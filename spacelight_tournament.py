@@ -63,7 +63,7 @@ class ParameterizedContestant(Contestant):
     
     def name(self) -> str:
         """Include parameters in name without rounding"""
-        param_str = "_".join(f"{k}={v}" for k, v in self.params.items())
+        param_str = ", ".join(f"{k}={v}" for k, v in self.params.items())
         return f"{self.__class__.__name__}({param_str})"
     
     @abstractmethod
@@ -135,6 +135,7 @@ def load_easy_levels_from_tsv(max_levels: int = None) -> List[EasyLevel]:
     
     tsv_path = Path(__file__).parent / 'test' / 'fc_data.tsv'
     easy_levels = []
+    total_processed = 0
     
     # Read the TSV file
     with open(tsv_path, 'r') as f:
@@ -150,12 +151,19 @@ def load_easy_levels_from_tsv(max_levels: int = None) -> List[EasyLevel]:
             continue
             
         parts = line.split('\t')
-        if len(parts) < 1:
+        if len(parts) < 3:  # Need at least URL, solve_ticks, and design_max_ticks
             continue
             
         url = parts[0].strip()
+        solve_ticks_str = parts[1].strip() if len(parts) > 1 else ""
         if not url:
             continue
+            
+        # Parse solve information: solve_ticks > 0 means it solves
+        solve_ticks = None
+        if solve_ticks_str and solve_ticks_str.isdigit():
+            solve_ticks = int(solve_ticks_str)
+        expected_result = solve_ticks is not None and solve_ticks > 0
             
         # Extract level/design ID from URL
         level_id = None
@@ -172,6 +180,7 @@ def load_easy_levels_from_tsv(max_levels: int = None) -> List[EasyLevel]:
         if not level_id:
             continue
             
+        total_processed += 1
         print(f"📦 Processing {url}...")
         
         try:
@@ -197,11 +206,11 @@ def load_easy_levels_from_tsv(max_levels: int = None) -> List[EasyLevel]:
                     rect_h=goal_piece.h,
                     rect_angle=goal_piece.angle,
                     level_id=level_id,
-                    expected_result=None  # We'll determine this via ftlib
+                    expected_result=expected_result  # From test data
                 )
                 
                 easy_levels.append(easy_level)
-                print(f"✅ Added easy level: {level_id}")
+                print(f"✅ Added easy level: {level_id} (expected: {'SOLVES' if expected_result else 'FAILS'})")
             else:
                 print(f"⏭️  Skipped complex level: {level_id}")
                 
@@ -210,6 +219,20 @@ def load_easy_levels_from_tsv(max_levels: int = None) -> List[EasyLevel]:
             continue
     
     print(f"🎯 Found {len(easy_levels)} easy levels")
+    
+    # Print statistics for debugging
+    solve_count = sum(1 for level in easy_levels if level.expected_result)
+    fail_count = len(easy_levels) - solve_count
+    print(f"📊 Statistics:")
+    print(f"   • Total levels processed: {total_processed}")
+    print(f"   • Goal rectangle levels found: {len(easy_levels)}")
+    print(f"   • Goal rectangle ratio: {len(easy_levels)/total_processed:.1%}")
+    print(f"   • Expected to solve: {solve_count}")  
+    print(f"   • Expected to fail: {fail_count}")
+    if len(easy_levels) > 0:
+        solve_rate = solve_count / len(easy_levels)
+        print(f"   • Solve rate: {solve_rate:.1%}")
+    
     return easy_levels
 
 def determine_expected_results_with_ftlib(easy_levels: List[EasyLevel]) -> List[EasyLevel]:
@@ -417,6 +440,183 @@ class ParameterizedPaddingContestant(ParameterizedContestant):
         
         return True
 
+# ==================== WEIRD CONTESTANTS ====================
+
+class CenterDistanceContestant(Contestant):
+    """Weird: Just check if rectangle center is within goal area (ignores rotation/size)"""
+    
+    def name(self) -> str:
+        return "CenterDistance"
+    
+    def guess_does_solve(self, level: EasyLevel) -> bool:
+        # Just check if center is inside goal area
+        goal_x1, goal_x2 = level.goal_x - level.goal_w/2, level.goal_x + level.goal_w/2
+        goal_y1, goal_y2 = level.goal_y - level.goal_h/2, level.goal_y + level.goal_h/2
+        return goal_x1 <= level.rect_x <= goal_x2 and goal_y1 <= level.rect_y <= goal_y2
+
+class BoundingBoxContestant(Contestant):
+    """Weird: Use axis-aligned bounding box instead of rotated rectangle"""
+    
+    def name(self) -> str:
+        return "BoundingBox"
+    
+    def guess_does_solve(self, level: EasyLevel) -> bool:
+        # Calculate axis-aligned bounding box of rotated rectangle
+        hw, hh = level.rect_w / 2, level.rect_h / 2
+        cos_a, sin_a = abs(math.cos(level.rect_angle)), abs(math.sin(level.rect_angle))
+        
+        # Bounding box half-dimensions
+        bb_hw = hw * cos_a + hh * sin_a
+        bb_hh = hw * sin_a + hh * cos_a
+        
+        # Check if bounding box fits in goal area
+        rect_x1, rect_x2 = level.rect_x - bb_hw, level.rect_x + bb_hw
+        rect_y1, rect_y2 = level.rect_y - bb_hh, level.rect_y + bb_hh
+        
+        goal_x1, goal_x2 = level.goal_x - level.goal_w/2, level.goal_x + level.goal_w/2
+        goal_y1, goal_y2 = level.goal_y - level.goal_h/2, level.goal_y + level.goal_h/2
+        
+        return (rect_x1 >= goal_x1 and rect_x2 <= goal_x2 and 
+                rect_y1 >= goal_y1 and rect_y2 <= goal_y2)
+
+class AngleIgnoreContestant(Contestant):
+    """Weird: Ignore angle completely, treat as axis-aligned"""
+    
+    def name(self) -> str:
+        return "AngleIgnore"
+    
+    def guess_does_solve(self, level: EasyLevel) -> bool:
+        # Ignore angle, treat as axis-aligned rectangle
+        rect_x1, rect_x2 = level.rect_x - level.rect_w/2, level.rect_x + level.rect_w/2
+        rect_y1, rect_y2 = level.rect_y - level.rect_h/2, level.rect_y + level.rect_h/2
+        
+        goal_x1, goal_x2 = level.goal_x - level.goal_w/2, level.goal_x + level.goal_w/2
+        goal_y1, goal_y2 = level.goal_y - level.goal_h/2, level.goal_y + level.goal_h/2
+        
+        return (rect_x1 >= goal_x1 and rect_x2 <= goal_x2 and 
+                rect_y1 >= goal_y1 and rect_y2 <= goal_y2)
+
+class ModuloAngleContestant(Contestant):
+    """Weird: Apply modulo to angle in strange ways"""
+    
+    def name(self) -> str:
+        return "ModuloAngle"
+    
+    def guess_does_solve(self, level: EasyLevel) -> bool:
+        # Apply weird modulo transformation
+        weird_angle = (level.rect_angle * 7.3) % (2 * math.pi / 3)
+        
+        hw, hh = level.rect_w / 2, level.rect_h / 2
+        cos_a, sin_a = math.cos(weird_angle), math.sin(weird_angle)
+        
+        corners = [
+            ( hw * cos_a - hh * sin_a,  hw * sin_a + hh * cos_a),
+            (-hw * cos_a - hh * sin_a, -hw * sin_a + hh * cos_a),
+            (-hw * cos_a + hh * sin_a, -hw * sin_a - hh * cos_a),
+            ( hw * cos_a + hh * sin_a,  hw * sin_a - hh * cos_a),
+        ]
+        
+        rect_corners = [(level.rect_x + dx, level.rect_y + dy) for dx, dy in corners]
+        
+        goal_x1, goal_x2 = level.goal_x - level.goal_w/2, level.goal_x + level.goal_w/2
+        goal_y1, goal_y2 = level.goal_y - level.goal_h/2, level.goal_y + level.goal_h/2
+        
+        for x, y in rect_corners:
+            if not (goal_x1 <= x <= goal_x2 and goal_y1 <= y <= goal_y2):
+                return False
+        
+        return True
+
+class QuantizedAngleContestant(Contestant):
+    """Tests angle quantization hypothesis: truncate angle to nearest degree"""
+    
+    def name(self) -> str:
+        return "QuantizedAngle" 
+    
+    def guess_does_solve(self, level: EasyLevel) -> bool:
+        # Quantize angle to nearest degree (truncate towards zero)
+        angle_degrees = math.degrees(level.rect_angle)
+        quantized_degrees = int(angle_degrees)  # Truncate to integer
+        quantized_angle = math.radians(quantized_degrees)
+        
+        # Check if all corners of rotated rectangle are in goal area
+        cos_a = math.cos(quantized_angle)
+        sin_a = math.sin(quantized_angle)
+        
+        hw = level.rect_w / 2
+        hh = level.rect_h / 2
+        
+        # Rectangle corners relative to center
+        corners = [(-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)]
+        
+        # Rotate and translate corners
+        rect_corners = []
+        for dx, dy in corners:
+            rx = level.rect_x + dx * cos_a - dy * sin_a
+            ry = level.rect_y + dx * sin_a + dy * cos_a
+            rect_corners.append((rx, ry))
+        
+        # Check if all corners are within goal area
+        goal_x1 = level.goal_x - level.goal_w / 2
+        goal_x2 = level.goal_x + level.goal_w / 2
+        goal_y1 = level.goal_y - level.goal_h / 2
+        goal_y2 = level.goal_y + level.goal_h / 2
+        
+        for x, y in rect_corners:
+            if not (goal_x1 <= x <= goal_x2 and goal_y1 <= y <= goal_y2):
+                return False
+        
+        return True
+
+class ExtremeAngleClampContestant(Contestant):
+    """Tests extreme angle clamping: abs(angle) >= 2^15 degrees → -2^15 degrees, then quantize"""
+    
+    def name(self) -> str:
+        return "ExtremeAngleClamp"
+    
+    def guess_does_solve(self, level: EasyLevel) -> bool:
+        angle_degrees = math.degrees(level.rect_angle)
+        
+        # Apply extreme angle clamping rule: if abs(angle) >= 2^15 degrees, treat as -2^15 degrees
+        CLAMP_THRESHOLD = 2**15  # 32768 degrees
+        CLAMP_VALUE = -2**15     # -32768 degrees
+        
+        if abs(angle_degrees) >= CLAMP_THRESHOLD:
+            angle_degrees = CLAMP_VALUE
+            
+        # Then quantize to nearest degree
+        quantized_degrees = int(angle_degrees)
+        angle = math.radians(quantized_degrees)
+        
+        # Check if all corners of rotated rectangle are in goal area
+        cos_a = math.cos(angle)
+        sin_a = math.sin(angle)
+        
+        hw = level.rect_w / 2
+        hh = level.rect_h / 2
+        
+        # Rectangle corners relative to center
+        corners = [(-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)]
+        
+        # Rotate and translate corners
+        rect_corners = []
+        for dx, dy in corners:
+            rx = level.rect_x + dx * cos_a - dy * sin_a
+            ry = level.rect_y + dx * sin_a + dy * cos_a
+            rect_corners.append((rx, ry))
+        
+        # Check if all corners are within goal area
+        goal_x1 = level.goal_x - level.goal_w / 2
+        goal_x2 = level.goal_x + level.goal_w / 2
+        goal_y1 = level.goal_y - level.goal_h / 2
+        goal_y2 = level.goal_y + level.goal_h / 2
+        
+        for x, y in rect_corners:
+            if not (goal_x1 <= x <= goal_x2 and goal_y1 <= y <= goal_y2):
+                return False
+        
+        return True
+
 def autotune_contestant(contestant: ParameterizedContestant, 
                        easy_levels: List[EasyLevel], 
                        max_time_seconds: float = 60) -> ParameterizedContestant:
@@ -480,12 +680,12 @@ def autotune_contestant(contestant: ParameterizedContestant,
 
 def main():
     parser = argparse.ArgumentParser(description='Spacelight Tournament for goal rectangle research')
-    parser.add_argument('--timeout', type=float, default=300, 
+    parser.add_argument('--timeout', '-t', type=float, default=300, 
                        help='Maximum timeout for tournament in seconds (default: 300)')
-    parser.add_argument('--skip-ftlib', action='store_true',
-                       help='Skip ftlib expected result determination (for testing)')
-    parser.add_argument('--autotune-time', type=float, default=60,
+    parser.add_argument('--autotune-time', '-a', type=float, default=60,
                        help='Time to spend auto-tuning parameterized contestants (default: 60)')
+    parser.add_argument('--max-levels', '-m', type=int, default=None,
+                       help='Maximum number of levels to process (default: no limit)')
     args = parser.parse_args()
     
     print("🌌 Welcome to the Spacelight Tournament!")
@@ -494,51 +694,73 @@ def main():
     print()
     
     # Load easy test cases
-    easy_levels = load_easy_levels_from_tsv(max_levels=10)  # Limit for testing
+    easy_levels = load_easy_levels_from_tsv(max_levels=args.max_levels)
     
     if not easy_levels:
         print("❌ No easy levels found!")
         return 1
     
-    # Determine expected results using ftlib
-    if not args.skip_ftlib:
-        easy_levels = determine_expected_results_with_ftlib(easy_levels)
-        
-        # Filter to levels with known results
-        valid_levels = [l for l in easy_levels if l.expected_result is not None]
-        if len(valid_levels) == 0:
-            print("❌ No levels with valid expected results!")
-            return 1
-        easy_levels = valid_levels
-    else:
-        print("⚠️  Skipping ftlib expected result determination")
-        # Set dummy results for testing
-        for level in easy_levels:
-            level.expected_result = True  # Dummy value
+    # Filter to levels with known results from test data
+    valid_levels = [l for l in easy_levels if l.expected_result is not None]
+    if len(valid_levels) == 0:
+        print("❌ No levels with valid expected results!")
+        return 1
+    
+    print(f"🎯 Using {len(valid_levels)} levels with known solve status from test data")
+    easy_levels = valid_levels
     
     # Create tournament
     tournament = SpaceLightTournament(easy_levels)
     
-    # Add basic contestants
-    tournament.add_contestant(SaneBasicMathContestant())
-    tournament.add_contestant(FCBehaviorBaselineContestant())
-    tournament.add_contestant(AlwaysTrueContestant())
-    tournament.add_contestant(AlwaysFalseContestant())
-    tournament.add_contestant(RandomContestant(seed=42))
+    # Automatically discover and instantiate all contestant subclasses
+    def get_all_contestant_subclasses(cls):
+        """Recursively get all subclasses of a class"""
+        all_subclasses = []
+        for subclass in cls.__subclasses__():
+            all_subclasses.append(subclass)
+            all_subclasses.extend(get_all_contestant_subclasses(subclass))
+        return all_subclasses
     
-    # Add parameterized contestants
-    padding_contestant = ParameterizedPaddingContestant()
-    tournament.add_contestant(padding_contestant)
+    contestant_classes = get_all_contestant_subclasses(Contestant)
+    parameterized_contestants = []
     
-    # Auto-tune the parameterized contestant
-    if args.autotune_time > 0:
+    print(f"🤖 Auto-discovered {len(contestant_classes)} contestant classes")
+    
+    for contestant_class in contestant_classes:
+        try:
+            # Handle special cases that need parameters
+            if contestant_class == RandomContestant:
+                contestant = contestant_class(seed=42)
+            else:
+                # Try to instantiate with no arguments
+                contestant = contestant_class()
+            
+            # Separate parameterized contestants for auto-tuning
+            if isinstance(contestant, ParameterizedContestant):
+                parameterized_contestants.append(contestant)
+            
+            tournament.add_contestant(contestant)
+            print(f"  ✅ Added: {contestant.name()}")
+            
+        except Exception as e:
+            print(f"  ❌ Failed to instantiate {contestant_class.__name__}: {e}")
+            continue
+    
+    # Auto-tune parameterized contestants
+    if args.autotune_time > 0 and parameterized_contestants:
         print()
-        tuned_contestant = autotune_contestant(
-            ParameterizedPaddingContestant(), 
-            easy_levels, 
-            max_time_seconds=args.autotune_time
-        )
-        tournament.add_contestant(tuned_contestant)
+        for contestant in parameterized_contestants:
+            # Create a fresh instance for tuning
+            fresh_contestant = contestant.__class__()
+            tuned_contestant = autotune_contestant(
+                fresh_contestant, 
+                easy_levels, 
+                max_time_seconds=args.autotune_time
+            )
+            tournament.add_contestant(tuned_contestant)
+            print(f"  🎯 Added tuned: {tuned_contestant.name()}")
+    elif args.autotune_time > 0:
+        print("⚠️  No parameterized contestants found for auto-tuning")
     
     print()
     # Run tournament
