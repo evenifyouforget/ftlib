@@ -36,6 +36,61 @@ def count_ast_nodes(func) -> int:
         return sum(1 for _ in ast.walk(tree))
     except Exception:
         return -1  # Unable to analyze
+
+class Colors:
+    """ANSI color codes for terminal output"""
+    # Pass rate colors (6 brackets: 0-16%, 17-33%, 34-50%, 51-66%, 67-83%, 84-100%)
+    PASS_RATE_1 = '\033[91m'  # Bright red (0-16%)
+    PASS_RATE_2 = '\033[31m'  # Dark red (17-33%)
+    PASS_RATE_3 = '\033[33m'  # Yellow (34-50%)
+    PASS_RATE_4 = '\033[32m'  # Green (51-66%)
+    PASS_RATE_5 = '\033[92m'  # Bright green (67-83%)
+    PASS_RATE_6 = '\033[96m'  # Bright cyan (84-100%)
+    
+    # Complexity colors (6 brackets: 0-50, 51-100, 101-200, 201-300, 301-400, 401+)
+    COMPLEXITY_1 = '\033[96m'  # Bright cyan (0-50 nodes - very simple)
+    COMPLEXITY_2 = '\033[92m'  # Bright green (51-100 nodes - simple) 
+    COMPLEXITY_3 = '\033[32m'  # Green (101-200 nodes - moderate)
+    COMPLEXITY_4 = '\033[33m'  # Yellow (201-300 nodes - complex)
+    COMPLEXITY_5 = '\033[31m'  # Red (301-400 nodes - very complex)
+    COMPLEXITY_6 = '\033[91m'  # Bright red (401+ nodes - extremely complex)
+    
+    # General colors
+    BOLD = '\033[1m'
+    RESET = '\033[0m'
+    GRAY = '\033[90m'
+
+def get_pass_rate_color(pass_rate: float) -> str:
+    """Get color for pass rate based on 6 brackets"""
+    if pass_rate <= 0.16:
+        return Colors.PASS_RATE_1
+    elif pass_rate <= 0.33:
+        return Colors.PASS_RATE_2
+    elif pass_rate <= 0.50:
+        return Colors.PASS_RATE_3
+    elif pass_rate <= 0.66:
+        return Colors.PASS_RATE_4
+    elif pass_rate <= 0.83:
+        return Colors.PASS_RATE_5
+    else:
+        return Colors.PASS_RATE_6
+
+def get_complexity_color(ast_nodes: int) -> str:
+    """Get color for complexity based on 6 brackets"""
+    if ast_nodes < 0:
+        return Colors.GRAY
+    elif ast_nodes <= 50:
+        return Colors.COMPLEXITY_1
+    elif ast_nodes <= 100:
+        return Colors.COMPLEXITY_2
+    elif ast_nodes <= 200:
+        return Colors.COMPLEXITY_3
+    elif ast_nodes <= 300:
+        return Colors.COMPLEXITY_4
+    elif ast_nodes <= 400:
+        return Colors.COMPLEXITY_5
+    else:
+        return Colors.COMPLEXITY_6
 from get_design import retrieveLevel, retrieveDesign, designDomToStruct, fcsim_piece_types
 
 @dataclass
@@ -136,8 +191,15 @@ class SpaceLightTournament:
                 'ast_nodes': ast_nodes
             }
             
+            # Color-coded display
+            pass_color = get_pass_rate_color(pass_rate)
+            complexity_color = get_complexity_color(ast_nodes)
             ast_display = f"{ast_nodes}" if ast_nodes >= 0 else "N/A"
-            print(f"{contestant.name():<60} | Pass Rate: {pass_rate:.4f} ({correct_predictions}/{total_predictions}) | Time: {contestant_time:.3f}s | AST: {ast_display}")
+            
+            print(f"{contestant.name():<60} | "
+                  f"Pass Rate: {pass_color}{pass_rate:.4f}{Colors.RESET} ({correct_predictions}/{total_predictions}) | "
+                  f"Time: {contestant_time:.3f}s | "
+                  f"AST: {complexity_color}{ast_display}{Colors.RESET}")
         
         total_time = time.time() - start_time
         print("=" * 80)
@@ -691,7 +753,7 @@ def autotune_contestant(contestant: ParameterizedContestant,
         
         # Phase 1: Differential Evolution (global search)
         if time_remaining() > 1.0:
-            print(f"🔍 Phase 1: Differential Evolution ({time_remaining():.1f}s remaining)")
+            print(f"🔍 {Colors.BOLD}Phase 1: Differential Evolution{Colors.RESET} ({time_remaining():.1f}s remaining)")
             def callback_function(xk, convergence):
                 return time_remaining() < max_time_seconds * 0.7  # Save 30% time for other methods
             
@@ -710,7 +772,7 @@ def autotune_contestant(contestant: ParameterizedContestant,
         
         # Phase 2: Basin Hopping (escape local minima)
         if time_remaining() > 0.5 and best_result is not None:
-            print(f"🔍 Phase 2: Basin Hopping ({time_remaining():.1f}s remaining)")
+            print(f"🔍 {Colors.BOLD}Phase 2: Basin Hopping{Colors.RESET} ({time_remaining():.1f}s remaining)")
             
             # Use best result from DE as starting point
             x0 = best_result.x
@@ -732,7 +794,7 @@ def autotune_contestant(contestant: ParameterizedContestant,
         
         # Phase 3: Fine-tuning with L-BFGS-B (local refinement)
         if time_remaining() > 0.1 and best_result is not None:
-            print(f"🔍 Phase 3: L-BFGS-B fine-tuning ({time_remaining():.1f}s remaining)")
+            print(f"🔍 {Colors.BOLD}Phase 3: L-BFGS-B fine-tuning{Colors.RESET} ({time_remaining():.1f}s remaining)")
             
             # Multiple random starts from best solution with noise
             attempts = min(5, int(time_remaining() * 10))  # ~0.1s per attempt
@@ -885,8 +947,13 @@ def main():
     print("🏆 Final Rankings:")
     sorted_results = sorted(results.items(), key=lambda x: x[1]['pass_rate'], reverse=True)
     for i, (name, result) in enumerate(sorted_results, 1):
+        pass_color = get_pass_rate_color(result['pass_rate'])
+        complexity_color = get_complexity_color(result['ast_nodes'])
         ast_display = f"{result['ast_nodes']}" if result['ast_nodes'] >= 0 else "N/A"
-        print(f"{i:2d}. {name:<60} | {result['pass_rate']:.4f} | AST: {ast_display}")
+        
+        print(f"{i:2d}. {name:<60} | "
+              f"{pass_color}{result['pass_rate']:.4f}{Colors.RESET} | "
+              f"AST: {complexity_color}{ast_display}{Colors.RESET}")
     
     return 0
 
