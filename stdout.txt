@@ -1,0 +1,24 @@
+scons: Reading SConscript files ...
+scons: done reading SConscript files.
+scons: Building targets ...
+scons: `bin/libftlib.a' is up to date.
+scons: `bin/example_cli' is up to date.
+scons: `bin/run_single_design' is up to date.
+scons: `bin/fcsim_strtod' is up to date.
+scons: done building targets.
+scons: Reading SConscript files ...
+scons: done reading SConscript files.
+scons: Building targets ...
+scons: building associated VariantDir targets: build/linux build/run_single_design build/test build/wasm build/linux2 build/run_single_design_xml
+g++ -o run_single_design_xml build/run_single_design_xml/src/arena.o build/run_single_design_xml/src/arena_algorithm.o build/run_single_design_xml/src/arena_graphics.o build/run_single_design_xml/src/button.o build/run_single_design_xml/src/export.o build/run_single_design_xml/src/core.o build/run_single_design_xml/src/gen.o build/run_single_design_xml/src/graph.o build/run_single_design_xml/src/graph_algorithm.o build/run_single_design_xml/src/str.o build/run_single_design_xml/src/text.o build/run_single_design_xml/src/xml.o build/run_single_design_xml/src/box2d/b2BlockAllocator.o build/run_single_design_xml/src/box2d/b2Body.o build/run_single_design_xml/src/box2d/b2BroadPhase.o build/run_single_design_xml/src/box2d/b2CircleContact.o build/run_single_design_xml/src/box2d/b2CollideCircle.o build/run_single_design_xml/src/box2d/b2CollidePoly.o build/run_single_design_xml/src/box2d/b2Contact.o build/run_single_design_xml/src/box2d/b2ContactManager.o build/run_single_design_xml/src/box2d/b2ContactSolver.o build/run_single_design_xml/src/box2d/b2Island.o build/run_single_design_xml/src/box2d/b2Joint.o build/run_single_design_xml/src/box2d/b2PairManager.o build/run_single_design_xml/src/box2d/b2PolyAndCircleContact.o build/run_single_design_xml/src/box2d/b2PolyContact.o build/run_single_design_xml/src/box2d/b2RevoluteJoint.o build/run_single_design_xml/src/box2d/b2Settings.o build/run_single_design_xml/src/box2d/b2Shape.o build/run_single_design_xml/src/box2d/b2StackAllocator.o build/run_single_design_xml/src/box2d/b2World.o build/run_single_design_xml/src/fpmath/atan2.o build/run_single_design_xml/src/fpmath/sincos.o build/run_single_design_xml/src/fpmath/strtod.o build/run_single_design_xml/src/run_single_design_xml.o -lpthread
+scons: done building targets.
+============================= test session starts ==============================
+platform linux -- Python 3.13.6, pytest-7.4.4, pluggy-1.4.0
+rootdir: /home/komi/Documents/yggdrasil/ftlib
+plugins: xdist-3.8.0
+created: 12/12 workers
+12 workers [1534 items]
+
+..........FFF..FFFF.FFF...FFFF....F.FFF.F.FF.F..F..FF....F....FFF....F......F.FFF..F....F...........FF.....F............F...........FFF.F..F..F..FFF.FF.....FF...F..F..FF.FFF.FF..FFF....FF.F.F........FF...FFFFF.FF...F...F...FFF........F....FFF..FFF......................FFFFFFFFF..FFFF...F........F...F...FFFF.F.F.FF..F.....F.F.............F.............F.................F.F..............FF.......FFF.F......F.....FF.......F..F.F.......FFF...........F...F...F.F.F.F!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/usr/lib/python3.13/threading.py:363: KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --full-trace)

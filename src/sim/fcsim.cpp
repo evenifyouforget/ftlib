@@ -560,10 +560,24 @@ bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
 	}
 	double x = bdef.x;
 	double y = bdef.y;
-	double x0 = ft_mul(ft_cos(bdef.angle), bex);
-	double y0 = ft_mul(ft_sin(bdef.angle), bex);
-	double x1 = ft_mul(ft_sin(bdef.angle), bey);
-	double y1 = ft_mul(-ft_cos(bdef.angle), bey);
+	
+	// Goal rectangle rotation clamping experiment:
+	// If abs(rotation) > 32678 degrees, treat as -32678 degrees
+	double angle = bdef.angle;
+	if (bdef.type == fcsim_piece_type::GP_RECT) {
+		// Convert 32678 degrees to radians: 32678 * π / 180 ≈ 570.34
+		const double ROTATION_LIMIT_RAD = 570.34;
+		const double CLAMP_VALUE_RAD = -570.34; // -32678 degrees
+		
+		if (fabs(angle) > ROTATION_LIMIT_RAD) {
+			angle = CLAMP_VALUE_RAD;
+		}
+	}
+	
+	double x0 = ft_mul(ft_cos(angle), bex);
+	double y0 = ft_mul(ft_sin(angle), bex);
+	double x1 = ft_mul(ft_sin(angle), bey);
+	double y1 = ft_mul(-ft_cos(angle), bey);
 	CHECK_CORNER(ft_add(ft_add(x, x0), x1), ft_add(ft_add(y, y0), y1));
 	CHECK_CORNER(ft_add(ft_sub(x, x0), x1), ft_add(ft_sub(y, y0), y1));
 	CHECK_CORNER(ft_sub(ft_add(x, x0), x1), ft_sub(ft_add(y, y0), y1));
