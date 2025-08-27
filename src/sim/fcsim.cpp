@@ -559,7 +559,7 @@ bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
 
 	double angle = bdef.angle;
 
-    // convert to degrees using fixed-point multiplication
+    // convert to degrees
     angle = ft_mul(angle, 57.295779513082320876763);
 
     // if abs(angle) > 2^15 degrees, use -2^15 degrees
@@ -570,7 +570,7 @@ bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
         angle = (int)angle;
     }
 
-    // convert back to radians using fixed-point multiplication
+    // convert back to radians
     angle = ft_mul(angle, 0.017453292519943295769245);
 
     // get rotation expanded bounding box
