@@ -543,8 +543,6 @@ void fcsim_step(std::shared_ptr<ft_sim_state> handle, const ft_sim_settings& set
 	handle->tick++;
 }
 
-#define CHECK_CORNER(valx, valy) {double xx = valx; double yy = valy; if(xx < area_xa || xx > area_xb || yy < area_ya || yy > area_yb)return false;}
-
 bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
 	bool is_circle = block_physics_tbl[bdef.type].circle;
 	double bex = ft_mul(bdef.w, 0.5);
@@ -558,17 +556,30 @@ bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
 	if (is_circle) {
 		return ft_sub(bdef.x, bex) >= area_xa && ft_add(bdef.x, bex) <= area_xb && ft_sub(bdef.y, bey) >= area_ya & ft_add(bdef.y, bey) <= area_yb;
 	}
-	double x = bdef.x;
-	double y = bdef.y;
-	double x0 = ft_mul(ft_cos(bdef.angle), bex);
-	double y0 = ft_mul(ft_sin(bdef.angle), bex);
-	double x1 = ft_mul(ft_sin(bdef.angle), bey);
-	double y1 = ft_mul(-ft_cos(bdef.angle), bey);
-	CHECK_CORNER(ft_add(ft_add(x, x0), x1), ft_add(ft_add(y, y0), y1));
-	CHECK_CORNER(ft_add(ft_sub(x, x0), x1), ft_add(ft_sub(y, y0), y1));
-	CHECK_CORNER(ft_sub(ft_add(x, x0), x1), ft_sub(ft_add(y, y0), y1));
-	CHECK_CORNER(ft_sub(ft_sub(x, x0), x1), ft_sub(ft_sub(y, y0), y1));
-	return true;
+
+	double angle = bdef.angle;
+
+    // convert to degrees using fixed-point multiplication
+    angle = ft_mul(angle, 57.295779513082320876763);
+
+    // if abs(angle) > 2^15 degrees, use -2^15 degrees
+    if (std::abs(angle) >= 32768) {
+        angle = -32768;
+    } else {
+        // truncate to 1 degree
+        angle = (int)angle;
+    }
+
+    // convert back to radians using fixed-point multiplication
+    angle = ft_mul(angle, 0.017453292519943295769245);
+
+    // get rotation expanded bounding box
+    double abs_cos_angle = std::abs(ft_cos(angle));
+    double abs_sin_angle = std::abs(ft_sin(angle));
+    double bex2 = ft_add(ft_mul(bex, abs_cos_angle), ft_mul(bey, abs_sin_angle));
+    double bey2 = ft_add(ft_mul(bex, abs_sin_angle), ft_mul(bey, abs_cos_angle));
+
+    return ft_sub(bdef.x, bex2) >= area_xa && ft_add(bdef.x, bex2) <= area_xb && ft_sub(bdef.y, bey2) >= area_ya & ft_add(bdef.y, bey2) <= area_yb;
 }
 
 bool fcsim_is_solved(const std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec) {
