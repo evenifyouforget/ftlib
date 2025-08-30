@@ -117,7 +117,8 @@ def autotune_contestant(contestant: ParameterizedContestant,
                 algo_start = time.time()
                 previous_best = best_score
                 
-                print(f"🎯 Iteration {iteration}: {algo_name} ({slice_time:.1f}s, {time_remaining():.1f}s total remaining)")
+                if iteration <= 3 or iteration % 10 == 0:  # Only show first 3 and every 10th
+                    print(f"🎯 Iteration {iteration}: {algo_name} ({slice_time:.1f}s, {time_remaining():.1f}s remaining)")
                 
                 try:
                     if algo_name == 'differential_evolution':
@@ -230,9 +231,11 @@ def autotune_contestant(contestant: ParameterizedContestant,
                         best_x = result.x.copy()
                         best_result = result
                         improvement = previous_best - result.fun
-                        print(f"   ✅ {algo_name}: New best! Score: {-best_score:.4f} (improved by {improvement:.4f})")
+                        if iteration <= 3 or iteration % 5 == 0:  # Show improvements more often
+                            print(f"   ✅ {algo_name}: New best! Score: {-best_score:.4f} (improved by {improvement:.4f})")
                     else:
-                        print(f"   🔄 {algo_name}: No improvement (best remains {-best_score:.4f})")
+                        if iteration <= 2:  # Only show no-improvement for first couple iterations
+                            print(f"   🔄 {algo_name}: No improvement (best remains {-best_score:.4f})")
                 
                 except Exception as e:
                     print(f"   ❌ {algo_name}: Error - {e}")

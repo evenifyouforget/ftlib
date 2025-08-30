@@ -84,7 +84,7 @@ class SpaceLightTournament:
             pass_rate_color = get_pass_rate_color(pass_rate)
             complexity_color = get_complexity_color(ast_nodes)
             
-            print(f"   📊 Pass rate: {pass_rate_color}{pass_rate:.3f}{Colors.RESET} ({correct_predictions}/{total_predictions})")
+            print(f"   📊 Pass rate: {pass_rate_color}{pass_rate:.4f}{Colors.RESET} ({correct_predictions}/{total_predictions})")
             print(f"   ⚡ Complexity: {complexity_color}{ast_display} AST nodes{Colors.RESET}")
             print(f"   ⏱️  Time: {execution_time:.4f}s")
             
@@ -120,7 +120,19 @@ class SpaceLightTournament:
             complexity_color = get_complexity_color(ast_nodes)
             ast_display = f"{ast_nodes}" if ast_nodes > 0 else "N/A"
             
-            print(f"{i:<4} {name:<35} {pass_rate_color}{pass_rate:.3f}{Colors.RESET}        {complexity_color}{ast_display:<8}{Colors.RESET}     {exec_time:.3f}s")
+            print(f"{i:<4} {name:<35} {pass_rate_color}{pass_rate:.4f}{Colors.RESET}       {complexity_color}{ast_display:<8}{Colors.RESET}     {exec_time:.3f}s")
+        
+        # Tournament statistics
+        print("\n📊 Tournament Statistics:")
+        solve_levels = sum(1 for level in self.easy_levels if level.expected_result == True)
+        fail_levels = sum(1 for level in self.easy_levels if level.expected_result == False)
+        unknown_levels = sum(1 for level in self.easy_levels if level.expected_result is None)
+        print(f"   Total levels: {len(self.easy_levels)}")
+        print(f"   Expected SOLVE: {solve_levels} ({solve_levels/len(self.easy_levels)*100:.1f}%)")
+        print(f"   Expected FAIL: {fail_levels} ({fail_levels/len(self.easy_levels)*100:.1f}%)")
+        if unknown_levels > 0:
+            print(f"   Unknown result: {unknown_levels}")
+        print(f"   Total contestants: {len(self.contestants)}")
         
         tournament_results = {
             'timestamp': datetime.now().isoformat(),

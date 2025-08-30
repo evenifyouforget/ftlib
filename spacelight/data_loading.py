@@ -73,7 +73,8 @@ def load_easy_levels_from_tsv(max_levels: int = None) -> List[EasyLevel]:
                     if not design_id:
                         continue
                     
-                    print(f"📦 Processing {design_id} (expect: {'SOLVE' if expected_result else 'FAIL'})...")
+                    if level_count <= 3 or level_count % 10 == 0:  # Show first 3, then every 10th
+                        print(f"📦 Processing {design_id} (expect: {'SOLVE' if expected_result else 'FAIL'})...")
                     level_count += 1
                     
                     try:
@@ -85,10 +86,12 @@ def load_easy_levels_from_tsv(max_levels: int = None) -> List[EasyLevel]:
                         
                         # Skip if too complex (>1 goal piece or complex goal area)
                         if len(goal_pieces) > 1:
-                            print(f"⏭️  Skipped complex level: {design_id}")
+                            if level_count <= 2:  # Only show first couple skips
+                                print(f"⏭️  Skipped complex level: {design_id}")
                             continue
                         if goal_area.w > 150 or goal_area.h > 150:
-                            print(f"⏭️  Skipped complex level: {design_id}")
+                            if level_count <= 2:  # Only show first couple skips
+                                print(f"⏭️  Skipped complex level: {design_id}")
                             continue
                         
                         # Convert goal pieces to simple format
@@ -111,7 +114,8 @@ def load_easy_levels_from_tsv(max_levels: int = None) -> List[EasyLevel]:
                         )
                         
                         levels.append(level)
-                        print(f"✅ Added level {design_id}: {'SOLVE' if expected_result else 'FAIL'}")
+                        if level_count <= 3 or level_count % 10 == 0:
+                            print(f"✅ Added level {design_id}: {'SOLVE' if expected_result else 'FAIL'}")
                         
                     except Exception as e:
                         print(f"⏭️  Skipped level {design_id} due to error: {e}")
@@ -121,11 +125,7 @@ def load_easy_levels_from_tsv(max_levels: int = None) -> List[EasyLevel]:
                     print(f"⏭️  Skipped line {line_num} due to error: {e}")
                     continue
     
-    print(f"🎯 Found {len(levels)} easy levels")
-    print(f"📊 Statistics:")
-    print(f"   • Total levels processed: {level_count}")
-    print(f"   • Expected SOLVE: {solve_count}")
-    print(f"   • Expected FAIL: {fail_count}")
-    print(f"   • Goal rectangle levels found: {len(levels)}")
+    print(f"🎯 Found {len(levels)} easy levels (processed {level_count} total)")
+    print(f"📊 Dataset: {solve_count} SOLVE + {fail_count} FAIL cases = {solve_count + fail_count} expected results")
     
     return levels
