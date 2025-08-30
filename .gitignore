@@ -267,3 +267,6 @@ test/history/live/
 # Custom
 .editorconfig
 .vscode/
+
+# Tournament logs (generated files)
+tournament_logs/

@@ -1,13 +1,16 @@
 """Tournament execution and main logic"""
 
 import inspect
+import json
 import time
+from datetime import datetime
+from pathlib import Path
 from typing import List, Dict, Any
 
 from .core import Contestant, ParameterizedContestant, EasyLevel, Colors, count_ast_nodes, get_pass_rate_color, get_complexity_color
 from .contestants import *
 from .optimization import autotune_contestant
-from .data_loading import load_easy_levels_from_tsv, determine_expected_results_with_ftlib
+from .data_loading import load_easy_levels_from_tsv
 
 
 class SpaceLightTournament:
@@ -119,8 +122,35 @@ class SpaceLightTournament:
             
             print(f"{i:<4} {name:<35} {pass_rate_color}{pass_rate:.3f}{Colors.RESET}        {complexity_color}{ast_display:<8}{Colors.RESET}     {exec_time:.3f}s")
         
-        return {
+        tournament_results = {
+            'timestamp': datetime.now().isoformat(),
             'results': results,
             'total_contestants': len(self.contestants),
-            'total_levels': len(self.easy_levels)
+            'total_levels': len(self.easy_levels),
+            'level_details': [
+                {
+                    'design_id': level.design_id,
+                    'expected_result': level.expected_result,
+                    'url': level.url
+                } for level in self.easy_levels
+            ],
+            'dataset_stats': {
+                'solve_count': sum(1 for l in self.easy_levels if l.expected_result == True),
+                'fail_count': sum(1 for l in self.easy_levels if l.expected_result == False),
+                'unknown_count': sum(1 for l in self.easy_levels if l.expected_result is None)
+            }
         }
+        
+        # Save tournament log
+        log_dir = Path(__file__).parent.parent / "tournament_logs"
+        log_dir.mkdir(exist_ok=True)
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        log_file = log_dir / f"spacelight_tournament_{timestamp}.json"
+        
+        with open(log_file, 'w') as f:
+            json.dump(tournament_results, f, indent=2)
+        
+        print(f"\n💾 Tournament results saved to: {log_file}")
+        
+        return tournament_results

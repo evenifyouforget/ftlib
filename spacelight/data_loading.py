@@ -1,27 +1,44 @@
-"""Data loading and ftlib integration for Spacelight Tournament"""
+"""Data loading for Spacelight Tournament"""
 
-import math
+import re
 import sys
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List
 
-# Add test directory to path for imports
-current_dir = Path(__file__).parent.parent
-test_dir = current_dir / "test"
+# Add test directory to path for imports  
+ftlib_root = Path(__file__).parent.parent  # Go up from spacelight/ to ftlib/
+test_dir = ftlib_root / "test"
 sys.path.insert(0, str(test_dir))
 
-from get_design import retrieveDesign, designDomToStruct, fcsim_strtod
+from get_design import retrieveDesign, designDomToStruct
 from .core import EasyLevel
 
 
+def extract_design_id(link_or_id):
+    """Extract design ID from URL or direct ID"""
+    matches = re.findall('(?:Id=)?(\\d+)', link_or_id)
+    for match in matches:
+        return int(match)
+    return None
+
+
+def int_or_none(value):
+    """Convert string to int or None if empty"""
+    if value == '':
+        return None
+    return int(value)
+
+
 def load_easy_levels_from_tsv(max_levels: int = None) -> List[EasyLevel]:
-    """Load easy levels from fc_data.tsv file"""
+    """Load easy levels from fc_data.tsv file with expected results"""
     print("📥 Loading levels from fc_data.tsv...")
     
-    tsv_path = current_dir / "test" / "fc_data.tsv"
+    tsv_path = ftlib_root / "test" / "fc_data.tsv"
     
     levels = []
     level_count = 0
+    solve_count = 0
+    fail_count = 0
     
     with open(tsv_path, 'r') as file:
         for line_num, line in enumerate(file, 1):
@@ -32,18 +49,32 @@ def load_easy_levels_from_tsv(max_levels: int = None) -> List[EasyLevel]:
             if line.strip() and not line.startswith('#'):
                 try:
                     parts = line.strip().split('\t')
-                    url = parts[0]
-                    
-                    print(f"📦 Processing {url}...")
-                    level_count += 1
-                    
-                    if "designId=" in url:
-                        design_id = url.split("designId=")[1].split("&")[0]
-                    elif "levelId=" in url:
-                        design_id = url.split("levelId=")[1].split("&")[0]
-                    else:
-                        print(f"⏭️  Skipped: Cannot extract design ID from {url}")
+                    if len(parts) < 4:
                         continue
+                        
+                    url = parts[0]
+                    solve_ticks_str = parts[1] if len(parts) > 1 else ''
+                    design_max_ticks_str = parts[2] if len(parts) > 2 else ''
+                    
+                    # Determine expected result from TSV columns
+                    solve_ticks = int_or_none(solve_ticks_str)
+                    design_max_ticks = int_or_none(design_max_ticks_str)
+                    
+                    if solve_ticks is not None:
+                        expected_result = True  # Design solves
+                        solve_count += 1
+                    elif design_max_ticks is not None:
+                        expected_result = False  # Design fails
+                        fail_count += 1
+                    else:
+                        continue  # Skip if no expected result
+                    
+                    design_id = extract_design_id(url)
+                    if not design_id:
+                        continue
+                    
+                    print(f"📦 Processing {design_id} (expect: {'SOLVE' if expected_result else 'FAIL'})...")
+                    level_count += 1
                     
                     try:
                         dom = retrieveDesign(design_id)
@@ -75,11 +106,12 @@ def load_easy_levels_from_tsv(max_levels: int = None) -> List[EasyLevel]:
                             goal_area_w=goal_area.w,
                             goal_area_h=goal_area.h,
                             goal_area_angle=goal_area.angle,
-                            goal_pieces=simple_goal_pieces
+                            goal_pieces=simple_goal_pieces,
+                            expected_result=expected_result
                         )
                         
                         levels.append(level)
-                        print(f"✅ Added easy level: {design_id}")
+                        print(f"✅ Added level {design_id}: {'SOLVE' if expected_result else 'FAIL'}")
                         
                     except Exception as e:
                         print(f"⏭️  Skipped level {design_id} due to error: {e}")
@@ -92,56 +124,8 @@ def load_easy_levels_from_tsv(max_levels: int = None) -> List[EasyLevel]:
     print(f"🎯 Found {len(levels)} easy levels")
     print(f"📊 Statistics:")
     print(f"   • Total levels processed: {level_count}")
+    print(f"   • Expected SOLVE: {solve_count}")
+    print(f"   • Expected FAIL: {fail_count}")
     print(f"   • Goal rectangle levels found: {len(levels)}")
-    if level_count > 0:
-        print(f"   • Goal rectangle ratio: {len(levels)/level_count*100:.1f}%")
     
     return levels
-
-
-def determine_expected_results_with_ftlib(easy_levels: List[EasyLevel]) -> List[EasyLevel]:
-    """Determine expected results using ftlib's fcsim_in_area function"""
-    print("🔍 Determining expected results with ftlib...")
-    
-    sys.path.insert(0, str(current_dir / "test"))
-    from get_ftlib_dir import get_ftlib_dir
-    
-    ftlib_path = get_ftlib_dir()
-    build_dir = ftlib_path / "build"
-    sys.path.insert(0, str(build_dir))
-    
-    try:
-        import ftlib
-    except ImportError as e:
-        print(f"❌ Could not import ftlib: {e}")
-        print("   Make sure ftlib is built: cd ../ftlib && scons")
-        return easy_levels
-    
-    solve_count = 0
-    fail_count = 0
-    
-    for level in easy_levels:
-        try:
-            for piece in level.goal_pieces:
-                result = ftlib.fcsim_in_area(
-                    piece['x'], piece['y'], piece['w'], piece['h'], piece['angle'],
-                    level.goal_area_x, level.goal_area_y, 
-                    level.goal_area_w, level.goal_area_h, level.goal_area_angle
-                )
-                
-                level.expected_result = bool(result)
-                if result:
-                    solve_count += 1
-                    print(f"✅ Level {level.design_id}: SOLVES")
-                else:
-                    fail_count += 1
-                    print(f"❌ Level {level.design_id}: FAILS")
-                break  # Only check first goal piece for simple levels
-                
-        except Exception as e:
-            print(f"⚠️  Could not determine result for {level.design_id}: {e}")
-            level.expected_result = None
-    
-    print(f"📊 Expected results: {solve_count} solve, {fail_count} fail")
-    
-    return easy_levels
