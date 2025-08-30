@@ -32,7 +32,11 @@ from .contestants import (
     PrecisionContestant,
     UltraOptimisticContestant,
     DataDrivenContestant,
-    PerfectionistContestant
+    PerfectionistContestant,
+    SuperPatternContestant,
+    ID688KillerContestant,
+    HybridWinnerContestant,
+    AntiFailBiasContestant
 )
 
 # Convenience function for running a complete tournament
@@ -74,6 +78,8 @@ __all__ = [
     'SmartPreScreenContestant', 'PatternBasedContestant', 'GeometricInsightContestant', 
     'StatisticalContestant', 'CombinedInsightContestant', 'PrecisionContestant',
     'UltraOptimisticContestant', 'DataDrivenContestant', 'PerfectionistContestant',
+    'SuperPatternContestant', 'ID688KillerContestant', 'HybridWinnerContestant', 
+    'AntiFailBiasContestant',
     
     # Entry point
     'main'
