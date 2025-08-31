@@ -84,15 +84,7 @@ def load_easy_levels_from_tsv(max_levels: int = None) -> List[EasyLevel]:
                         goal_area = design_struct.goal_area
                         goal_pieces = design_struct.goal_pieces
                         
-                        # Skip if too complex (>1 goal piece or complex goal area)
-                        if len(goal_pieces) > 1:
-                            if level_count <= 2:  # Only show first couple skips
-                                print(f"⏭️  Skipped complex level: {design_id}")
-                            continue
-                        if goal_area.w > 150 or goal_area.h > 150:
-                            if level_count <= 2:  # Only show first couple skips
-                                print(f"⏭️  Skipped complex level: {design_id}")
-                            continue
+                        # Allow all levels - removed restrictive filtering to get full dataset
                         
                         # Convert goal pieces to simple format
                         simple_goal_pieces = []

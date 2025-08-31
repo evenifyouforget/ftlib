@@ -25,7 +25,7 @@ from .contestants import (
     WeirdNeverSolveContestant,
     MagicThresholdContestant,
     SmartPreScreenContestant,
-    PatternBasedContestant,
+    NonCheatingPatternContestant,
     GeometricInsightContestant,
     StatisticalContestant,
     CombinedInsightContestant,
@@ -33,10 +33,10 @@ from .contestants import (
     UltraOptimisticContestant,
     DataDrivenContestant,
     PerfectionistContestant,
-    SuperPatternContestant,
-    ID688KillerContestant,
-    HybridWinnerContestant,
-    AntiFailBiasContestant
+    GoalAreaAnalysisContestant,
+    GeometryBasedContestant,
+    AdvancedGeometryContestant,
+    StatisticalLearnerContestant
 )
 
 # Convenience function for running a complete tournament
@@ -75,11 +75,11 @@ __all__ = [
     'RandomContestant', 'ParameterizedPaddingContestant', 'FtlibExactContestant',
     'HyperStrictContestant', 'HyperLenientContestant', 'DistanceBasedStrictContestant',
     'DistanceBasedLenientContestant', 'WeirdNeverSolveContestant', 'MagicThresholdContestant',
-    'SmartPreScreenContestant', 'PatternBasedContestant', 'GeometricInsightContestant', 
+    'SmartPreScreenContestant', 'NonCheatingPatternContestant', 'GeometricInsightContestant', 
     'StatisticalContestant', 'CombinedInsightContestant', 'PrecisionContestant',
     'UltraOptimisticContestant', 'DataDrivenContestant', 'PerfectionistContestant',
-    'SuperPatternContestant', 'ID688KillerContestant', 'HybridWinnerContestant', 
-    'AntiFailBiasContestant',
+    'GoalAreaAnalysisContestant', 'GeometryBasedContestant', 'AdvancedGeometryContestant',
+    'StatisticalLearnerContestant',
     
     # Entry point
     'main'

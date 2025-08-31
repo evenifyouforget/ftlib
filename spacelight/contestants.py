@@ -309,34 +309,33 @@ class SmartPreScreenContestant(Contestant):
         return True
 
 
-class PatternBasedContestant(Contestant):
-    """Looks for patterns in design IDs and goal areas"""
+class NonCheatingPatternContestant(Contestant):
+    """Looks for patterns in goal areas only (no design ID cheating)"""
     
     def guess_does_solve(self, level: EasyLevel) -> bool:
-        # Pattern 1: Design ID patterns (purely empirical)
-        design_id = int(level.design_id)
-        
-        # Observed pattern: newer designs (higher IDs) more likely to solve
-        if design_id > 12700000:
-            base_score = 0.95
-        elif design_id > 12600000:
-            base_score = 0.85  
-        elif design_id > 1000000:
-            base_score = 0.75
-        else:
-            base_score = 0.65
-        
-        # Pattern 2: Goal area characteristics
+        # Pattern analysis using only allowed fields
         area_w, area_h = level.goal_area_w, level.goal_area_h
+        area_x, area_y = level.goal_area_x, level.goal_area_y
         area_size = area_w * area_h
         
-        # Smaller goal areas seem harder to satisfy
+        base_score = 0.55  # Start with dataset average
+        
+        # Goal area size patterns
         if area_size < 1000:
-            base_score *= 0.7
+            base_score *= 0.7  # Small areas harder
         elif area_size > 5000:
-            base_score *= 1.1
+            base_score *= 1.1  # Large areas easier
             
-        # Use random threshold based on calculated probability
+        # Position patterns
+        distance_from_origin = math.sqrt(area_x**2 + area_y**2)
+        if distance_from_origin > 200:
+            base_score *= 0.9  # Far goals slightly harder
+            
+        # Aspect ratio patterns
+        aspect_ratio = max(area_w, area_h) / min(area_w, area_h)
+        if aspect_ratio > 3.0:
+            base_score *= 0.8  # Very elongated goals are harder
+            
         import random
         return random.random() < base_score
 
@@ -590,33 +589,19 @@ class PerfectionistContestant(Contestant):
         return True
 
 
-# === TDD ITERATION 2: Pattern-Based Dominance Analysis ===
+# === TDD ITERATION 2: NON-CHEATING Pattern Analysis ===
 
-class SuperPatternContestant(Contestant):
-    """Enhanced pattern analysis based on PatternBasedContestant's success"""
+class GoalAreaAnalysisContestant(Contestant):
+    """Analyzes goal area properties without cheating (no design_id access)"""
     
     def guess_does_solve(self, level: EasyLevel) -> bool:
-        design_id = int(level.design_id)
-        
-        # Enhanced ID pattern analysis (PatternBasedContestant got 69.3%)
-        if design_id > 12700000:
-            base_score = 0.98  # Even higher for newest
-        elif design_id > 12650000:
-            base_score = 0.85  
-        elif design_id > 12600000:
-            base_score = 0.75
-        elif design_id > 1000000:
-            base_score = 0.65
-        elif design_id > 688000:  # 688xxx seem to be mostly FAIL
-            base_score = 0.2   # Much lower for 688xxx series
-        else:
-            base_score = 0.4
-        
-        # Enhanced area analysis 
         area_w, area_h = level.goal_area_w, level.goal_area_h
+        area_x, area_y = level.goal_area_x, level.goal_area_y
         area_size = area_w * area_h
         
-        # More precise area size patterns
+        base_score = 0.6  # Default probability
+        
+        # Area size patterns
         if area_size < 500:
             base_score *= 0.5  # Very small areas are hard
         elif area_size < 1500:
@@ -624,77 +609,118 @@ class SuperPatternContestant(Contestant):
         elif area_size > 10000:
             base_score *= 1.2  # Large areas are easier
         
-        # Goal position patterns (new insight)
-        goal_x, goal_y = level.goal_area_x, level.goal_area_y
-        if abs(goal_x) > 300 or abs(goal_y) > 300:
+        # Goal position patterns
+        if abs(area_x) > 300 or abs(area_y) > 300:
             base_score *= 0.7  # Far goals are harder
         
+        # Very small goals tend to fail
+        if area_w < 10 or area_h < 10:
+            base_score *= 0.3
+            
         import random
         return random.random() < base_score
 
 
-class ID688KillerContestant(Contestant):
-    """Specifically targets the 688xxx series that seem to mostly fail"""
+class GeometryBasedContestant(Contestant):
+    """Pure geometry analysis without design ID cheating"""
     
     def guess_does_solve(self, level: EasyLevel) -> bool:
-        design_id = int(level.design_id)
-        
-        # Key insight: 688xxx designs are mostly FAIL cases
-        if 688000 <= design_id <= 689000:
-            return False  # Aggressively predict FAIL for 688xxx
-        
-        # For everything else, be optimistic (like AlwaysTrueContestant at 55.7%)
-        return True
-
-
-class HybridWinnerContestant(Contestant):
-    """Combines the best aspects of top performers"""
-    
-    def guess_does_solve(self, level: EasyLevel) -> bool:
-        design_id = int(level.design_id)
-        
-        # Pattern-based logic (from PatternBasedContestant)
-        if 688000 <= design_id <= 689000:
-            pattern_score = 0.1  # Most 688xxx fail
-        elif design_id > 12700000:
-            pattern_score = 0.95
-        elif design_id > 12650000:
-            pattern_score = 0.8
-        else:
-            pattern_score = 0.6
-        
-        # Statistical adjustment (from StatisticalContestant's 54.5%)
         for piece in level.goal_pieces:
             x, y = piece['x'], piece['y']
-            area_x, area_y = level.goal_area_x, level.goal_area_y
+            w, h = piece['w'], piece['h']
             
+            area_x, area_y = level.goal_area_x, level.goal_area_y
+            area_w, area_h = level.goal_area_w, level.goal_area_h
+            
+            # Distance-based analysis
             distance = math.sqrt((x - area_x)**2 + (y - area_y)**2)
-            if distance < 30:  # Very close
-                pattern_score *= 1.3
-            elif distance > 150:  # Far
-                pattern_score *= 0.7
+            relative_distance = distance / max(area_w, area_h)
+            
+            # Pieces very close to goal center usually solve
+            if relative_distance < 0.2:
+                return True
+                
+            # Size ratio analysis
+            piece_area = w * h
+            goal_area = area_w * area_h
+            area_ratio = piece_area / goal_area
+            
+            if area_ratio < 0.05:  # Very small pieces usually solve
+                return True
+            
+            if area_ratio > 2.0:  # Very large pieces usually fail
+                return False
         
-        return pattern_score > 0.5
+        # Default to optimistic
+        return True
 
 
-class AntiFailBiasContestant(Contestant):
-    """Designed to counter the dataset's 39/88 FAIL cases"""
+class AdvancedGeometryContestant(Contestant):
+    """More sophisticated geometry analysis"""
     
     def guess_does_solve(self, level: EasyLevel) -> bool:
-        design_id = int(level.design_id)
+        area_w, area_h = level.goal_area_w, level.goal_area_h
+        area_x, area_y = level.goal_area_x, level.goal_area_y
         
-        # The dataset has 49 SOLVE vs 39 FAIL (55.7% solve rate)
-        # AlwaysTrueContestant gets exactly this rate - so it's mostly learning the bias
+        # Multi-factor analysis
+        solve_score = 0.6  # Base probability
         
-        # Target the specific FAIL patterns more precisely
-        if 688000 <= design_id <= 689000:
-            # 688xxx series: look for additional FAIL indicators
-            area_w, area_h = level.goal_area_w, level.goal_area_h
-            if area_w * area_h < 800:  # Small 688xxx areas likely fail
-                return False
-            if level.goal_area_x > 400 or level.goal_area_y > 400:  # Far 688xxx fail
-                return False
-            return True  # Other 688xxx might solve
+        for piece in level.goal_pieces:
+            x, y = piece['x'], piece['y']
+            w, h = piece['w'], piece['h']
+            angle = piece['angle']
+            
+            # Factor 1: Distance penalty
+            distance = math.sqrt((x - area_x)**2 + (y - area_y)**2)
+            max_reasonable = max(area_w, area_h) * 2
+            if distance > max_reasonable:
+                solve_score *= 0.3
+            elif distance > max_reasonable * 0.5:
+                solve_score *= 0.7
+            else:
+                solve_score *= 1.1  # Reward close pieces
+            
+            # Factor 2: Size matching
+            piece_size = max(w, h)
+            goal_size = max(area_w, area_h)
+            if piece_size > goal_size * 3:
+                solve_score *= 0.4  # Large pieces are problematic
+            elif piece_size < goal_size * 0.1:
+                solve_score *= 1.2  # Small pieces are good
+                
+            # Factor 3: Rotation penalty
+            if abs(angle) > 1.0:  # > ~57 degrees
+                solve_score *= 0.8
         
-        # For non-688xxx, optimistically assume solve
-        return True
+        return solve_score > 0.5
+
+
+class StatisticalLearnerContestant(Contestant):
+    """Uses statistical patterns from geometry only"""
+    
+    def guess_does_solve(self, level: EasyLevel) -> bool:
+        # Since dataset is ~53% SOLVE, start slightly optimistic
+        solve_probability = 0.55
+        
+        area_w, area_h = level.goal_area_w, level.goal_area_h
+        area_size = area_w * area_h
+        
+        # Adjust based on goal area characteristics
+        if area_size < 1000:
+            solve_probability *= 0.8  # Small areas harder
+        elif area_size > 5000:
+            solve_probability *= 1.2  # Large areas easier
+            
+        # Position-based adjustments
+        if abs(level.goal_area_x) > 200 or abs(level.goal_area_y) > 200:
+            solve_probability *= 0.9  # Far goals slightly harder
+            
+        # Piece analysis
+        for piece in level.goal_pieces:
+            piece_area = piece['w'] * piece['h']
+            if piece_area / area_size < 0.1:  # Small relative to goal
+                solve_probability *= 1.1
+            elif piece_area / area_size > 1.0:  # Large relative to goal
+                solve_probability *= 0.8
+        
+        return solve_probability > 0.5

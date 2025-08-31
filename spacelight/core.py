@@ -75,6 +75,27 @@ class EasyLevel:
     expected_result: Optional[bool] = None
 
 
+class SafeLevelView:
+    """Anti-cheating wrapper that only exposes allowed fields to contestants"""
+    
+    def __init__(self, level: EasyLevel):
+        self._level = level
+        
+        # Only expose fields contestants are allowed to see
+        self.goal_area_x = level.goal_area_x
+        self.goal_area_y = level.goal_area_y
+        self.goal_area_w = level.goal_area_w
+        self.goal_area_h = level.goal_area_h
+        self.goal_area_angle = level.goal_area_angle
+        self.goal_pieces = level.goal_pieces
+    
+    def __getattr__(self, name):
+        # Block access to any internal fields
+        if name in ['design_id', 'url', 'expected_result', '_design_id', '_url', '_expected_result']:
+            raise AttributeError(f"SafeLevelView: Contestants cannot access '{name}' field")
+        raise AttributeError(f"SafeLevelView: '{name}' not found")
+
+
 class Contestant(ABC):
     """Abstract base class for goal rectangle checking contestants"""
     
