@@ -579,6 +579,7 @@ bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
     double abs_sin_angle = std::abs(ft_sin(angle));
     double bex2 = ft_add(ft_mul(bex, abs_cos_angle), ft_mul(bey, abs_sin_angle));
     double bey2 = ft_add(ft_mul(bex, abs_sin_angle), ft_mul(bey, abs_cos_angle));
+	// twips: snap to 0.05
 	bex2 = ft_mul(0.05, std::ceil(ft_mul(bex2, 20)));
 	bey2 = ft_mul(0.05, std::ceil(ft_mul(bey2, 20)));
 
