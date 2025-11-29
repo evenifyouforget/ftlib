@@ -70,7 +70,8 @@ def autotune_contestant(contestant: ParameterizedContestant,
             'differential_evolution': {'improvements': 0, 'time_spent': 0},
             'basin_hopping': {'improvements': 0, 'time_spent': 0},
             'lbfgs_b': {'improvements': 0, 'time_spent': 0},
-            'nelder_mead': {'improvements': 0, 'time_spent': 0}
+            'nelder_mead': {'improvements': 0, 'time_spent': 0},
+            'combinatorial': {'improvements': 0, 'time_spent': 0},
         }
         
         print(f"🔧 {Colors.BOLD}Adaptive Interleaved Hybrid Optimization{Colors.RESET}")
@@ -80,7 +81,8 @@ def autotune_contestant(contestant: ParameterizedContestant,
             ('differential_evolution', 0.3),  # Initial time allocation
             ('basin_hopping', 0.25),
             ('lbfgs_b', 0.25), 
-            ('nelder_mead', 0.2)
+            ('nelder_mead', 0.2),
+            ('combinatorial', 0.01)
         ]
         
         iteration = 0
@@ -220,6 +222,45 @@ def autotune_contestant(contestant: ParameterizedContestant,
                             })()
                         else:
                             result = result_nm
+                    
+                    elif algo_name == 'combinatorial':
+                        # Simple combinatorial search over discrete parameters
+                        discrete_bounds = contestant.get_discrete_param_bounds()
+                        discrete_param_names = list(discrete_bounds.keys())
+                        discrete_param_ranges = [range(int(discrete_bounds[name][0]), int(discrete_bounds[name][1]) + 1) for name in discrete_param_names]
+                        
+                        best_combination = contestant.discrete_params.copy()
+                        best_combination_score = old_best = objective_function(best_x)
+                        
+                        start_time_combo = time.time()
+                        for indices in np.ndindex(*[len(rng) for rng in discrete_param_ranges]):
+                            #if time.time() - start_time_combo >= slice_time:
+                            #    break
+                            
+                            # Set discrete params
+                            for i, name in enumerate(discrete_param_names):
+                                contestant.discrete_params[name] = discrete_param_ranges[i][indices[i]]
+                            
+                            score = objective_function(best_x)
+                            if score < best_combination_score:
+                                best_combination_score = score
+                                best_combination = contestant.discrete_params.copy()
+                        
+                        if best_combination is not None:
+                            # Update contestant with best found combination
+                            contestant.discrete_params.update(best_combination)
+                        if best_combination_score != old_best:
+                            result = type('Result', (), {
+                                'x': np.array([contestant.params[name] for name in param_names]),
+                                'fun': best_combination_score,
+                                'success': True
+                            })()
+                        else:
+                            result = type('Result', (), {
+                                'x': np.array(best_x),
+                                'fun': float('inf'),
+                                'success': False
+                            })()
                     
                     # Update statistics and best result
                     elapsed_time = time.time() - algo_start

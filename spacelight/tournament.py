@@ -49,13 +49,13 @@ class SpaceLightTournament:
         results = []
         
         for contestant in self.contestants:
-            contestant_name = contestant.__class__.__name__
-            
             # Auto-tune parameterized contestants
             if isinstance(contestant, ParameterizedContestant):
                 print(f"🔧 {Colors.CYAN}Auto-tuning {contestant_name}...{Colors.RESET}")
                 contestant = autotune_contestant(contestant, self.easy_levels, autotune_time)
                 print()
+
+            contestant_name = str(contestant)
             
             print(f"🧪 Testing {Colors.BOLD}{contestant_name}{Colors.RESET}...")
             

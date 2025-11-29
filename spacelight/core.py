@@ -103,6 +103,9 @@ class Contestant(ABC):
     def guess_does_solve(self, level: EasyLevel) -> bool:
         """Predict whether the design solves the level"""
         pass
+    
+    def __str__(self):
+        return self.__class__.__name__
 
 
 class ParameterizedContestant(Contestant):
@@ -110,12 +113,22 @@ class ParameterizedContestant(Contestant):
     
     def __init__(self):
         self.params = {}
+        self.discrete_params = {}
     
-    @abstractmethod
     def get_param_bounds(self) -> Dict[str, tuple]:
         """Return parameter bounds for optimization"""
-        pass
+        return {name: (0.0, 1.0) for name in self.params}
+    
+    def get_discrete_param_bounds(self) -> Dict[str, tuple]:
+        """Return parameter bounds for optimization"""
+        return {name: (0, 1) for name in self.discrete_params}
     
     def set_params(self, params: Dict[str, float]):
         """Set parameter values"""
         self.params = params
+    
+    def __str__(self):
+        param_str = ', '.join(f"{k}={v}" for k, v in self.params.items())
+        discrete_str = ', '.join(f"{k}={v}" for k, v in self.discrete_params.items())
+        all_params = ', '.join(filter(None, [param_str, discrete_str]))
+        return f"{self.__class__.__name__}({all_params})"
