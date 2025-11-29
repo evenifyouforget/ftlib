@@ -123,11 +123,11 @@ def autotune_contestant(contestant: ParameterizedContestant,
             
             # Run each algorithm for its allocated time slice
             for algo_name, time_fraction in algorithms:
-                if time_remaining() < min_slice_time:
+                if time_remaining() < min_slice_time and not last_combinatorial_seconds:
                     break
                 
                 slice_time = min(time_remaining() * time_fraction, time_remaining() - min_slice_time * (len(algorithms) - 1))
-                if slice_time < min_slice_time:
+                if slice_time < min_slice_time and not last_combinatorial_seconds:
                     continue
                 
                 algo_start = time.time()
