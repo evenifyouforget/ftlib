@@ -724,3 +724,107 @@ class StatisticalLearnerContestant(Contestant):
                 solve_probability *= 0.8
         
         return solve_probability > 0.5
+
+# Constants copied exactly from the C++ logic to ensure the most precise 
+# floating-point behavior possible in Python.
+RAD_TO_DEG = 57.295779513082320876763
+DEG_TO_RAD = 0.017453292519943295769245
+DEGREE_CAP = 32768.0
+
+class PR35Reference(Contestant):
+    """
+    Implements the goal-checking logic using the C++ fcsim_in_area expanded 
+    bounding box (AABB) method for rectangular pieces, ensuring exact floating-point 
+    arithmetic order and angle handling. This mimics the final, accurate contest logic.
+    """
+    
+    def _fcsim_in_area_check(self, piece, level) -> bool:
+        """
+        Translates the C++ fcsim_in_area function for rectangular blocks.
+        Uses the rotation-expanded AABB check.
+        """
+        # Piece definition (bdef in C++)
+        x, y = piece['x'], piece['y']
+        w, h = piece['w'], piece['h']
+        angle = piece['angle']  # Assumed to be in radians
+        
+        # Area definition (area in C++)
+        area_x, area_y = level.goal_area_x, level.goal_area_y
+        area_w, area_h = level.goal_area_w, level.goal_area_h
+        
+        # Calculate piece half-extents (bex, bey in C++)
+        bex = w * 0.5
+        bey = h * 0.5
+
+        # Calculate area half-extents and bounds
+        area_ex = area_w * 0.5
+        area_ey = area_h * 0.5
+        
+        # Calculate goal area bounds (area_xa, area_xb, area_ya, area_yb in C++)
+        # ft_sub(area.x, area_ex), ft_add(area.x, area_ex), etc.
+        area_xa = area_x - area_ex
+        area_xb = area_x + area_ex
+        area_ya = area_y - area_ey
+        area_yb = area_y + area_ey
+
+        # --- Angle Conversion Logic (Must be EXACT) ---
+        
+        # convert to degrees (ft_mul(angle, RAD_TO_DEG))
+        angle_deg = angle * RAD_TO_DEG
+
+        # if abs(angle) >= 2^15 degrees, use -2^15 degrees
+        if abs(angle_deg) >= DEGREE_CAP:
+            angle_deg = -DEGREE_CAP
+        # Truncation step is skipped as per C++ comments.
+
+        # convert back to radians (ft_mul(angle, DEG_TO_RAD))
+        angle_rad = angle_deg * DEG_TO_RAD
+        
+        # --- Rotated Bounding Box Logic (AABB of the rotated piece) ---
+
+        # get rotation expanded bounding box
+        abs_cos_angle = abs(math.cos(angle_rad))
+        abs_sin_angle = abs(math.sin(angle_rad))
+        
+        # C++: bex2 = ft_add(ft_mul(bex, abs_cos_angle), ft_mul(bey, abs_sin_angle));
+        # Preserving multiplication order:
+        bex2 = (bex * abs_cos_angle) + (bey * abs_sin_angle)
+        
+        # C++: bey2 = ft_add(ft_mul(bex, abs_sin_angle), ft_mul(bey, abs_cos_angle));
+        # Preserving multiplication order:
+        bey2 = (bex * abs_sin_angle) + (bey * abs_cos_angle)
+
+        # --- Final Containment Check ---
+        
+        # C++: ft_sub(bdef.x, bex2) >= area_xa && ft_add(bdef.x, bex2) <= area_xb && ...
+        x_min = x - bex2
+        x_max = x + bex2
+        y_min = y - bey2
+        y_max = y + bey2
+        
+        # Check X bounds
+        is_in_x = x_min >= area_xa and x_max <= area_xb
+        
+        # Check Y bounds
+        is_in_y = y_min >= area_ya and y_max <= area_yb
+        
+        return is_in_x and is_in_y
+
+    def guess_does_solve(self, level: EasyLevel) -> bool:
+        """
+        Translates the C++ fcsim_is_solved logic. Checks for goal existence 
+        and ensures all goal pieces are in the area using the expanded AABB check.
+        """
+        
+        if not level.goal_pieces:
+            # Matches C++: if no goal objects are found, returns false
+            return False
+            
+        for piece in level.goal_pieces:
+            # Mirrors the C++ loop's intent: check all goal objects
+            if not self._fcsim_in_area_check(piece, level):
+                # Matches C++: if (!fcsim_in_area(...)) return false;
+                return False
+                
+        # Matches C++: return goal_exist (which is true since we passed the initial check)
+        return True

@@ -1,7 +1,10 @@
 """Data loading for Spacelight Tournament"""
 
+import csv
+import itertools
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 from typing import List
 
@@ -10,7 +13,7 @@ ftlib_root = Path(__file__).parent.parent  # Go up from spacelight/ to ftlib/
 test_dir = ftlib_root / "test"
 sys.path.insert(0, str(test_dir))
 
-from get_design import retrieveDesign, designDomToStruct
+from get_design import retrieveDesign, retrieveLevel, designDomToStruct
 from .core import EasyLevel
 
 
@@ -37,65 +40,69 @@ def load_easy_levels_from_tsv(max_levels: int = None) -> List[EasyLevel]:
     
     levels = []
     level_count = 0
-    solve_count = 0
-    fail_count = 0
+    line_count = 0
+    reject_reason_counts = Counter()
     
-    with open(tsv_path, 'r') as file:
-        for line_num, line in enumerate(file, 1):
+    with open(tsv_path, newline='') as file:
+        reader = csv.reader(file, delimiter='\t')
+        # tsv to 2D list
+        fc_data = list(reader)
+    
+    if True:
+        for row in fc_data:
+            line_count += 1
             if max_levels and len(levels) >= max_levels:
                 print(f"🛑 Reached max_levels limit ({max_levels})")
                 break
                 
-            if line.strip() and not line.startswith('#'):
+            if True:
                 try:
-                    parts = line.strip().split('\t')
-                    if len(parts) < 4:
-                        continue
-                        
-                    url = parts[0]
-                    solve_ticks_str = parts[1] if len(parts) > 1 else ''
-                    design_max_ticks_str = parts[2] if len(parts) > 2 else ''
-                    
-                    # Determine expected result from TSV columns
-                    solve_ticks = int_or_none(solve_ticks_str)
-                    design_max_ticks = int_or_none(design_max_ticks_str)
-                    
-                    if solve_ticks is not None:
-                        expected_result = True  # Design solves
-                        solve_count += 1
-                    elif design_max_ticks is not None:
-                        expected_result = False  # Design fails
-                        fail_count += 1
-                    else:
+                    # parse row
+                    level_id, design_id, solve_ticks, design_max_ticks, user_comment, spectre_override, cpu_name, p2_solve_ticks, *_ = itertools.chain(row, [None]*10)
+                    level_id = extract_design_id(level_id)
+                    design_id = extract_design_id(design_id)
+                    solve_ticks = int_or_none(solve_ticks)
+                    design_max_ticks = int_or_none(design_max_ticks)
+                    if solve_ticks is None and design_max_ticks is None:
+                        reject_reason_counts['no expected result'] += 1
                         continue  # Skip if no expected result
+                    # generate basic data
+                    design_uid = f'D{design_id}' if design_id else f'L{level_id}'
+                    # placeholder
+                    design_xml = retrieveDesign(design_id) if design_id else retrieveLevel(level_id)
+                    design_struct = designDomToStruct(design_xml)
                     
-                    design_id = extract_design_id(url)
-                    if not design_id:
-                        continue
+                    expected_result = solve_ticks is not None
                     
                     if level_count <= 3 or level_count % 10 == 0:  # Show first 3, then every 10th
                         print(f"📦 Processing {design_id} (expect: {'SOLVE' if expected_result else 'FAIL'})...")
                     level_count += 1
                     
                     try:
-                        dom = retrieveDesign(design_id)
-                        design_struct = designDomToStruct(dom)
-                        
                         goal_area = design_struct.goal_area
                         goal_pieces = design_struct.goal_pieces
                         
-                        # Allow all levels - removed restrictive filtering to get full dataset
+                        # Single goal rectangle and nothing else
+                        reject_reason = None
+                        reject_reason = reject_reason or len(design_struct.level_pieces) != 0 and 'has level pieces'
+                        reject_reason = reject_reason or len(design_struct.design_pieces) != 0 and 'has design pieces'
                         
                         # Convert goal pieces to simple format
                         simple_goal_pieces = []
                         for piece in goal_pieces:
+                            reject_reason = reject_reason or piece.type_id != 4 and 'non-rectangle goal piece'
                             simple_goal_pieces.append({
                                 'x': piece.x, 'y': piece.y, 'w': piece.w, 'h': piece.h, 'angle': piece.angle
                             })
+                        reject_reason = reject_reason or len(simple_goal_pieces) != 1 and 'not exactly 1 goal piece'
+                        
+                        if reject_reason:
+                            reject_reason_counts[reject_reason] += 1
+                            continue
                         
                         level = EasyLevel(
                             design_id=design_id,
-                            url=url,
+                            url=None,
                             goal_area_x=goal_area.x,
                             goal_area_y=goal_area.y, 
                             goal_area_w=goal_area.w,
@@ -117,7 +124,17 @@ def load_easy_levels_from_tsv(max_levels: int = None) -> List[EasyLevel]:
                     print(f"⏭️  Skipped line {line_num} due to error: {e}")
                     continue
     
-    print(f"🎯 Found {len(levels)} easy levels (processed {level_count} total)")
+    print(f"🎯 Found {len(levels)} easy levels (processed {level_count} levels, {line_count} lines)")
+    solve_count = sum(1 for level in levels if level.expected_result)
+    fail_count = len(levels) - solve_count
     print(f"📊 Dataset: {solve_count} SOLVE + {fail_count} FAIL cases = {solve_count + fail_count} expected results")
+    
+    print('# Sample - first 10 levels')
+    for level in levels[:10]:
+        print(f"   - Level {level.design_id}: expects {'SOLVE' if level.expected_result else 'FAIL'}")
+    
+    print('# Rejection Reasons:')
+    for reason, count in reject_reason_counts.items():
+        print(f"   - {reason}: {count} levels")
     
     return levels
