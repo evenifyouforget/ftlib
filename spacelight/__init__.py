@@ -52,14 +52,16 @@ def main(max_mode: bool = False, max_levels: int = None, autotune_time: float = 
         # Max mode: all levels, longer autotune time
         levels = load_easy_levels_from_tsv(max_levels or None)  # Load all levels
         autotune_budget = autotune_time or 60  # Longer optimization
+        last_combinatorial_seconds = 15 * 60
         print(f"🚀 {Colors.BOLD}MAX MODE ENABLED{Colors.RESET} - All levels, extended optimization")
     else:
         # Default mode: limited for quick testing
         levels = load_easy_levels_from_tsv(max_levels or 5)
         autotune_budget = autotune_time or 15
+        last_combinatorial_seconds = None
     
     tournament = SpaceLightTournament(levels)
-    results = tournament.run_tournament(autotune_time=autotune_budget)
+    results = tournament.run_tournament(autotune_time=autotune_budget, last_combinatorial_seconds=last_combinatorial_seconds)
     
     return results
 

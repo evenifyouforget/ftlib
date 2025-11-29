@@ -1385,3 +1385,338 @@ class PR35TwipTester(ParameterizedContestant):
                 return False
                 
         return True
+
+class PR35BoundaryTwipTester(ParameterizedContestant):
+    """
+    Focuses quantization on the piece's center, rotated half-extents, 
+    and the four final calculated piece AABB boundaries (x_min, x_max, y_min, y_max).
+    
+    Discrete Parameters (8 total, each 0-4 mode):
+    - Piece: X, Y (Center)
+    - Rotated Half-Extents: bex2, bey2
+    - Calculated AABB Bounds: x_min, x_max, y_min, y_max
+    """
+
+    def __init__(self):
+        super().__init__()
+        # Define 8 discrete parameters, each controlling one rounding operation
+        self.discrete_params = {
+            'round_x_center': 0, 'round_y_center': 0, # Piece Center Position
+            'round_bex2': 0, 'round_bey2': 0,         # Rotated Extents
+            'round_x_min': 0, 'round_x_max': 0,       # Calculated X Bounds
+            'round_y_min': 0, 'round_y_max': 0        # Calculated Y Bounds
+        }
+        self.ref = PR35Reference() # Use Reference's angle normalization and base logic
+        self.mode_max = 4
+    
+    def adjust_time_budget(self, time_seconds):
+        super().adjust_time_budget(time_seconds)
+        self.mode_max = 4
+        while self.mode_max > 1 and (self.mode_max + 1) ** 8 * 0.0002 > time_seconds:
+            self.mode_max -= 1
+
+    def get_discrete_param_bounds(self):
+        """All 8 parameters are modes 0 to 4 (5 total modes)."""
+        return {name: (0, self.mode_max) for name in self.discrete_params}
+
+    def _calculate_rotated_extents(self, w: float, h: float, angle_rad: float) -> tuple[float, float]:
+        """
+        Calculates extents, applying rounding ONLY to final bex2 and bey2.
+        Uses original piece W/H without twipping.
+        """
+        bex = w * 0.5
+        bey = h * 0.5
+        
+        abs_cos_angle = abs(math.cos(angle_rad))
+        abs_sin_angle = abs(math.sin(angle_rad))
+        
+        # Reference calculation for unrounded rotated extents
+        bex2_unrounded = (bex * abs_cos_angle) + (bey * abs_sin_angle)
+        bey2_unrounded = (bex * abs_sin_angle) + (bey * abs_cos_angle)
+        
+        # Apply rounding to final rotated extents
+        bex2 = _round_twip(bex2_unrounded, self.discrete_params['round_bex2'])
+        bey2 = _round_twip(bey2_unrounded, self.discrete_params['round_bey2'])
+        
+        return bex2, bey2
+        
+    def _fcsim_in_area_check(self, piece, level: EasyLevel) -> bool:
+        """
+        Applies rounding to piece position and the four resulting AABB bounds.
+        Area parameters are used as provided (no rounding).
+        """
+        # Piece definition - Apply position rounding
+        x = _round_twip(piece['x'], self.discrete_params['round_x_center'])
+        y = _round_twip(piece['y'], self.discrete_params['round_y_center'])
+        w, h, angle = piece['w'], piece['h'], piece['angle']
+        
+        # Area definition - Used without rounding
+        area_x, area_y = level.goal_area_x, level.goal_area_y
+        area_w, area_h = level.goal_area_w, level.goal_area_h
+        
+        # 1. Angle normalization
+        angle_rad = self.ref._normalize_angle_for_check(angle)
+        
+        # 2. Rotated Half-Extents (Applies bex2/bey2 rounding internally)
+        bex2, bey2 = self._calculate_rotated_extents(w, h, angle_rad)
+
+        # 3. Calculate goal area bounds
+        area_ex = area_w * 0.5
+        area_ey = area_h * 0.5
+        area_xa = area_x - area_ex
+        area_xb = area_x + area_ex
+        area_ya = area_y - area_ey
+        area_yb = area_y + area_ey
+
+        # 4. Calculate Piece Bounds (Unrounded)
+        x_min_unrounded = x - bex2
+        x_max_unrounded = x + bex2
+        y_min_unrounded = y - bey2
+        y_max_unrounded = y + bey2
+        
+        # 5. Apply Quantization to Piece Bounds
+        x_min = _round_twip(x_min_unrounded, self.discrete_params['round_x_min'])
+        x_max = _round_twip(x_max_unrounded, self.discrete_params['round_x_max'])
+        y_min = _round_twip(y_min_unrounded, self.discrete_params['round_y_min'])
+        y_max = _round_twip(y_max_unrounded, self.discrete_params['round_y_max'])
+        
+        # 6. Final Containment Check
+        # Reference uses inclusive bounds: >= and <=
+        is_in_x = x_min >= area_xa and x_max <= area_xb
+        is_in_y = y_min >= area_ya and y_max <= area_yb
+        
+        return is_in_x and is_in_y
+
+    def guess_does_solve(self, level: EasyLevel) -> bool:
+        if not level.goal_pieces:
+            return False
+            
+        for piece in level.goal_pieces:
+            if not self._fcsim_in_area_check(piece, level):
+                return False
+                
+        return True
+
+
+class PR35XTwipTester(ParameterizedContestant):
+    """
+    Tests quantization exclusively on X-axis related components.
+    X_min and X_max boundaries share a single mode parameter.
+    Y-axis twipping is completely disabled (mode 0).
+    
+    Discrete Parameters (3 total, each 0-4 mode):
+    - mode_x_center: Rounds piece X.
+    - mode_bex2: Rounds rotated half-extent BEX2.
+    - mode_x_bounds: Rounds both x_min and x_max bounds.
+    """
+
+    def __init__(self):
+        super().__init__()
+        # Define 3 discrete parameters for X-axis twipping
+        self.discrete_params = {
+            'mode_x_center': 0,    # Piece Center Position X
+            'mode_bex2': 0,        # Rotated Extent X
+            'mode_x_bounds': 0     # Calculated X Bounds (x_min, x_max)
+        }
+        self.ref = PR35Reference() # Use Reference's angle normalization and base logic
+
+    def get_discrete_param_bounds(self):
+        """All 3 parameters are modes 0 to 4 (5 total modes)."""
+        return {name: (0, 4) for name in self.discrete_params}
+
+    def _calculate_rotated_extents(self, w: float, h: float, angle_rad: float) -> tuple[float, float]:
+        """
+        Calculates extents, applying rounding ONLY to final bex2 (X-axis).
+        BEY2 (Y-axis) is not twipped.
+        """
+        bex = w * 0.5
+        bey = h * 0.5
+        
+        abs_cos_angle = abs(math.cos(angle_rad))
+        abs_sin_angle = abs(math.sin(angle_rad))
+        
+        # Reference calculation for unrounded rotated extents
+        bex2_unrounded = (bex * abs_cos_angle) + (bey * abs_sin_angle)
+        bey2_unrounded = (bex * abs_sin_angle) + (bey * abs_cos_angle)
+        
+        # Apply rounding to BEX2 (X-axis)
+        bex2 = _round_twip(bex2_unrounded, self.discrete_params['mode_bex2'])
+        
+        # BEY2 (Y-axis) is NOT rounded (mode 0)
+        bey2 = bey2_unrounded
+        
+        return bex2, bey2
+        
+    def _fcsim_in_area_check(self, piece, level: EasyLevel) -> bool:
+        """
+        Applies rounding to piece X position and the resulting X-AABB bounds.
+        Y-axis values are not twipped.
+        """
+        # Piece definition - Apply rounding only to X position
+        x = _round_twip(piece['x'], self.discrete_params['mode_x_center'])
+        y = piece['y'] # Y is not twipped
+        w, h, angle = piece['w'], piece['h'], piece['angle']
+        
+        # Area definition - Used without rounding
+        area_x, area_y = level.goal_area_x, level.goal_area_y
+        area_w, area_h = level.goal_area_w, level.goal_area_h
+        
+        # 1. Angle normalization
+        angle_rad = self.ref._normalize_angle_for_check(angle)
+        
+        # 2. Rotated Half-Extents (BEX2 is twipped internally, BEY2 is not)
+        bex2, bey2 = self._calculate_rotated_extents(w, h, angle_rad)
+
+        # 3. Calculate goal area bounds
+        area_ex = area_w * 0.5
+        area_ey = area_h * 0.5
+        area_xa = area_x - area_ex
+        area_xb = area_x + area_ex
+        area_ya = area_y - area_ey
+        area_yb = area_y + area_ey
+        
+        # 4. Calculate Piece Bounds (Unrounded Y, Twipped X/BEX2)
+        x_min_unrounded = x - bex2
+        x_max_unrounded = x + bex2
+        y_min = y - bey2 # Y is NOT twipped
+        y_max = y + bey2 # Y is NOT twipped
+        
+        # 5. Apply Quantization to X Piece Bounds (using the shared mode)
+        x_bound_mode = self.discrete_params['mode_x_bounds']
+        x_min = _round_twip(x_min_unrounded, x_bound_mode)
+        x_max = _round_twip(x_max_unrounded, x_bound_mode)
+        
+        # 6. Final Containment Check
+        # Reference uses inclusive bounds: >= and <=
+        is_in_x = x_min >= area_xa and x_max <= area_xb
+        is_in_y = y_min >= area_ya and y_max <= area_yb
+        
+        return is_in_x and is_in_y
+
+    def guess_does_solve(self, level: EasyLevel) -> bool:
+        if not level.goal_pieces:
+            return False
+            
+        for piece in level.goal_pieces:
+            if not self._fcsim_in_area_check(piece, level):
+                return False
+                
+        return True
+
+
+# --- Variant: Combined Twip Quantization Tester (PR35CombinedTwipTester) ---
+
+class PR35CombinedTwipTester(ParameterizedContestant):
+    """
+    Tests quantization across all relevant calculated values for both the piece
+    and the area. Uses a grouped 6-parameter approach to keep the search space
+    manageable (5^6 = 15,625 combinations).
+    
+    Discrete Parameters (6 total, each 0-4 mode):
+    - mode_x_calc: Rounds piece X center and rotated half-extent BEX2.
+    - mode_x_piece_bound: Rounds the final x_min and x_max piece boundaries.
+    - mode_x_area_bound: Rounds the final area_xa and area_xb boundaries.
+    - mode_y_calc: Rounds piece Y center and rotated half-extent BEY2.
+    - mode_y_piece_bound: Rounds the final y_min and y_max piece boundaries.
+    - mode_y_area_bound: Rounds the final area_ya and area_yb boundaries.
+    """
+
+    def __init__(self):
+        super().__init__()
+        # Define 6 discrete parameters
+        self.discrete_params = {
+            'mode_x_calc': 0,           # Piece X center and BEX2
+            'mode_x_piece_bound': 0,    # Piece X min/max
+            'mode_x_area_bound': 0,     # Area X a/b
+            'mode_y_calc': 0,           # Piece Y center and BEY2
+            'mode_y_piece_bound': 0,    # Piece Y min/max
+            'mode_y_area_bound': 0      # Area Y a/b
+        }
+        self.ref = PR35Reference() 
+
+    def get_discrete_param_bounds(self):
+        """All 6 parameters are modes 0 to 4 (5 total modes)."""
+        return {name: (0, 4) for name in self.discrete_params}
+
+    def _calculate_rotated_extents(self, w: float, h: float, angle_rad: float) -> tuple[float, float]:
+        """
+        Calculates extents, applying rounding to BEX2 and BEY2 based on the calc modes.
+        W/H are used without twipping.
+        """
+        bex = w * 0.5
+        bey = h * 0.5
+        
+        abs_cos_angle = abs(math.cos(angle_rad))
+        abs_sin_angle = abs(math.sin(angle_rad))
+        
+        # Reference calculation for unrounded rotated extents
+        bex2_unrounded = (bex * abs_cos_angle) + (bey * abs_sin_angle)
+        bey2_unrounded = (bex * abs_sin_angle) + (bey * abs_cos_angle)
+        
+        # Apply rounding to BEX2 and BEY2
+        bex2 = _round_twip(bex2_unrounded, self.discrete_params['mode_x_calc'])
+        bey2 = _round_twip(bey2_unrounded, self.discrete_params['mode_y_calc'])
+        
+        return bex2, bey2
+        
+    def _fcsim_in_area_check(self, piece, level: EasyLevel) -> bool:
+        """
+        Applies twipping to piece position, piece AABB bounds, and area AABB bounds.
+        """
+        # Piece definition - Apply rounding to X and Y position
+        x = _round_twip(piece['x'], self.discrete_params['mode_x_calc'])
+        y = _round_twip(piece['y'], self.discrete_params['mode_y_calc'])
+        w, h, angle = piece['w'], piece['h'], piece['angle']
+        
+        # Area definition - Used without rounding
+        area_x, area_y = level.goal_area_x, level.goal_area_y
+        area_w, area_h = level.goal_area_w, level.goal_area_h
+        
+        # 1. Angle normalization
+        angle_rad = self.ref._normalize_angle_for_check(angle)
+        
+        # 2. Rotated Half-Extents (BEX2/BEY2 are twipped internally)
+        bex2, bey2 = self._calculate_rotated_extents(w, h, angle_rad)
+
+        # 3. Calculate goal area bounds (Unrounded)
+        area_ex = area_w * 0.5
+        area_ey = area_h * 0.5
+        area_xa_unrounded = area_x - area_ex
+        area_xb_unrounded = area_x + area_ex
+        area_ya_unrounded = area_y - area_ey
+        area_yb_unrounded = area_y + area_ey
+
+        # 3b. Apply Quantization to Area Bounds
+        area_xa = _round_twip(area_xa_unrounded, self.discrete_params['mode_x_area_bound'])
+        area_xb = _round_twip(area_xb_unrounded, self.discrete_params['mode_x_area_bound'])
+        area_ya = _round_twip(area_ya_unrounded, self.discrete_params['mode_y_area_bound'])
+        area_yb = _round_twip(area_yb_unrounded, self.discrete_params['mode_y_area_bound'])
+
+        # 4. Calculate Piece Bounds (Unrounded)
+        x_min_unrounded = x - bex2
+        x_max_unrounded = x + bex2
+        y_min_unrounded = y - bey2
+        y_max_unrounded = y + bey2
+        
+        # 5. Apply Quantization to Piece Bounds
+        x_min = _round_twip(x_min_unrounded, self.discrete_params['mode_x_piece_bound'])
+        x_max = _round_twip(x_max_unrounded, self.discrete_params['mode_x_piece_bound'])
+        y_min = _round_twip(y_min_unrounded, self.discrete_params['mode_y_piece_bound'])
+        y_max = _round_twip(y_max_unrounded, self.discrete_params['mode_y_piece_bound'])
+        
+        # 6. Final Containment Check
+        # Reference uses inclusive bounds: >= and <=
+        is_in_x = x_min >= area_xa and x_max <= area_xb
+        is_in_y = y_min >= area_ya and y_max <= area_yb
+        
+        return is_in_x and is_in_y
+
+    def guess_does_solve(self, level: EasyLevel) -> bool:
+        if not level.goal_pieces:
+            return False
+            
+        for piece in level.goal_pieces:
+            if not self._fcsim_in_area_check(piece, level):
+                return False
+                
+        return True

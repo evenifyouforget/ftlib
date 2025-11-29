@@ -7,12 +7,25 @@ from typing import List, Dict
 
 from .core import ParameterizedContestant, EasyLevel, Colors
 
+class BoolTrap(object):
+    def __init__(self, value):
+        self.value = value
+        self.evaluated = False
+    
+    def __bool__(self):
+        self.evaluated = True
+        return bool(self.value)
 
 def autotune_contestant(contestant: ParameterizedContestant, 
                        easy_levels: List[EasyLevel], 
-                       max_time_seconds: float = 60) -> ParameterizedContestant:
+                       max_time_seconds: float = 60, last_combinatorial_seconds: float | None = None) -> ParameterizedContestant:
     """Autotune a parameterized contestant using adaptive interleaved hybrid optimization"""
     print(f"🔧 Auto-tuning {contestant.__class__.__name__} for {max_time_seconds}s...")
+    
+    # Skip to end for discrete-only
+    if len(contestant.params) == 0 and len(contestant.discrete_params) > 0:
+        last_combinatorial_seconds = max((last_combinatorial_seconds or 1), max_time_seconds)
+        max_time_seconds = 0.1
     
     # Calculate initial pass rate
     initial_correct = 0
@@ -88,7 +101,8 @@ def autotune_contestant(contestant: ParameterizedContestant,
         iteration = 0
         min_slice_time = 0.1  # Minimum time slice per algorithm
         
-        while time_remaining() > min_slice_time and iteration < 100:
+        last_combinatorial_seconds = BoolTrap(last_combinatorial_seconds)
+        while time_remaining() > min_slice_time and iteration < 100 or last_combinatorial_seconds:
             iteration += 1
             
             # Adaptive time allocation based on past performance
@@ -225,7 +239,12 @@ def autotune_contestant(contestant: ParameterizedContestant,
                     
                     elif algo_name == 'combinatorial':
                         # Invert time budget
-                        contestant.adjust_time_budget(max_time_seconds - time_remaining())
+                        budget = max_time_seconds - time_remaining()
+                        if last_combinatorial_seconds.evaluated:
+                            # Final loop with huge budget
+                            budget = last_combinatorial_seconds.value
+                            last_combinatorial_seconds.value = None
+                        contestant.adjust_time_budget(budget)
                         # Simple combinatorial search over discrete parameters
                         discrete_bounds = contestant.get_discrete_param_bounds()
                         discrete_param_names = list(discrete_bounds.keys())
@@ -249,7 +268,8 @@ def autotune_contestant(contestant: ParameterizedContestant,
                                 best_combination_score = score
                                 best_combination = contestant.discrete_params.copy()
                         end_time_combo = time.time()
-                        print(f"   ⏱️  Combinatorial search time: {end_time_combo - start_time_combo:.2f}s over {total_combinations} combinations (average time: {(end_time_combo - start_time_combo)/max(1,total_combinations):.6f}s each)")
+                        if total_combinations > 1:
+                            print(f"   ⏱️  Combinatorial search time: {end_time_combo - start_time_combo:.2f}s over {total_combinations} combinations (average time: {(end_time_combo - start_time_combo)/max(1,total_combinations):.6f}s each)")
                         
                         if best_combination is not None:
                             # Update contestant with best found combination

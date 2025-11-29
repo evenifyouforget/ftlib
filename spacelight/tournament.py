@@ -40,7 +40,7 @@ class SpaceLightTournament:
         
         return contestants
     
-    def run_tournament(self, autotune_time: float = 60) -> Dict[str, Any]:
+    def run_tournament(self, autotune_time: float = 60, last_combinatorial_seconds: float | None = None) -> Dict[str, Any]:
         """Run the tournament and return results"""
         print(f"🏁 {Colors.BOLD}SPACELIGHT TOURNAMENT - Generation 5 TDD Checker Research{Colors.RESET}")
         print(f"🎯 Testing {len(self.contestants)} contestants on {len(self.easy_levels)} levels")
@@ -52,7 +52,7 @@ class SpaceLightTournament:
             # Auto-tune parameterized contestants
             if isinstance(contestant, ParameterizedContestant):
                 print(f"🔧 {Colors.CYAN}Auto-tuning {contestant_name}...{Colors.RESET}")
-                contestant = autotune_contestant(contestant, self.easy_levels, autotune_time)
+                contestant = autotune_contestant(contestant, self.easy_levels, autotune_time, last_combinatorial_seconds=last_combinatorial_seconds)
                 print()
 
             contestant_name = str(contestant)
