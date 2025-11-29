@@ -132,3 +132,7 @@ class ParameterizedContestant(Contestant):
         discrete_str = ', '.join(f"{k}={v}" for k, v in self.discrete_params.items())
         all_params = ', '.join(filter(None, [param_str, discrete_str]))
         return f"{self.__class__.__name__}({all_params})"
+    
+    def adjust_time_budget(self, time_seconds: float):
+        """Adjust internal time budget if applicable"""
+        self.time_budget_seconds = time_seconds

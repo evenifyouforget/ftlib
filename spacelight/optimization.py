@@ -224,6 +224,8 @@ def autotune_contestant(contestant: ParameterizedContestant,
                             result = result_nm
                     
                     elif algo_name == 'combinatorial':
+                        # Invert time budget
+                        contestant.adjust_time_budget(max_time_seconds - time_remaining())
                         # Simple combinatorial search over discrete parameters
                         discrete_bounds = contestant.get_discrete_param_bounds()
                         discrete_param_names = list(discrete_bounds.keys())
@@ -233,6 +235,7 @@ def autotune_contestant(contestant: ParameterizedContestant,
                         best_combination_score = old_best = objective_function(best_x)
                         
                         start_time_combo = time.time()
+                        total_combinations = np.prod([len(rng) for rng in discrete_param_ranges])
                         for indices in np.ndindex(*[len(rng) for rng in discrete_param_ranges]):
                             #if time.time() - start_time_combo >= slice_time:
                             #    break
@@ -245,6 +248,8 @@ def autotune_contestant(contestant: ParameterizedContestant,
                             if score < best_combination_score:
                                 best_combination_score = score
                                 best_combination = contestant.discrete_params.copy()
+                        end_time_combo = time.time()
+                        print(f"   ⏱️  Combinatorial search time: {end_time_combo - start_time_combo:.2f}s over {total_combinations} combinations (average time: {(end_time_combo - start_time_combo)/max(1,total_combinations):.6f}s each)")
                         
                         if best_combination is not None:
                             # Update contestant with best found combination

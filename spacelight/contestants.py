@@ -731,7 +731,7 @@ RAD_TO_DEG = 57.295779513082320876763
 DEG_TO_RAD = 0.017453292519943295769245
 DEGREE_CAP = 32768.0
 
-class PR35Reference(Contestant):
+class PR35ReferenceOld(Contestant):
     """
     Implements the goal-checking logic using the C++ fcsim_in_area expanded 
     bounding box (AABB) method for rectangular pieces, ensuring exact floating-point 
@@ -957,4 +957,431 @@ class SelectiveFeatures(ParameterizedContestant):
                 return False
                 
         # Matches C++: return goal_exist (which is true since we passed the initial check)
+        return True
+
+def _round_twip(value: float, mode: int) -> float:
+    """
+    Rounds a float value to a multiple of 0.05 (a 'twip') based on the mode.
+    Mode: 0=none, 1=round (nearest), 2=floor, 3=ceil, 4=truncate.
+    
+    The term 'twip' here refers to a multiple of 0.05 world units.
+    """
+    if mode == 0:  # 0: none (no rounding)
+        return value
+    
+    # Scale to integer space (twips / 0.05)
+    twips_float = value / 0.05
+    
+    if mode == 1:  # 1: round (nearest)
+        twips_int = round(twips_float)
+    elif mode == 2:  # 2: floor
+        twips_int = math.floor(twips_float)
+    elif mode == 3:  # 3: ceil
+        twips_int = math.ceil(twips_float)
+    elif mode == 4:  # 4: truncate (towards zero, like C++ trunc or int())
+        twips_int = math.trunc(twips_float)
+    else:
+        # Fallback for invalid mode
+        return value 
+    
+    # Scale back to world units
+    return twips_int * 0.05
+
+
+class PR35Reference(Contestant):
+    """
+    The base reference contestant, implementing the C++ logic broken into 
+    reusable functions for modularity and subclassing.
+    
+    Authored by Gemini.
+    """
+    
+    def _normalize_angle_for_check(self, angle: float) -> float:
+        """
+        Implements the exact C++ angle conversion/capping logic.
+        """
+        # 1. convert to degrees (ft_mul(angle, RAD_TO_DEG))
+        angle_deg = angle * RAD_TO_DEG
+
+        # 2. if abs(angle) >= 2^15 degrees, use -2^15 degrees
+        if abs(angle_deg) >= DEGREE_CAP:
+            angle_deg = -DEGREE_CAP
+
+        # 3. convert back to radians (ft_mul(angle, DEG_TO_RAD))
+        return angle_deg * DEG_TO_RAD
+
+    def _calculate_rotated_extents(self, w: float, h: float, angle_rad: float) -> tuple[float, float]:
+        """
+        Calculates the rotation-expanded half-extents (AABB) of the rotated piece.
+        This function implements the EXACT C++ arithmetic order for the reference.
+        """
+        # Piece half-extents (bex, bey in C++)
+        bex = w * 0.5
+        bey = h * 0.5
+        
+        abs_cos_angle = abs(math.cos(angle_rad))
+        abs_sin_angle = abs(math.sin(angle_rad))
+        
+        # C++: bex2 = ft_add(ft_mul(bex, abs_cos_angle), ft_mul(bey, abs_sin_angle));
+        bex2 = (bex * abs_cos_angle) + (bey * abs_sin_angle)
+        
+        # C++: bey2 = ft_add(ft_mul(bex, abs_sin_angle), ft_mul(bey, abs_cos_angle));
+        bey2 = (bex * abs_sin_angle) + (bey * abs_cos_angle)
+        
+        return bex2, bey2
+        
+    def _fcsim_in_area_check(self, piece, level: EasyLevel) -> bool:
+        """
+        Translates the C++ fcsim_in_area function for rectangular blocks.
+        Uses the rotation-expanded AABB check, leveraging helper methods.
+        """
+        # Piece definition
+        x, y = piece['x'], piece['y']
+        w, h = piece['w'], piece['h']
+        angle = piece['angle']
+        
+        # Area definition
+        area_x, area_y = level.goal_area_x, level.goal_area_y
+        area_w, area_h = level.goal_area_w, level.goal_area_h
+        
+        # 1. Angle normalization
+        angle_rad = self._normalize_angle_for_check(angle)
+        
+        # 2. Rotated Half-Extents
+        bex2, bey2 = self._calculate_rotated_extents(w, h, angle_rad)
+
+        # 3. Calculate goal area bounds (area_xa, area_xb, area_ya, area_yb in C++)
+        area_ex = area_w * 0.5
+        area_ey = area_h * 0.5
+        
+        # Order of subtraction/addition is preserved from C++: ft_sub(area.x, area_ex)
+        area_xa = area_x - area_ex
+        area_xb = area_x + area_ex
+        area_ya = area_y - area_ey
+        area_yb = area_y + area_ey
+
+        # 4. Final Containment Check (AABB vs AABB)
+        
+        # Piece bounds: Order of subtraction/addition is preserved from C++: ft_sub(bdef.x, bex2)
+        x_min = x - bex2
+        x_max = x + bex2
+        y_min = y - bey2
+        y_max = y + bey2
+        
+        # Check X bounds (Reference uses inclusive bounds: >= and <=)
+        is_in_x = x_min >= area_xa and x_max <= area_xb
+        
+        # Check Y bounds (Reference uses inclusive bounds: >= and <=)
+        is_in_y = y_min >= area_ya and y_max <= area_yb
+        
+        return is_in_x and is_in_y
+
+    def guess_does_solve(self, level: EasyLevel) -> bool:
+        """
+        Translates the C++ fcsim_is_solved logic. 
+        Checks for goal existence and ensures all goal pieces are in the area.
+        """
+        if not level.goal_pieces:
+            return False
+            
+        for piece in level.goal_pieces:
+            if not self._fcsim_in_area_check(piece, level):
+                return False
+                
+        return True
+
+# --- Variant 1: Mathematically Equivalent Commutative Swap (PR35Commutative) ---
+
+class MathEquivalentPR35Commutative(PR35Reference):
+    # ... (implementation remains the same)
+    def _calculate_rotated_extents(self, w: float, h: float, angle_rad: float) -> tuple[float, float]:
+        bex = w * 0.5
+        bey = h * 0.5
+        abs_cos_angle = abs(math.cos(angle_rad))
+        abs_sin_angle = abs(math.sin(angle_rad))
+        bex2 = (bey * abs_sin_angle) + (bex * abs_cos_angle)
+        bey2 = (bey * abs_cos_angle) + (bex * abs_sin_angle)
+        return bex2, bey2
+
+# --- Variant 2: Associativity Test (PR35Fermi) ---
+
+class PR35Fermi(PR35Reference):
+    # ... (implementation remains the same)
+    def _calculate_rotated_extents(self, w: float, h: float, angle_rad: float) -> tuple[float, float]:
+        abs_cos_angle = abs(math.cos(angle_rad))
+        abs_sin_angle = abs(math.sin(angle_rad))
+        bex2_term1 = w * (0.5 * abs_cos_angle)
+        bex2_term2 = h * (0.5 * abs_sin_angle)
+        bex2 = bex2_term1 + bex2_term2
+        bey2_term1 = w * (0.5 * abs_sin_angle)
+        bey2_term2 = h * (0.5 * abs_cos_angle)
+        bey2 = bey2_term1 + bey2_term2
+        return bex2, bey2
+
+# --- Variant 3: Boundary Strictness Test (PR35Gagarin) ---
+
+class PR35Gagarin(PR35Reference):
+    # ... (implementation remains the same)
+    def _fcsim_in_area_check(self, piece, level: EasyLevel) -> bool:
+        # Uses STICTLY exclusive bounds
+        x, y, w, h, angle = piece['x'], piece['y'], piece['w'], piece['h'], piece['angle']
+        area_x, area_y, area_w, area_h = level.goal_area_x, level.goal_area_y, level.goal_area_w, level.goal_area_h
+        angle_rad = self._normalize_angle_for_check(angle)
+        bex2, bey2 = self._calculate_rotated_extents(w, h, angle_rad)
+        area_ex, area_ey = area_w * 0.5, area_h * 0.5
+        area_xa, area_xb = area_x - area_ex, area_x + area_ex
+        area_ya, area_yb = area_y - area_ey, area_y + area_ey
+        x_min, x_max = x - bex2, x + bex2
+        y_min, y_max = y - bey2, y + bey2
+        is_in_x = x_min > area_xa and x_max < area_xb # STRICT
+        is_in_y = y_min > area_ya and y_max < area_yb # STRICT
+        return is_in_x and is_in_y
+
+# --- Variant 4: Angle Normalization Multiplication Swap (PR35Salyut) ---
+
+class PR35Salyut(PR35Reference):
+    # ... (implementation remains the same)
+    def _normalize_angle_for_check(self, angle: float) -> float:
+        angle_deg = angle * RAD_TO_DEG
+        if abs(angle_deg) >= DEGREE_CAP:
+            angle_deg = -DEGREE_CAP
+        return DEG_TO_RAD * angle_deg # Swapped order
+
+# --- Variant 5: Containment Inequality Rearrangement (PR35Challenger) ---
+
+class PR35Challenger(PR35Reference):
+    # ... (implementation remains the same)
+    def _fcsim_in_area_check(self, piece, level: EasyLevel) -> bool:
+        x, y, w, h, angle = piece['x'], piece['y'], piece['w'], piece['h'], piece['angle']
+        area_x, area_y, area_w, area_h = level.goal_area_x, level.goal_area_y, level.goal_area_w, level.goal_area_h
+        angle_rad = self._normalize_angle_for_check(angle)
+        bex2, bey2 = self._calculate_rotated_extents(w, h, angle_rad)
+        area_ex, area_ey = area_w * 0.5, area_h * 0.5
+        x_lower_check = (x + area_ex) >= (area_x + bex2)
+        x_upper_check = (area_x + area_ex - x) >= bex2 
+        y_lower_check = (y + area_ey) >= (area_y + bey2)
+        y_upper_check = (area_y + area_ey - y) >= bey2
+        is_in_x = x_lower_check and x_upper_check
+        is_in_y = y_lower_check and y_upper_check
+        return is_in_x and is_in_y
+        
+# --- Variant 6: Rearrangement of Goal Area Bounds (PR35Vostok) ---
+
+class PR35Vostok(PR35Reference):
+    # ... (implementation remains the same)
+    def _fcsim_in_area_check(self, piece, level: EasyLevel) -> bool:
+        x, y, w, h, angle = piece['x'], piece['y'], piece['w'], piece['h'], piece['angle']
+        area_x, area_y, area_w, area_h = level.goal_area_x, level.goal_area_y, level.goal_area_w, level.goal_area_h
+        angle_rad = self._normalize_angle_for_check(angle)
+        bex2, bey2 = self._calculate_rotated_extents(w, h, angle_rad)
+        # AREA CALCULATION REARRANGED HERE
+        area_xa = (area_x * 2.0 - area_w) * 0.5
+        area_xb = (area_x * 2.0 + area_w) * 0.5
+        area_ya = (area_y * 2.0 - area_h) * 0.5
+        area_yb = (area_y * 2.0 + area_h) * 0.5
+        x_min, x_max = x - bex2, x + bex2
+        y_min, y_max = y - bey2, y + bey2
+        is_in_x = x_min >= area_xa and x_max <= area_xb
+        is_in_y = y_min >= area_ya and y_max <= area_yb
+        return is_in_x and is_in_y
+
+# --- Variant 7: Distance-Based AABB Check (PR35Mercury) ---
+
+class PR35Mercury(PR35Reference):
+    # ... (implementation remains the same)
+    def _fcsim_in_area_check(self, piece, level: EasyLevel) -> bool:
+        x, y, w, h, angle = piece['x'], piece['y'], piece['w'], piece['h'], piece['angle']
+        area_x, area_y, area_w, area_h = level.goal_area_x, level.goal_area_y, level.goal_area_w, level.goal_area_h
+        angle_rad = self._normalize_angle_for_check(angle)
+        bex2, bey2 = self._calculate_rotated_extents(w, h, angle_rad)
+        area_ex, area_ey = area_w * 0.5, area_h * 0.5
+        max_dist_x, max_dist_y = area_ex - bex2, area_ey - bey2
+        dist_x, dist_y = abs(x - area_x), abs(y - area_y)
+        is_in_x, is_in_y = dist_x <= max_dist_x, dist_y <= max_dist_y
+        return is_in_x and is_in_y
+
+# --- Variant 8: Quantization Hypothesis 1 - Round Rotated Extents (PR35Apollo) ---
+
+class PR35Apollo(PR35Reference):
+    """
+    Rounds the final calculated Rotated Half-Extents (bex2, bey2) to the nearest multiple of 0.05.
+    Uses _round_twip(..., mode=1) to preserve original 'nearest round' logic.
+    """
+    def _calculate_rotated_extents(self, w: float, h: float, angle_rad: float) -> tuple[float, float]:
+        bex = w * 0.5
+        bey = h * 0.5
+        abs_cos_angle = abs(math.cos(angle_rad))
+        abs_sin_angle = abs(math.sin(angle_rad))
+        bex2_unrounded = (bex * abs_cos_angle) + (bey * abs_sin_angle)
+        bey2_unrounded = (bex * abs_sin_angle) + (bey * abs_cos_angle)
+        
+        # Apply quantization (nearest round, mode=1)
+        bex2 = _round_twip(bex2_unrounded, 1)
+        bey2 = _round_twip(bey2_unrounded, 1)
+        
+        return bex2, bey2
+
+
+# --- Variant 9: Quantization Hypothesis 2 - Round Piece Center (PR35Gemini) ---
+
+class PR35Gemini(PR35Reference):
+    """
+    Rounds the Piece Center Coordinates (x, y) to the nearest multiple of 0.05.
+    Uses _round_twip(..., mode=1) to preserve original 'nearest round' logic.
+    """
+    def _fcsim_in_area_check(self, piece, level: EasyLevel) -> bool:
+        # Piece definition - QUANTIZATION APPLIED HERE (mode=1 for nearest round)
+        x = _round_twip(piece['x'], 1)
+        y = _round_twip(piece['y'], 1)
+        w, h, angle = piece['w'], piece['h'], piece['angle']
+        
+        area_x, area_y, area_w, area_h = level.goal_area_x, level.goal_area_y, level.goal_area_w, level.goal_area_h
+        
+        angle_rad = self._normalize_angle_for_check(angle)
+        bex2, bey2 = self._calculate_rotated_extents(w, h, angle_rad)
+        area_ex, area_ey = area_w * 0.5, area_h * 0.5
+        area_xa, area_xb = area_x - area_ex, area_x + area_ex
+        area_ya, area_yb = area_y - area_ey, area_y + area_ey
+
+        x_min, x_max = x - bex2, x + bex2
+        y_min, y_max = y - bey2, y + bey2
+        
+        is_in_x = x_min >= area_xa and x_max <= area_xb
+        is_in_y = y_min >= area_ya and y_max <= area_yb
+        
+        return is_in_x and is_in_y
+
+# --- Variant 10: Quantization Hypothesis 3 - Round Initial Dimensions (PR35Saturn) ---
+
+class PR35Saturn(PR35Reference):
+    """
+    Rounds the Piece Dimensions (w, h) to the nearest multiple of 0.05.
+    Uses _round_twip(..., mode=1) to preserve original 'nearest round' logic.
+    """
+    def _calculate_rotated_extents(self, w: float, h: float, angle_rad: float) -> tuple[float, float]:
+        # Dimensions are rounded before division/rotation (mode=1 for nearest round)
+        w_rounded = _round_twip(w, 1)
+        h_rounded = _round_twip(h, 1)
+        
+        bex = w_rounded * 0.5
+        bey = h_rounded * 0.5
+        
+        abs_cos_angle = abs(math.cos(angle_rad))
+        abs_sin_angle = abs(math.sin(angle_rad))
+        
+        bex2 = (bex * abs_cos_angle) + (bey * abs_sin_angle)
+        bey2 = (bex * abs_sin_angle) + (bey * abs_cos_angle)
+        
+        return bex2, bey2
+
+# --- Variant 11: Comprehensive Twip Quantization Tester (PR35TwipTester) ---
+
+class PR35TwipTester(ParameterizedContestant):
+    """
+    Tests various quantization points using 5 rounding modes (none, round, floor, ceil, truncate).
+    
+    Discrete Parameters (10 total, each 0-4 mode):
+    - Piece: W, H, X, Y
+    - Area: W, H, X, Y
+    - Rotated Extents: bex2, bey2
+    """
+
+    def __init__(self):
+        super().__init__()
+        # Define 10 discrete parameters, each controlling one rounding operation
+        self.discrete_params = {
+            'round_w': 0, 'round_h': 0,           # Piece Dimensions
+            'round_x': 0, 'round_y': 0,           # Piece Position
+            'round_area_w': 0, 'round_area_h': 0, # Area Dimensions
+            'round_area_x': 0, 'round_area_y': 0, # Area Position
+            'round_bex2': 0, 'round_bey2': 0      # Rotated Extents
+        }
+        self.ref = PR35Reference() # Use Reference's angle normalization
+        self.mode_max = 4
+    
+    def adjust_time_budget(self, time_seconds):
+        super().adjust_time_budget(time_seconds)
+        self.mode_max = 4
+        while self.mode_max > 1 and (self.mode_max + 1) ** 10 * 0.0002 > time_seconds:
+            self.mode_max -= 1
+
+    def get_discrete_param_bounds(self):
+        """All 10 parameters are modes 0 to 4 (5 total modes)."""
+        return {name: (0, self.mode_max) for name in self.discrete_params}
+
+    def _calculate_rotated_extents(self, w: float, h: float, angle_rad: float) -> tuple[float, float]:
+        """
+        Calculates extents, applying rounding to initial dimensions and final extents.
+        """
+        # Apply rounding to initial piece dimensions
+        w_rnd = _round_twip(w, self.discrete_params['round_w'])
+        h_rnd = _round_twip(h, self.discrete_params['round_h'])
+        
+        # Piece half-extents (bex, bey in C++)
+        bex = w_rnd * 0.5
+        bey = h_rnd * 0.5
+        
+        abs_cos_angle = abs(math.cos(angle_rad))
+        abs_sin_angle = abs(math.sin(angle_rad))
+        
+        # Reference calculation for unrounded rotated extents
+        bex2_unrounded = (bex * abs_cos_angle) + (bey * abs_sin_angle)
+        bey2_unrounded = (bex * abs_sin_angle) + (bey * abs_cos_angle)
+        
+        # Apply rounding to final rotated extents
+        bex2 = _round_twip(bex2_unrounded, self.discrete_params['round_bex2'])
+        bey2 = _round_twip(bey2_unrounded, self.discrete_params['round_bey2'])
+        
+        return bex2, bey2
+        
+    def _fcsim_in_area_check(self, piece, level: EasyLevel) -> bool:
+        """
+        Applies rounding to piece and area positions/dimensions before check.
+        """
+        # Piece definition (Apply position rounding)
+        x = _round_twip(piece['x'], self.discrete_params['round_x'])
+        y = _round_twip(piece['y'], self.discrete_params['round_y'])
+        w, h, angle = piece['w'], piece['h'], piece['angle']
+        
+        # Area definition (Apply position and dimension rounding)
+        area_x = _round_twip(level.goal_area_x, self.discrete_params['round_area_x'])
+        area_y = _round_twip(level.goal_area_y, self.discrete_params['round_area_y'])
+        area_w = _round_twip(level.goal_area_w, self.discrete_params['round_area_w'])
+        area_h = _round_twip(level.goal_area_h, self.discrete_params['round_area_h'])
+        
+        # 1. Angle normalization (uses reference logic)
+        angle_rad = self.ref._normalize_angle_for_check(angle)
+        
+        # 2. Rotated Half-Extents (Applies W/H and bex2/bey2 rounding internally)
+        bex2, bey2 = self._calculate_rotated_extents(w, h, angle_rad)
+
+        # 3. Calculate goal area bounds (area_xa, area_xb, area_ya, area_yb in C++)
+        area_ex = area_w * 0.5
+        area_ey = area_h * 0.5
+        
+        area_xa = area_x - area_ex
+        area_xb = area_x + area_ex
+        area_ya = area_y - area_ey
+        area_yb = area_y + area_ey
+
+        # 4. Final Containment Check (AABB vs AABB)
+        x_min = x - bex2
+        x_max = x + bex2
+        y_min = y - bey2
+        y_max = y + bey2
+        
+        # Reference uses inclusive bounds: >= and <=
+        is_in_x = x_min >= area_xa and x_max <= area_xb
+        is_in_y = y_min >= area_ya and y_max <= area_yb
+        
+        return is_in_x and is_in_y
+
+    def guess_does_solve(self, level: EasyLevel) -> bool:
+        if not level.goal_pieces:
+            return False
+            
+        for piece in level.goal_pieces:
+            if not self._fcsim_in_area_check(piece, level):
+                return False
+                
         return True
