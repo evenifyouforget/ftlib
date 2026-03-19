@@ -55,6 +55,9 @@ def use_classic_timeout(pytestconfig):
     return pytestconfig.getoption('--classic')
 
 def pytest_sessionstart(session):
+    # xdist workers re-run this hook; skip the build there since the controller already ran it
+    if hasattr(session.config, 'workerinput'):
+        return
     root_dir = get_ftlib_dir()
     # sanity check that this looks like the root dir for ftlib
     root_children = set(child.name for child in root_dir.iterdir())
