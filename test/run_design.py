@@ -6,6 +6,16 @@ from get_ftlib_dir import get_ftlib_dir
 
 RunDesignResult = namedtuple('RunDesignResult', ['proc', 'real_solve_ticks', 'real_end_ticks'])
 
+# Timeout formula: timeout = TIMEOUT_PER_TICK * max_ticks + TIMEOUT_OVERHEAD_SECS
+TIMEOUT_PER_TICK = 1 / 7646 * 3 # seconds per tick
+TIMEOUT_OVERHEAD_SECS = 2       # fixed overhead for process spawn and I/O
+TIMEOUT_INFINITY_SECS = 600     # cap when max_ticks = -1 (unbounded run)
+
+def _compute_timeout(max_ticks):
+    if max_ticks < 0:
+        return TIMEOUT_INFINITY_SECS
+    return max_ticks * TIMEOUT_PER_TICK + TIMEOUT_OVERHEAD_SECS
+
 def run_design(design_struct, max_ticks, command_prepend=None, command_append=None, backend='ftlib'):
     # generate serialized input
     serialized_input = []
@@ -41,9 +51,13 @@ def run_design(design_struct, max_ticks, command_prepend=None, command_append=No
     command_prepend = command_prepend or []
     command_append = command_append or []
     command = command_prepend + [exec_path] + command_append
-    proc = subprocess.run(command, text=True, input=serialized_input, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    debug_command_text = shlex.join(map(str, command))
+    timeout = _compute_timeout(max_ticks)
+    try:
+        proc = subprocess.run(command, text=True, input=serialized_input, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        raise AssertionError(f'Process {debug_command_text} timed out after {timeout:.1f}s (max_ticks={max_ticks})')
     if proc.returncode != 0:
-        debug_command_text = shlex.join(map(str, command))
         raise AssertionError(f'Process {debug_command_text} exited with return code {proc.returncode}')
     stdout = proc.stdout
     real_solve_ticks, real_end_ticks = map(int, stdout.strip().split())
