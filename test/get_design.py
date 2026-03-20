@@ -6,6 +6,8 @@ import subprocess
 from xml.dom import minidom
 from pathlib import Path
 import warnings
+import os
+import tempfile
 from get_ftlib_dir import get_ftlib_dir
 
 DISABLE_CACHE = 'DISABLE_CACHE'
@@ -101,10 +103,16 @@ def retrieveLevel(levelId, is_design=False, cache=None):
 
         raw_text = r.text
 
-        # save to cache
+        # save to cache atomically so concurrent writers don't leave partial reads
         if cache != DISABLE_CACHE:
-            with open(design_file_path, 'w') as file:
-                file.write(raw_text)
+            fd, tmp_path = tempfile.mkstemp(dir=cache_dir)
+            try:
+                with os.fdopen(fd, 'w') as f:
+                    f.write(raw_text)
+                os.replace(tmp_path, design_file_path)
+            except:
+                os.unlink(tmp_path)
+                raise
 
     dom = minidom.parseString(raw_text)
 

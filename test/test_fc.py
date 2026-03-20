@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 import subprocess
 from get_design import retrieveLevel, retrieveDesign, designDomToStruct
-from run_design import run_design
+from run_design import run_design, VALGRIND_TIMEOUT_MULTIPLIER
 from get_ftlib_dir import get_ftlib_dir
 
 SingleDesignData = namedtuple('SingleDesignData', ['design_uid', 'design_struct', 'expect_solve_ticks', 'design_max_ticks', 'user_comment'])
@@ -173,7 +173,7 @@ def test_valgrind(design_uid, design_data, global_max_ticks):
     if global_max_ticks and global_max_ticks > 0:
         max_ticks = min(max_ticks, global_max_ticks)
     # run the design
-    run_result = run_design(design_struct, max_ticks, command_prepend=['valgrind'])
+    run_result = run_design(design_struct, max_ticks, command_prepend=['valgrind'], timeout_multiplier=VALGRIND_TIMEOUT_MULTIPLIER)
     valgrind_report = run_result.proc.stderr
     if 'All heap blocks were freed -- no leaks are possible' not in valgrind_report:
         print(valgrind_report)
