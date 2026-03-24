@@ -6,11 +6,11 @@ Import('env')
 src_base = Dir('.').abspath
 src_dirs = [
     ".",
-    "glib", 
+    "glib",
     "glib_adapter",
-    "openlibm", 
-    "sim", 
-    "softfloat", 
+    "openlibm",
+    "sim",
+    "softfloat",
     "spectre"
 ]
 # convert to absolute paths to avoid errors building in godot

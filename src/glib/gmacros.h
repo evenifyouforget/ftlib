@@ -44,20 +44,20 @@
 #define g_free free
 #define g_assert(x)
 typedef int GError;
-#define g_return_val_if_fail(expr,val)
+#define g_return_val_if_fail(expr, val)
 
-#define _g_printf    printf
-#define _g_fprintf   fprintf
-#define _g_sprintf   sprintf
-#define _g_snprintf  snprintf
+#define _g_printf printf
+#define _g_fprintf fprintf
+#define _g_sprintf sprintf
+#define _g_snprintf snprintf
 
-#define _g_vprintf   vprintf
-#define _g_vfprintf  vfprintf
-#define _g_vsprintf  vsprintf
+#define _g_vprintf vprintf
+#define _g_vfprintf vfprintf
+#define _g_vsprintf vsprintf
 #define _g_vsnprintf vsnprintf
 
-#if !defined (__GLIB_H_INSIDE__) && !defined (GLIB_COMPILATION)
-//#error "Only <glib.h> can be included directly."
+#if !defined(__GLIB_H_INSIDE__) && !defined(GLIB_COMPILATION)
+// #error "Only <glib.h> can be included directly."
 #endif
 
 /* We include stddef.h to get the system's definition of NULL
@@ -71,10 +71,9 @@ typedef int GError;
  * current Clang will be 1.
  */
 #ifdef __GNUC__
-#define G_GNUC_CHECK_VERSION(major, minor) \
-    ((__GNUC__ > (major)) || \
-     ((__GNUC__ == (major)) && \
-      (__GNUC_MINOR__ >= (minor))))
+#define G_GNUC_CHECK_VERSION(major, minor)                                     \
+  ((__GNUC__ > (major)) ||                                                     \
+   ((__GNUC__ == (major)) && (__GNUC_MINOR__ >= (minor))))
 #else
 #define G_GNUC_CHECK_VERSION(major, minor) 0
 #endif
@@ -89,46 +88,44 @@ typedef int GError;
 #define G_GNUC_EXTENSION
 #endif
 
-#if !defined (__cplusplus)
+#if !defined(__cplusplus)
 
-# undef G_CXX_STD_VERSION
-# define G_CXX_STD_CHECK_VERSION(version) (0)
+#undef G_CXX_STD_VERSION
+#define G_CXX_STD_CHECK_VERSION(version) (0)
 
-# if defined (__STDC_VERSION__)
-#  define G_C_STD_VERSION __STDC_VERSION__
-# else
-#  define G_C_STD_VERSION 199000L
-# endif /* defined (__STDC_VERSION__) */
+#if defined(__STDC_VERSION__)
+#define G_C_STD_VERSION __STDC_VERSION__
+#else
+#define G_C_STD_VERSION 199000L
+#endif /* defined (__STDC_VERSION__) */
 
-# define G_C_STD_CHECK_VERSION(version) ( \
-  ((version) >= 199000L && (version) <= G_C_STD_VERSION) || \
-  ((version) == 89 && G_C_STD_VERSION >= 199000L) || \
-  ((version) == 90 && G_C_STD_VERSION >= 199000L) || \
-  ((version) == 99 && G_C_STD_VERSION >= 199901L) || \
-  ((version) == 11 && G_C_STD_VERSION >= 201112L) || \
-  ((version) == 17 && G_C_STD_VERSION >= 201710L) || \
-  0)
+#define G_C_STD_CHECK_VERSION(version)                                         \
+  (((version) >= 199000L && (version) <= G_C_STD_VERSION) ||                   \
+   ((version) == 89 && G_C_STD_VERSION >= 199000L) ||                          \
+   ((version) == 90 && G_C_STD_VERSION >= 199000L) ||                          \
+   ((version) == 99 && G_C_STD_VERSION >= 199901L) ||                          \
+   ((version) == 11 && G_C_STD_VERSION >= 201112L) ||                          \
+   ((version) == 17 && G_C_STD_VERSION >= 201710L) || 0)
 
 #else /* defined (__cplusplus) */
 
-# undef G_C_STD_VERSION
-# define G_C_STD_CHECK_VERSION(version) (0)
+#undef G_C_STD_VERSION
+#define G_C_STD_CHECK_VERSION(version) (0)
 
-# if defined (_MSVC_LANG)
-#  define G_CXX_STD_VERSION (_MSVC_LANG > __cplusplus ? _MSVC_LANG : __cplusplus)
-# else
-#  define G_CXX_STD_VERSION __cplusplus
-# endif /* defined(_MSVC_LANG) */
+#if defined(_MSVC_LANG)
+#define G_CXX_STD_VERSION (_MSVC_LANG > __cplusplus ? _MSVC_LANG : __cplusplus)
+#else
+#define G_CXX_STD_VERSION __cplusplus
+#endif /* defined(_MSVC_LANG) */
 
-# define G_CXX_STD_CHECK_VERSION(version) ( \
-  ((version) >= 199711L && (version) <= G_CXX_STD_VERSION) || \
-  ((version) == 98 && G_CXX_STD_VERSION >= 199711L) || \
-  ((version) == 03 && G_CXX_STD_VERSION >= 199711L) || \
-  ((version) == 11 && G_CXX_STD_VERSION >= 201103L) || \
-  ((version) == 14 && G_CXX_STD_VERSION >= 201402L) || \
-  ((version) == 17 && G_CXX_STD_VERSION >= 201703L) || \
-  ((version) == 20 && G_CXX_STD_VERSION >= 202002L) || \
-  0)
+#define G_CXX_STD_CHECK_VERSION(version)                                       \
+  (((version) >= 199711L && (version) <= G_CXX_STD_VERSION) ||                 \
+   ((version) == 98 && G_CXX_STD_VERSION >= 199711L) ||                        \
+   ((version) == 03 && G_CXX_STD_VERSION >= 199711L) ||                        \
+   ((version) == 11 && G_CXX_STD_VERSION >= 201103L) ||                        \
+   ((version) == 14 && G_CXX_STD_VERSION >= 201402L) ||                        \
+   ((version) == 17 && G_CXX_STD_VERSION >= 201703L) ||                        \
+   ((version) == 20 && G_CXX_STD_VERSION >= 202002L) || 0)
 
 #endif /* !defined (__cplusplus) */
 
@@ -142,18 +139,18 @@ typedef int GError;
  */
 #define G_CAN_INLINE
 #ifdef G_C_STD_VERSION
-# ifdef _MSC_VER
-#  if (_MSC_VER < 1900)
-#   define G_INLINE_DEFINE_NEEDED
-#  endif
-# elif !G_C_STD_CHECK_VERSION (99)
-#  define G_INLINE_DEFINE_NEEDED
-# endif
+#ifdef _MSC_VER
+#if (_MSC_VER < 1900)
+#define G_INLINE_DEFINE_NEEDED
+#endif
+#elif !G_C_STD_CHECK_VERSION(99)
+#define G_INLINE_DEFINE_NEEDED
+#endif
 #endif
 
 #ifdef G_INLINE_DEFINE_NEEDED
-# undef inline
-# define inline __inline
+#undef inline
+#define inline __inline
 #endif
 
 #undef G_INLINE_DEFINE_NEEDED
@@ -176,10 +173,11 @@ typedef int GError;
  * define G_IMPLEMENT_INLINES to mean "don't implement this here".
  */
 #ifdef G_IMPLEMENT_INLINES
-#  define G_INLINE_FUNC extern GLIB_DEPRECATED_MACRO_IN_2_48_FOR(static inline)
-#  undef  G_CAN_INLINE
+#define G_INLINE_FUNC extern GLIB_DEPRECATED_MACRO_IN_2_48_FOR(static inline)
+#undef G_CAN_INLINE
 #else
-#  define G_INLINE_FUNC static inline GLIB_DEPRECATED_MACRO_IN_2_48_FOR(static inline)
+#define G_INLINE_FUNC                                                          \
+  static inline GLIB_DEPRECATED_MACRO_IN_2_48_FOR(static inline)
 #endif /* G_IMPLEMENT_INLINES */
 
 /*
@@ -197,23 +195,25 @@ typedef int GError;
  */
 #define g_macro__has_attribute(x) g_macro__has_attribute_##x
 
-#define g_macro__has_attribute___alloc_size__ G_GNUC_CHECK_VERSION (4, 3)
-#define g_macro__has_attribute___always_inline__ G_GNUC_CHECK_VERSION (2, 0)
-#define g_macro__has_attribute___const__ G_GNUC_CHECK_VERSION (2, 4)
-#define g_macro__has_attribute___deprecated__ G_GNUC_CHECK_VERSION (3, 1)
-#define g_macro__has_attribute___format__ G_GNUC_CHECK_VERSION (2, 4)
-#define g_macro__has_attribute___format_arg__ G_GNUC_CHECK_VERSION (2, 4)
-#define g_macro__has_attribute___malloc__ G_GNUC_CHECK_VERSION (2, 96)
-#define g_macro__has_attribute___no_instrument_function__ G_GNUC_CHECK_VERSION (2, 4)
-#define g_macro__has_attribute___noinline__ G_GNUC_CHECK_VERSION (2, 96)
-#define g_macro__has_attribute___noreturn__ (G_GNUC_CHECK_VERSION (2, 8) || (0x5110 <= __SUNPRO_C))
-#define g_macro__has_attribute___pure__ G_GNUC_CHECK_VERSION (2, 96)
-#define g_macro__has_attribute___sentinel__ G_GNUC_CHECK_VERSION (4, 0)
-#define g_macro__has_attribute___unused__ G_GNUC_CHECK_VERSION (2, 4)
-#define g_macro__has_attribute_cleanup G_GNUC_CHECK_VERSION (3, 3)
-#define g_macro__has_attribute_fallthrough G_GNUC_CHECK_VERSION (6, 0)
-#define g_macro__has_attribute_may_alias G_GNUC_CHECK_VERSION (3, 3)
-#define g_macro__has_attribute_warn_unused_result G_GNUC_CHECK_VERSION (3, 4)
+#define g_macro__has_attribute___alloc_size__ G_GNUC_CHECK_VERSION(4, 3)
+#define g_macro__has_attribute___always_inline__ G_GNUC_CHECK_VERSION(2, 0)
+#define g_macro__has_attribute___const__ G_GNUC_CHECK_VERSION(2, 4)
+#define g_macro__has_attribute___deprecated__ G_GNUC_CHECK_VERSION(3, 1)
+#define g_macro__has_attribute___format__ G_GNUC_CHECK_VERSION(2, 4)
+#define g_macro__has_attribute___format_arg__ G_GNUC_CHECK_VERSION(2, 4)
+#define g_macro__has_attribute___malloc__ G_GNUC_CHECK_VERSION(2, 96)
+#define g_macro__has_attribute___no_instrument_function__                      \
+  G_GNUC_CHECK_VERSION(2, 4)
+#define g_macro__has_attribute___noinline__ G_GNUC_CHECK_VERSION(2, 96)
+#define g_macro__has_attribute___noreturn__                                    \
+  (G_GNUC_CHECK_VERSION(2, 8) || (0x5110 <= __SUNPRO_C))
+#define g_macro__has_attribute___pure__ G_GNUC_CHECK_VERSION(2, 96)
+#define g_macro__has_attribute___sentinel__ G_GNUC_CHECK_VERSION(4, 0)
+#define g_macro__has_attribute___unused__ G_GNUC_CHECK_VERSION(2, 4)
+#define g_macro__has_attribute_cleanup G_GNUC_CHECK_VERSION(3, 3)
+#define g_macro__has_attribute_fallthrough G_GNUC_CHECK_VERSION(6, 0)
+#define g_macro__has_attribute_may_alias G_GNUC_CHECK_VERSION(3, 3)
+#define g_macro__has_attribute_warn_unused_result G_GNUC_CHECK_VERSION(3, 4)
 
 #endif
 
@@ -235,14 +235,17 @@ typedef int GError;
  * gboolean g_type_check_value (const GValue *value) G_GNUC_PURE;
  * ]|
  *
- * See the [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-pure-function-attribute) for more details.
+ * See the [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-pure-function-attribute)
+ * for more details.
  */
 
 /**
  * G_GNUC_MALLOC:
  *
  * Expands to the
- * [GNU C `malloc` function attribute](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-functions-that-behave-like-malloc)
+ * [GNU C `malloc` function
+ * attribute](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-functions-that-behave-like-malloc)
  * if the compiler is gcc.
  * Declaring a function as `malloc` enables better optimization of the function,
  * but must only be done if the allocation behaviour of the function is fully
@@ -266,7 +269,8 @@ typedef int GError;
  * ]|
  *
  * See the
- * [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-functions-that-behave-like-malloc)
+ * [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-functions-that-behave-like-malloc)
  * for more details.
  *
  * Since: 2.6
@@ -297,7 +301,8 @@ typedef int GError;
  * ]|
  *
  * See the
- * [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-noinline-function-attribute)
+ * [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-noinline-function-attribute)
  * for more details.
  *
  * See also: %G_NO_INLINE, %G_ALWAYS_INLINE.
@@ -312,17 +317,16 @@ typedef int GError;
 #endif
 
 #if g_macro__has_attribute(__malloc__)
-#define G_GNUC_MALLOC __attribute__ ((__malloc__))
+#define G_GNUC_MALLOC __attribute__((__malloc__))
 #else
 #define G_GNUC_MALLOC
 #endif
 
 #if g_macro__has_attribute(__noinline__)
-#define G_GNUC_NO_INLINE __attribute__ ((__noinline__)) \
-  GLIB_AVAILABLE_MACRO_IN_2_58
+#define G_GNUC_NO_INLINE                                                       \
+  __attribute__((__noinline__)) GLIB_AVAILABLE_MACRO_IN_2_58
 #else
-#define G_GNUC_NO_INLINE \
-  GLIB_AVAILABLE_MACRO_IN_2_58
+#define G_GNUC_NO_INLINE GLIB_AVAILABLE_MACRO_IN_2_58
 #endif
 
 /**
@@ -340,7 +344,9 @@ typedef int GError;
  *                     ...) G_GNUC_NULL_TERMINATED;
  * ]|
  *
- * See the [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-sentinel-function-attribute) for more details.
+ * See the [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-sentinel-function-attribute)
+ * for more details.
  *
  * Since: 2.8
  */
@@ -394,7 +400,9 @@ typedef int GError;
  * gpointer g_malloc (gsize n_bytes) G_GNUC_MALLOC G_GNUC_ALLOC_SIZE(1);
  * ]|
  *
- * See the [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-alloc_005fsize-function-attribute) for more details.
+ * See the [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-alloc_005fsize-function-attribute)
+ * for more details.
  *
  * Since: 2.18
  */
@@ -402,7 +410,8 @@ typedef int GError;
 /**
  * G_GNUC_ALLOC_SIZE2:
  * @x: the index of the argument specifying one factor of the allocation size
- * @y: the index of the argument specifying the second factor of the allocation size
+ * @y: the index of the argument specifying the second factor of the allocation
+ * size
  *
  * Expands to the GNU C `alloc_size` function attribute if the compiler is a
  * new enough gcc. This attribute tells the compiler that the function returns
@@ -414,19 +423,22 @@ typedef int GError;
  *
  * |[<!-- language="C" -->
  * gpointer g_malloc_n (gsize n_blocks,
- *                      gsize n_block_bytes) G_GNUC_MALLOC G_GNUC_ALLOC_SIZE2(1, 2);
+ *                      gsize n_block_bytes) G_GNUC_MALLOC G_GNUC_ALLOC_SIZE2(1,
+ * 2);
  * ]|
  *
- * See the [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-alloc_005fsize-function-attribute) for more details.
+ * See the [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-alloc_005fsize-function-attribute)
+ * for more details.
  *
  * Since: 2.18
  */
 #if g_macro__has_attribute(__alloc_size__)
 #define G_GNUC_ALLOC_SIZE(x) __attribute__((__alloc_size__(x)))
-#define G_GNUC_ALLOC_SIZE2(x,y) __attribute__((__alloc_size__(x,y)))
+#define G_GNUC_ALLOC_SIZE2(x, y) __attribute__((__alloc_size__(x, y)))
 #else
 #define G_GNUC_ALLOC_SIZE(x)
-#define G_GNUC_ALLOC_SIZE2(x,y)
+#define G_GNUC_ALLOC_SIZE2(x, y)
 #endif
 
 /**
@@ -445,7 +457,8 @@ typedef int GError;
  * semicolon.
  *
  * See the
- * [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-Wformat-3288)
+ * [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-Wformat-3288)
  * for more details.
  *
  * |[<!-- language="C" -->
@@ -478,7 +491,8 @@ typedef int GError;
  * ]|
  *
  * See the
- * [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-Wformat-3288)
+ * [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-Wformat-3288)
  * for details.
  */
 
@@ -499,7 +513,8 @@ typedef int GError;
  * ]|
  *
  * See the
- * [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-Wformat-3288)
+ * [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-Wformat-3288)
  * for details.
  *
  * Since: 2.60
@@ -520,7 +535,9 @@ typedef int GError;
  * Place the attribute after the function declaration, just before the
  * semicolon.
  *
- * See the [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-Wformat-nonliteral-1) for more details.
+ * See the [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-Wformat-nonliteral-1)
+ * for more details.
  *
  * |[<!-- language="C" -->
  * gchar *g_dgettext (gchar *domain_name, gchar *msgid) G_GNUC_FORMAT (2);
@@ -546,7 +563,9 @@ typedef int GError;
  * void g_abort (void) G_GNUC_NORETURN;
  * ]|
  *
- * See the [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-noreturn-function-attribute) for more details.
+ * See the [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-noreturn-function-attribute)
+ * for more details.
  */
 
 /**
@@ -563,7 +582,9 @@ typedef int GError;
  * gchar g_ascii_tolower (gchar c) G_GNUC_CONST;
  * ]|
  *
- * See the [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-const-function-attribute) for more details.
+ * See the [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-const-function-attribute)
+ * for more details.
  *
  * A function that has pointer arguments and examines the data pointed to
  * must not be declared `const`. Likewise, a function that calls a non-`const`
@@ -587,7 +608,9 @@ typedef int GError;
  *                          gint other_argument) G_GNUC_UNUSED;
  * ]|
  *
- * See the [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-unused-function-attribute) for more details.
+ * See the [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-unused-function-attribute)
+ * for more details.
  */
 
 /**
@@ -604,48 +627,47 @@ typedef int GError;
  * int do_uninteresting_things (void) G_GNUC_NO_INSTRUMENT;
  * ]|
  *
- * See the [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-no_005finstrument_005ffunction-function-attribute) for more details.
+ * See the [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-no_005finstrument_005ffunction-function-attribute)
+ * for more details.
  */
 
 #if g_macro__has_attribute(__format__)
 
-#if !defined (__clang__) && G_GNUC_CHECK_VERSION (4, 4)
-#define G_GNUC_PRINTF( format_idx, arg_idx )    \
-  __attribute__((__format__ (gnu_printf, format_idx, arg_idx)))
-#define G_GNUC_SCANF( format_idx, arg_idx )     \
-  __attribute__((__format__ (gnu_scanf, format_idx, arg_idx)))
-#define G_GNUC_STRFTIME( format_idx )    \
-  __attribute__((__format__ (gnu_strftime, format_idx, 0))) \
+#if !defined(__clang__) && G_GNUC_CHECK_VERSION(4, 4)
+#define G_GNUC_PRINTF(format_idx, arg_idx)                                     \
+  __attribute__((__format__(gnu_printf, format_idx, arg_idx)))
+#define G_GNUC_SCANF(format_idx, arg_idx)                                      \
+  __attribute__((__format__(gnu_scanf, format_idx, arg_idx)))
+#define G_GNUC_STRFTIME(format_idx)                                            \
+  __attribute__((__format__(gnu_strftime, format_idx, 0)))                     \
   GLIB_AVAILABLE_MACRO_IN_2_60
 #else
-#define G_GNUC_PRINTF( format_idx, arg_idx )    \
-  __attribute__((__format__ (__printf__, format_idx, arg_idx)))
-#define G_GNUC_SCANF( format_idx, arg_idx )     \
-  __attribute__((__format__ (__scanf__, format_idx, arg_idx)))
-#define G_GNUC_STRFTIME( format_idx )    \
-  __attribute__((__format__ (__strftime__, format_idx, 0))) \
+#define G_GNUC_PRINTF(format_idx, arg_idx)                                     \
+  __attribute__((__format__(__printf__, format_idx, arg_idx)))
+#define G_GNUC_SCANF(format_idx, arg_idx)                                      \
+  __attribute__((__format__(__scanf__, format_idx, arg_idx)))
+#define G_GNUC_STRFTIME(format_idx)                                            \
+  __attribute__((__format__(__strftime__, format_idx, 0)))                     \
   GLIB_AVAILABLE_MACRO_IN_2_60
 #endif
 
 #else
 
-#define G_GNUC_PRINTF( format_idx, arg_idx )
-#define G_GNUC_SCANF( format_idx, arg_idx )
-#define G_GNUC_STRFTIME( format_idx ) \
-  GLIB_AVAILABLE_MACRO_IN_2_60
+#define G_GNUC_PRINTF(format_idx, arg_idx)
+#define G_GNUC_SCANF(format_idx, arg_idx)
+#define G_GNUC_STRFTIME(format_idx) GLIB_AVAILABLE_MACRO_IN_2_60
 
 #endif
 
 #if g_macro__has_attribute(__format_arg__)
-#define G_GNUC_FORMAT(arg_idx) \
-  __attribute__ ((__format_arg__ (arg_idx)))
+#define G_GNUC_FORMAT(arg_idx) __attribute__((__format_arg__(arg_idx)))
 #else
-#define G_GNUC_FORMAT( arg_idx )
+#define G_GNUC_FORMAT(arg_idx)
 #endif
 
 #if g_macro__has_attribute(__noreturn__)
-#define G_GNUC_NORETURN \
-  __attribute__ ((__noreturn__))
+#define G_GNUC_NORETURN __attribute__((__noreturn__))
 #else
 /* NOTE: MSVC has __declspec(noreturn) but unlike GCC __attribute__,
  * __declspec can only be placed at the start of the function prototype
@@ -655,22 +677,19 @@ typedef int GError;
 #endif
 
 #if g_macro__has_attribute(__const__)
-#define G_GNUC_CONST \
-  __attribute__ ((__const__))
+#define G_GNUC_CONST __attribute__((__const__))
 #else
 #define G_GNUC_CONST
 #endif
 
 #if g_macro__has_attribute(__unused__)
-#define G_GNUC_UNUSED \
-  __attribute__ ((__unused__))
+#define G_GNUC_UNUSED __attribute__((__unused__))
 #else
 #define G_GNUC_UNUSED
 #endif
 
 #if g_macro__has_attribute(__no_instrument_function__)
-#define G_GNUC_NO_INSTRUMENT \
-  __attribute__ ((__no_instrument_function__))
+#define G_GNUC_NO_INSTRUMENT __attribute__((__no_instrument_function__))
 #else
 #define G_GNUC_NO_INSTRUMENT
 #endif
@@ -678,10 +697,10 @@ typedef int GError;
 /**
  * G_GNUC_FALLTHROUGH:
  *
- * Expands to the GNU C `fallthrough` statement attribute if the compiler supports it.
- * This allows declaring case statement to explicitly fall through in switch
- * statements. To enable this feature, use `-Wimplicit-fallthrough` during
- * compilation.
+ * Expands to the GNU C `fallthrough` statement attribute if the compiler
+ * supports it. This allows declaring case statement to explicitly fall through
+ * in switch statements. To enable this feature, use `-Wimplicit-fallthrough`
+ * during compilation.
  *
  * Put the attribute right before the case statement you want to fall through
  * to.
@@ -699,16 +718,17 @@ typedef int GError;
  * ]|
  *
  *
- * See the [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Statement-Attributes.html#index-fallthrough-statement-attribute) for more details.
+ * See the [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Statement-Attributes.html#index-fallthrough-statement-attribute)
+ * for more details.
  *
  * Since: 2.60
  */
 #if g_macro__has_attribute(fallthrough)
-#define G_GNUC_FALLTHROUGH __attribute__((fallthrough)) \
-  GLIB_AVAILABLE_MACRO_IN_2_60
+#define G_GNUC_FALLTHROUGH                                                     \
+  __attribute__((fallthrough)) GLIB_AVAILABLE_MACRO_IN_2_60
 #else
-#define G_GNUC_FALLTHROUGH \
-  GLIB_AVAILABLE_MACRO_IN_2_60
+#define G_GNUC_FALLTHROUGH GLIB_AVAILABLE_MACRO_IN_2_60
 #endif
 
 /**
@@ -725,7 +745,9 @@ typedef int GError;
  * int my_mistake (void) G_GNUC_DEPRECATED;
  * ]|
  *
- * See the [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-deprecated-function-attribute) for more details.
+ * See the [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-deprecated-function-attribute)
+ * for more details.
  *
  * Since: 2.2
  */
@@ -750,7 +772,9 @@ typedef int GError;
  * int my_mistake (void) G_GNUC_DEPRECATED_FOR(my_replacement);
  * ]|
  *
- * See the [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-deprecated-function-attribute) for more details.
+ * See the [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-deprecated-function-attribute)
+ * for more details.
  *
  * Note that if @f is a macro, it will be expanded in the warning message.
  * You can enclose it in quotes to prevent this. (The quotes will show up
@@ -759,38 +783,32 @@ typedef int GError;
  * Since: 2.26
  */
 #if G_GNUC_CHECK_VERSION(4, 5) || defined(__clang__)
-#define G_GNUC_DEPRECATED_FOR(f)                        \
-  __attribute__((deprecated("Use " #f " instead")))     \
-  GLIB_AVAILABLE_MACRO_IN_2_26
+#define G_GNUC_DEPRECATED_FOR(f)                                               \
+  __attribute__((deprecated("Use " #f " instead"))) GLIB_AVAILABLE_MACRO_IN_2_26
 #else
-#define G_GNUC_DEPRECATED_FOR(f)      G_GNUC_DEPRECATED \
+#define G_GNUC_DEPRECATED_FOR(f)                                               \
+  G_GNUC_DEPRECATED                                                            \
   GLIB_AVAILABLE_MACRO_IN_2_26
 #endif /* __GNUC__ */
 
 #ifdef __ICC
-#define G_GNUC_BEGIN_IGNORE_DEPRECATIONS                \
-  _Pragma ("warning (push)")                            \
-  _Pragma ("warning (disable:1478)")
-#define G_GNUC_END_IGNORE_DEPRECATIONS			\
-  _Pragma ("warning (pop)")
+#define G_GNUC_BEGIN_IGNORE_DEPRECATIONS                                       \
+  _Pragma("warning (push)") _Pragma("warning (disable:1478)")
+#define G_GNUC_END_IGNORE_DEPRECATIONS _Pragma("warning (pop)")
 #elif G_GNUC_CHECK_VERSION(4, 6)
-#define G_GNUC_BEGIN_IGNORE_DEPRECATIONS		\
-  _Pragma ("GCC diagnostic push")			\
-  _Pragma ("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
-#define G_GNUC_END_IGNORE_DEPRECATIONS			\
-  _Pragma ("GCC diagnostic pop")
-#elif defined (_MSC_VER) && (_MSC_VER >= 1500) && !defined (__clang__)
-#define G_GNUC_BEGIN_IGNORE_DEPRECATIONS		\
-  __pragma (warning (push))  \
-  __pragma (warning (disable : 4996))
-#define G_GNUC_END_IGNORE_DEPRECATIONS			\
-  __pragma (warning (pop))
-#elif defined (__clang__)
-#define G_GNUC_BEGIN_IGNORE_DEPRECATIONS \
-  _Pragma("clang diagnostic push") \
-  _Pragma("clang diagnostic ignored \"-Wdeprecated-declarations\"")
-#define G_GNUC_END_IGNORE_DEPRECATIONS \
-  _Pragma("clang diagnostic pop")
+#define G_GNUC_BEGIN_IGNORE_DEPRECATIONS                                       \
+  _Pragma("GCC diagnostic push")                                               \
+      _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
+#define G_GNUC_END_IGNORE_DEPRECATIONS _Pragma("GCC diagnostic pop")
+#elif defined(_MSC_VER) && (_MSC_VER >= 1500) && !defined(__clang__)
+#define G_GNUC_BEGIN_IGNORE_DEPRECATIONS                                       \
+  __pragma(warning(push)) __pragma(warning(disable : 4996))
+#define G_GNUC_END_IGNORE_DEPRECATIONS __pragma(warning(pop))
+#elif defined(__clang__)
+#define G_GNUC_BEGIN_IGNORE_DEPRECATIONS                                       \
+  _Pragma("clang diagnostic push")                                             \
+      _Pragma("clang diagnostic ignored \"-Wdeprecated-declarations\"")
+#define G_GNUC_END_IGNORE_DEPRECATIONS _Pragma("clang diagnostic pop")
 #else
 #define G_GNUC_BEGIN_IGNORE_DEPRECATIONS
 #define G_GNUC_END_IGNORE_DEPRECATIONS
@@ -804,7 +822,9 @@ typedef int GError;
  * Types with this attribute will not be subjected to type-based alias
  * analysis, but are assumed to alias with any other type, just like `char`.
  *
- * See the [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Type-Attributes.html#index-may_005falias-type-attribute) for details.
+ * See the [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Type-Attributes.html#index-may_005falias-type-attribute)
+ * for details.
  *
  * Since: 2.14
  */
@@ -828,7 +848,9 @@ typedef int GError;
  *                       gpointer data) G_GNUC_WARN_UNUSED_RESULT;
  * ]|
  *
- * See the [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-warn_005funused_005fresult-function-attribute) for more details.
+ * See the [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-warn_005funused_005fresult-function-attribute)
+ * for more details.
  *
  * Since: 2.10
  */
@@ -863,15 +885,18 @@ typedef int GError;
  * Mark them as deprecated since 2.26, since that’s when version macros were
  * introduced.
  */
-#if defined (__GNUC__) && (__GNUC__ < 3)
-#define G_GNUC_FUNCTION         __FUNCTION__ GLIB_DEPRECATED_MACRO_IN_2_26_FOR(G_STRFUNC)
-#define G_GNUC_PRETTY_FUNCTION  __PRETTY_FUNCTION__ GLIB_DEPRECATED_MACRO_IN_2_26_FOR(G_STRFUNC)
-#else   /* !__GNUC__ */
-#define G_GNUC_FUNCTION         "" GLIB_DEPRECATED_MACRO_IN_2_26_FOR(G_STRFUNC)
-#define G_GNUC_PRETTY_FUNCTION  "" GLIB_DEPRECATED_MACRO_IN_2_26_FOR(G_STRFUNC)
-#endif  /* !__GNUC__ */
+#if defined(__GNUC__) && (__GNUC__ < 3)
+#define G_GNUC_FUNCTION                                                        \
+  __FUNCTION__ GLIB_DEPRECATED_MACRO_IN_2_26_FOR(G_STRFUNC)
+#define G_GNUC_PRETTY_FUNCTION                                                 \
+  __PRETTY_FUNCTION__ GLIB_DEPRECATED_MACRO_IN_2_26_FOR(G_STRFUNC)
+#else /* !__GNUC__ */
+#define G_GNUC_FUNCTION "" GLIB_DEPRECATED_MACRO_IN_2_26_FOR(G_STRFUNC)
+#define G_GNUC_PRETTY_FUNCTION "" GLIB_DEPRECATED_MACRO_IN_2_26_FOR(G_STRFUNC)
+#endif /* !__GNUC__ */
 
-#if g_macro__has_feature(attribute_analyzer_noreturn) && defined(__clang_analyzer__)
+#if g_macro__has_feature(attribute_analyzer_noreturn) &&                       \
+    defined(__clang_analyzer__)
 #define G_ANALYZER_ANALYZING 1
 #define G_ANALYZER_NORETURN __attribute__((analyzer_noreturn))
 #elif defined(__COVERITY__)
@@ -882,49 +907,56 @@ typedef int GError;
 #define G_ANALYZER_NORETURN
 #endif
 
-#define G_STRINGIFY(macro_or_string)	G_STRINGIFY_ARG (macro_or_string)
-#define	G_STRINGIFY_ARG(contents)	#contents
+#define G_STRINGIFY(macro_or_string) G_STRINGIFY_ARG(macro_or_string)
+#define G_STRINGIFY_ARG(contents) #contents
 
-#ifndef __GI_SCANNER__ /* The static assert macro really confuses the introspection parser */
-#define G_PASTE_ARGS(identifier1,identifier2) identifier1 ## identifier2
-#define G_PASTE(identifier1,identifier2)      G_PASTE_ARGS (identifier1, identifier2)
-#if G_CXX_STD_CHECK_VERSION (11)
-#define G_STATIC_ASSERT(expr) static_assert (expr, "Expression evaluates to false")
-#elif (G_C_STD_CHECK_VERSION (11) || \
-     g_macro__has_feature(c_static_assert) || g_macro__has_extension(c_static_assert))
-#define G_STATIC_ASSERT(expr) _Static_assert (expr, "Expression evaluates to false")
+#ifndef __GI_SCANNER__ /* The static assert macro really confuses the          \
+                          introspection parser */
+#define G_PASTE_ARGS(identifier1, identifier2) identifier1##identifier2
+#define G_PASTE(identifier1, identifier2) G_PASTE_ARGS(identifier1, identifier2)
+#if G_CXX_STD_CHECK_VERSION(11)
+#define G_STATIC_ASSERT(expr)                                                  \
+  static_assert(expr, "Expression evaluates to false")
+#elif (G_C_STD_CHECK_VERSION(11) || g_macro__has_feature(c_static_assert) ||   \
+       g_macro__has_extension(c_static_assert))
+#define G_STATIC_ASSERT(expr)                                                  \
+  _Static_assert(expr, "Expression evaluates to false")
 #else
 #ifdef __COUNTER__
-#define G_STATIC_ASSERT(expr) typedef char G_PASTE (_GStaticAssertCompileTimeAssertion_, __COUNTER__)[(expr) ? 1 : -1] G_GNUC_UNUSED
+#define G_STATIC_ASSERT(expr)                                                  \
+  typedef char G_PASTE(_GStaticAssertCompileTimeAssertion_,                    \
+                       __COUNTER__)[(expr) ? 1 : -1] G_GNUC_UNUSED
 #else
-#define G_STATIC_ASSERT(expr) typedef char G_PASTE (_GStaticAssertCompileTimeAssertion_, __LINE__)[(expr) ? 1 : -1] G_GNUC_UNUSED
+#define G_STATIC_ASSERT(expr)                                                  \
+  typedef char G_PASTE(_GStaticAssertCompileTimeAssertion_,                    \
+                       __LINE__)[(expr) ? 1 : -1] G_GNUC_UNUSED
 #endif
 #endif /* G_CXX_STD_CHECK_VERSION (11) */
-#define G_STATIC_ASSERT_EXPR(expr) ((void) sizeof (char[(expr) ? 1 : -1]))
+#define G_STATIC_ASSERT_EXPR(expr) ((void)sizeof(char[(expr) ? 1 : -1]))
 #endif /* !__GI_SCANNER__ */
 
 /* Provide a string identifying the current code position */
-#if defined (__GNUC__) && (__GNUC__ < 3) && !defined (G_CXX_STD_VERSION)
-#define G_STRLOC	__FILE__ ":" G_STRINGIFY (__LINE__) ":" __PRETTY_FUNCTION__ "()"
+#if defined(__GNUC__) && (__GNUC__ < 3) && !defined(G_CXX_STD_VERSION)
+#define G_STRLOC __FILE__ ":" G_STRINGIFY(__LINE__) ":" __PRETTY_FUNCTION__ "()"
 #else
-#define G_STRLOC	__FILE__ ":" G_STRINGIFY (__LINE__)
+#define G_STRLOC __FILE__ ":" G_STRINGIFY(__LINE__)
 #endif
 
 /* Provide a string identifying the current function, non-concatenatable */
-#if defined (__GNUC__) && defined (G_CXX_STD_VERSION)
-#define G_STRFUNC     ((const char*) (__PRETTY_FUNCTION__))
-#elif G_C_STD_CHECK_VERSION (99)
-#define G_STRFUNC     ((const char*) (__func__))
-#elif defined (__GNUC__) || (defined(_MSC_VER) && (_MSC_VER > 1300))
-#define G_STRFUNC     ((const char*) (__FUNCTION__))
+#if defined(__GNUC__) && defined(G_CXX_STD_VERSION)
+#define G_STRFUNC ((const char *)(__PRETTY_FUNCTION__))
+#elif G_C_STD_CHECK_VERSION(99)
+#define G_STRFUNC ((const char *)(__func__))
+#elif defined(__GNUC__) || (defined(_MSC_VER) && (_MSC_VER > 1300))
+#define G_STRFUNC ((const char *)(__FUNCTION__))
 #else
-#define G_STRFUNC     ((const char*) ("???"))
+#define G_STRFUNC ((const char *)("???"))
 #endif
 
 /* Guard C code in headers, while including them from C++ */
-#ifdef  G_CXX_STD_VERSION
-#define G_BEGIN_DECLS  extern "C" {
-#define G_END_DECLS    }
+#ifdef G_CXX_STD_VERSION
+#define G_BEGIN_DECLS extern "C" {
+#define G_END_DECLS }
 #else
 #define G_BEGIN_DECLS
 #define G_END_DECLS
@@ -936,85 +968,85 @@ typedef int GError;
  *  defined then the current definition is correct.
  */
 #ifndef NULL
-#  if G_CXX_STD_CHECK_VERSION (11)
-#    define NULL (nullptr)
-#  elif defined (G_CXX_STD_VERSION)
-#    define NULL (0L)
-#  else
-#    define NULL ((void*) 0)
-#  endif /* G_CXX_STD_CHECK_VERSION (11) */
+#if G_CXX_STD_CHECK_VERSION(11)
+#define NULL (nullptr)
+#elif defined(G_CXX_STD_VERSION)
+#define NULL (0L)
+#else
+#define NULL ((void *)0)
+#endif /* G_CXX_STD_CHECK_VERSION (11) */
 #endif
 
-#ifndef	FALSE
-#define	FALSE	(0)
+#ifndef FALSE
+#define FALSE (0)
 #endif
 
-#ifndef	TRUE
-#define	TRUE	(!FALSE)
+#ifndef TRUE
+#define TRUE (!FALSE)
 #endif
 
-#undef	MAX
-#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+#undef MAX
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
-#undef	MIN
-#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+#undef MIN
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
-#undef	ABS
-#define ABS(a)	   (((a) < 0) ? -(a) : (a))
+#undef ABS
+#define ABS(a) (((a) < 0) ? -(a) : (a))
 
-#undef	CLAMP
-#define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
+#undef CLAMP
+#define CLAMP(x, low, high)                                                    \
+  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
 
-#define G_APPROX_VALUE(a, b, epsilon) \
+#define G_APPROX_VALUE(a, b, epsilon)                                          \
   (((a) > (b) ? (a) - (b) : (b) - (a)) < (epsilon))
 
 /* Count the number of elements in an array. The array must be defined
  * as such; using this with a dynamically allocated array will give
  * incorrect results.
  */
-#define G_N_ELEMENTS(arr)		(sizeof (arr) / sizeof ((arr)[0]))
+#define G_N_ELEMENTS(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 /* Macros by analogy to GINT_TO_POINTER, GPOINTER_TO_INT
  */
-#define GPOINTER_TO_SIZE(p)	((gsize) (p))
-#define GSIZE_TO_POINTER(s)	((gpointer) (gsize) (s))
+#define GPOINTER_TO_SIZE(p) ((gsize)(p))
+#define GSIZE_TO_POINTER(s) ((gpointer)(gsize)(s))
 
 /* Provide convenience macros for handling structure
  * fields through their offsets.
  */
 
 #if G_GNUC_CHECK_VERSION(4, 0) || defined(_MSC_VER)
-#define G_STRUCT_OFFSET(struct_type, member) \
-      ((glong) offsetof (struct_type, member))
+#define G_STRUCT_OFFSET(struct_type, member)                                   \
+  ((glong)offsetof(struct_type, member))
 #else
-#define G_STRUCT_OFFSET(struct_type, member)	\
-      ((glong) ((guint8*) &((struct_type*) 0)->member))
+#define G_STRUCT_OFFSET(struct_type, member)                                   \
+  ((glong)((guint8 *)&((struct_type *)0)->member))
 #endif
 
-#define G_STRUCT_MEMBER_P(struct_p, struct_offset)   \
-    ((gpointer) ((guint8*) (struct_p) + (glong) (struct_offset)))
-#define G_STRUCT_MEMBER(member_type, struct_p, struct_offset)   \
-    (*(member_type*) G_STRUCT_MEMBER_P ((struct_p), (struct_offset)))
+#define G_STRUCT_MEMBER_P(struct_p, struct_offset)                             \
+  ((gpointer)((guint8 *)(struct_p) + (glong)(struct_offset)))
+#define G_STRUCT_MEMBER(member_type, struct_p, struct_offset)                  \
+  (*(member_type *)G_STRUCT_MEMBER_P((struct_p), (struct_offset)))
 
 /* Provide simple macro statement wrappers:
  *   G_STMT_START { statements; } G_STMT_END;
  * This can be used as a single statement, like:
  *   if (x) G_STMT_START { ... } G_STMT_END; else ...
  * This intentionally does not use compiler extensions like GCC's '({...})' to
- * avoid portability issue or side effects when compiled with different compilers.
- * MSVC complains about "while(0)": C4127: "Conditional expression is constant",
- * so we use __pragma to avoid the warning since the use here is intentional.
+ * avoid portability issue or side effects when compiled with different
+ * compilers. MSVC complains about "while(0)": C4127: "Conditional expression is
+ * constant", so we use __pragma to avoid the warning since the use here is
+ * intentional.
  */
-#if !(defined (G_STMT_START) && defined (G_STMT_END))
-#define G_STMT_START  do
-#if defined (_MSC_VER) && (_MSC_VER >= 1500)
-#define G_STMT_END \
-    __pragma(warning(push)) \
-    __pragma(warning(disable:4127)) \
-    while(0) \
-    __pragma(warning(pop))
+#if !(defined(G_STMT_START) && defined(G_STMT_END))
+#define G_STMT_START do
+#if defined(_MSC_VER) && (_MSC_VER >= 1500)
+#define G_STMT_END                                                             \
+  __pragma(warning(push)) __pragma(warning(disable : 4127)) while (0)          \
+      __pragma(warning(pop))
 #else
-#define G_STMT_END    while (0)
+#define G_STMT_END while (0)
 #endif
 #endif
 
@@ -1029,10 +1061,11 @@ typedef int GError;
  * G_ALIGNOF
  * @type: a type-name
  *
- * Return the minimal alignment required by the platform ABI for values of the given
- * type. The address of a variable or struct member of the given type must always be
- * a multiple of this alignment. For example, most platforms require int variables
- * to be aligned at a 4-byte boundary, so `G_ALIGNOF (int)` is 4 on most platforms.
+ * Return the minimal alignment required by the platform ABI for values of the
+ * given type. The address of a variable or struct member of the given type must
+ * always be a multiple of this alignment. For example, most platforms require
+ * int variables to be aligned at a 4-byte boundary, so `G_ALIGNOF (int)` is 4
+ * on most platforms.
  *
  * Note this is not necessarily the same as the value returned by GCC’s
  * `__alignof__` operator, which returns the preferred alignment for a type.
@@ -1041,12 +1074,16 @@ typedef int GError;
  *
  * Since: 2.60
  */
-#if G_C_STD_CHECK_VERSION (11)
-#define G_ALIGNOF(type) _Alignof (type) \
-  GLIB_AVAILABLE_MACRO_IN_2_60
+#if G_C_STD_CHECK_VERSION(11)
+#define G_ALIGNOF(type) _Alignof(type) GLIB_AVAILABLE_MACRO_IN_2_60
 #else
-#define G_ALIGNOF(type) (G_STRUCT_OFFSET (struct { char a; type b; }, b)) \
-  GLIB_AVAILABLE_MACRO_IN_2_60
+#define G_ALIGNOF(type)                                                        \
+  (G_STRUCT_OFFSET(                                                            \
+      struct {                                                                 \
+        char a;                                                                \
+        type b;                                                                \
+      },                                                                       \
+      b)) GLIB_AVAILABLE_MACRO_IN_2_60
 #endif
 
 /**
@@ -1093,21 +1130,21 @@ typedef int GError;
  * evaluated when a header is included. This results in warnings in third party
  * code which includes glib.h, even if the third party code doesn’t use the new
  * macro itself. */
-#if G_CXX_STD_CHECK_VERSION (11)
-  /* Use ISO C++11 syntax when the compiler supports it.  */
-# define G_NORETURN [[noreturn]]
+#if G_CXX_STD_CHECK_VERSION(11)
+/* Use ISO C++11 syntax when the compiler supports it.  */
+#define G_NORETURN [[noreturn]]
 #elif g_macro__has_attribute(__noreturn__)
-  /* For compatibility with G_NORETURN_FUNCPTR on clang, use
-     __attribute__((__noreturn__)), not _Noreturn.  */
-# define G_NORETURN __attribute__ ((__noreturn__))
-#elif defined (_MSC_VER) && (1200 <= _MSC_VER)
-  /* Use MSVC specific syntax.  */
-# define G_NORETURN __declspec (noreturn)
-  /* Use ISO C11 syntax when the compiler supports it.  */
-#elif G_C_STD_CHECK_VERSION (11)
-# define G_NORETURN _Noreturn
+/* For compatibility with G_NORETURN_FUNCPTR on clang, use
+   __attribute__((__noreturn__)), not _Noreturn.  */
+#define G_NORETURN __attribute__((__noreturn__))
+#elif defined(_MSC_VER) && (1200 <= _MSC_VER)
+/* Use MSVC specific syntax.  */
+#define G_NORETURN __declspec(noreturn)
+/* Use ISO C11 syntax when the compiler supports it.  */
+#elif G_C_STD_CHECK_VERSION(11)
+#define G_NORETURN _Noreturn
 #else
-# define G_NORETURN /* empty */
+#define G_NORETURN /* empty */
 #endif
 
 /**
@@ -1133,11 +1170,10 @@ typedef int GError;
  * Since: 2.68
  */
 #if g_macro__has_attribute(__noreturn__)
-# define G_NORETURN_FUNCPTR __attribute__ ((__noreturn__))      \
-  GLIB_AVAILABLE_MACRO_IN_2_68
+#define G_NORETURN_FUNCPTR                                                     \
+  __attribute__((__noreturn__)) GLIB_AVAILABLE_MACRO_IN_2_68
 #else
-# define G_NORETURN_FUNCPTR /* empty */         \
-  GLIB_AVAILABLE_MACRO_IN_2_68
+#define G_NORETURN_FUNCPTR /* empty */ GLIB_AVAILABLE_MACRO_IN_2_68
 #endif
 
 /**
@@ -1160,9 +1196,11 @@ typedef int GError;
  * ]|
  *
  * See the
- * [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-always_005finline-function-attribute)
+ * [GNU C
+ * documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-always_005finline-function-attribute)
  * and the
- * [MSVC documentation](https://docs.microsoft.com/en-us/visualstudio/misc/inline-inline-forceinline)
+ * [MSVC
+ * documentation](https://docs.microsoft.com/en-us/visualstudio/misc/inline-inline-forceinline)
  *
  * Since: 2.74
  */
@@ -1172,21 +1210,21 @@ typedef int GError;
  * code which includes glib.h, even if the third party code doesn’t use the new
  * macro itself. */
 #if g_macro__has_attribute(__always_inline__)
-# if G_CXX_STD_CHECK_VERSION (11)
-    /* Use ISO C++11 syntax when the compiler supports it. */
-#   define G_ALWAYS_INLINE [[gnu::always_inline]]
-# else
-#   define G_ALWAYS_INLINE __attribute__ ((__always_inline__))
-# endif
-#elif defined (_MSC_VER)
-  /* Use MSVC specific syntax.  */
-# if G_CXX_STD_CHECK_VERSION (20) && _MSC_VER >= 1927
-#  define G_ALWAYS_INLINE [[msvc::forceinline]]
-# else
-#  define G_ALWAYS_INLINE __forceinline
-# endif
+#if G_CXX_STD_CHECK_VERSION(11)
+/* Use ISO C++11 syntax when the compiler supports it. */
+#define G_ALWAYS_INLINE [[gnu::always_inline]]
 #else
-# define G_ALWAYS_INLINE /* empty */
+#define G_ALWAYS_INLINE __attribute__((__always_inline__))
+#endif
+#elif defined(_MSC_VER)
+/* Use MSVC specific syntax.  */
+#if G_CXX_STD_CHECK_VERSION(20) && _MSC_VER >= 1927
+#define G_ALWAYS_INLINE [[msvc::forceinline]]
+#else
+#define G_ALWAYS_INLINE __forceinline
+#endif
+#else
+#define G_ALWAYS_INLINE /* empty */
 #endif
 
 /**
@@ -1220,30 +1258,30 @@ typedef int GError;
  * code which includes glib.h, even if the third party code doesn’t use the new
  * macro itself. */
 #if g_macro__has_attribute(__noinline__)
-# if G_CXX_STD_CHECK_VERSION (11)
-    /* Use ISO C++11 syntax when the compiler supports it. */
-#   if defined (__GNUC__)
-#      define G_NO_INLINE [[gnu::noinline]]
-#   elif defined (_MSC_VER)
-#      if G_CXX_STD_CHECK_VERSION (20) && _MSC_VER >= 1927
-#        define G_NO_INLINE [[msvc::noinline]]
-#      else
-#        define G_NO_INLINE __declspec (noinline)
-#      endif
-#   endif
-# else
-#   define G_NO_INLINE __attribute__ ((__noinline__))
-# endif
-#elif defined (_MSC_VER) && (1200 <= _MSC_VER)
-  /* Use MSVC specific syntax.  */
-    /* Use ISO C++11 syntax when the compiler supports it. */
-# if G_CXX_STD_CHECK_VERSION (20) && _MSC_VER >= 1927
-#   define G_NO_INLINE [[msvc::noinline]]
-# else
-#   define G_NO_INLINE __declspec (noinline)
-# endif
+#if G_CXX_STD_CHECK_VERSION(11)
+/* Use ISO C++11 syntax when the compiler supports it. */
+#if defined(__GNUC__)
+#define G_NO_INLINE [[gnu::noinline]]
+#elif defined(_MSC_VER)
+#if G_CXX_STD_CHECK_VERSION(20) && _MSC_VER >= 1927
+#define G_NO_INLINE [[msvc::noinline]]
 #else
-# define G_NO_INLINE /* empty */
+#define G_NO_INLINE __declspec(noinline)
+#endif
+#endif
+#else
+#define G_NO_INLINE __attribute__((__noinline__))
+#endif
+#elif defined(_MSC_VER) && (1200 <= _MSC_VER)
+/* Use MSVC specific syntax.  */
+/* Use ISO C++11 syntax when the compiler supports it. */
+#if G_CXX_STD_CHECK_VERSION(20) && _MSC_VER >= 1927
+#define G_NO_INLINE [[msvc::noinline]]
+#else
+#define G_NO_INLINE __declspec(noinline)
+#endif
+#else
+#define G_NO_INLINE /* empty */
 #endif
 
 /*
@@ -1255,18 +1293,18 @@ typedef int GError;
  * putting assignments in g_return_if_fail ().
  */
 #if G_GNUC_CHECK_VERSION(2, 0) && defined(__OPTIMIZE__)
-#define _G_BOOLEAN_EXPR_IMPL(uniq, expr)        \
- G_GNUC_EXTENSION ({                            \
-   int G_PASTE (_g_boolean_var_, uniq);         \
-   if (expr)                                    \
-      G_PASTE (_g_boolean_var_, uniq) = 1;      \
-   else                                         \
-      G_PASTE (_g_boolean_var_, uniq) = 0;      \
-   G_PASTE (_g_boolean_var_, uniq);             \
-})
-#define _G_BOOLEAN_EXPR(expr) _G_BOOLEAN_EXPR_IMPL (__COUNTER__, expr)
-#define G_LIKELY(expr) (__builtin_expect (_G_BOOLEAN_EXPR(expr), 1))
-#define G_UNLIKELY(expr) (__builtin_expect (_G_BOOLEAN_EXPR(expr), 0))
+#define _G_BOOLEAN_EXPR_IMPL(uniq, expr)                                       \
+  G_GNUC_EXTENSION({                                                           \
+    int G_PASTE(_g_boolean_var_, uniq);                                        \
+    if (expr)                                                                  \
+      G_PASTE(_g_boolean_var_, uniq) = 1;                                      \
+    else                                                                       \
+      G_PASTE(_g_boolean_var_, uniq) = 0;                                      \
+    G_PASTE(_g_boolean_var_, uniq);                                            \
+  })
+#define _G_BOOLEAN_EXPR(expr) _G_BOOLEAN_EXPR_IMPL(__COUNTER__, expr)
+#define G_LIKELY(expr) (__builtin_expect(_G_BOOLEAN_EXPR(expr), 1))
+#define G_UNLIKELY(expr) (__builtin_expect(_G_BOOLEAN_EXPR(expr), 0))
 #else
 #define G_LIKELY(expr) (expr)
 #define G_UNLIKELY(expr) (expr)
@@ -1294,19 +1332,23 @@ typedef int GError;
 #if defined(GLIB_CANNOT_IGNORE_DEPRECATIONS)
 #define G_DEPRECATED_FOR(f) G_DEPRECATED
 #elif G_GNUC_CHECK_VERSION(4, 5) || defined(__clang__)
-#define G_DEPRECATED_FOR(f) __attribute__((__deprecated__("Use '" #f "' instead")))
+#define G_DEPRECATED_FOR(f)                                                    \
+  __attribute__((__deprecated__("Use '" #f "' instead")))
 #elif defined(_MSC_FULL_VER) && (_MSC_FULL_VER > 140050320)
-#define G_DEPRECATED_FOR(f) __declspec(deprecated("is deprecated. Use '" #f "' instead"))
+#define G_DEPRECATED_FOR(f)                                                    \
+  __declspec(deprecated("is deprecated. Use '" #f "' instead"))
 #else
 #define G_DEPRECATED_FOR(f) G_DEPRECATED
 #endif
 
 #if G_GNUC_CHECK_VERSION(4, 5) || defined(__clang__)
-#define G_UNAVAILABLE(maj,min) __attribute__((deprecated("Not available before " #maj "." #min)))
+#define G_UNAVAILABLE(maj, min)                                                \
+  __attribute__((deprecated("Not available before " #maj "." #min)))
 #elif defined(_MSC_FULL_VER) && (_MSC_FULL_VER > 140050320)
-#define G_UNAVAILABLE(maj,min) __declspec(deprecated("is not available before " #maj "." #min))
+#define G_UNAVAILABLE(maj, min)                                                \
+  __declspec(deprecated("is not available before " #maj "." #min))
 #else
-#define G_UNAVAILABLE(maj,min) G_DEPRECATED
+#define G_UNAVAILABLE(maj, min) G_DEPRECATED
 #endif
 
 /* These macros are used to mark deprecated symbols in GLib headers,
@@ -1315,43 +1357,50 @@ typedef int GError;
  * or define your own wrappers around it.
  */
 
-#if !defined(GLIB_DISABLE_DEPRECATION_WARNINGS) && \
-    (G_GNUC_CHECK_VERSION(4, 6) ||                 \
-     __clang_major__ > 3 || (__clang_major__ == 3 && __clang_minor__ >= 4))
-#define _GLIB_GNUC_DO_PRAGMA(x) _Pragma(G_STRINGIFY (x))
-#define GLIB_DEPRECATED_MACRO _GLIB_GNUC_DO_PRAGMA(GCC warning "Deprecated pre-processor symbol")
-#define GLIB_DEPRECATED_MACRO_FOR(f) \
-  _GLIB_GNUC_DO_PRAGMA(GCC warning G_STRINGIFY (Deprecated pre-processor symbol: replace with #f))
-#define GLIB_UNAVAILABLE_MACRO(maj,min) \
-  _GLIB_GNUC_DO_PRAGMA(GCC warning G_STRINGIFY (Not available before maj.min))
+#if !defined(GLIB_DISABLE_DEPRECATION_WARNINGS) &&                             \
+    (G_GNUC_CHECK_VERSION(4, 6) || __clang_major__ > 3 ||                      \
+     (__clang_major__ == 3 && __clang_minor__ >= 4))
+#define _GLIB_GNUC_DO_PRAGMA(x) _Pragma(G_STRINGIFY(x))
+#define GLIB_DEPRECATED_MACRO                                                  \
+  _GLIB_GNUC_DO_PRAGMA(GCC warning "Deprecated pre-processor symbol")
+#define GLIB_DEPRECATED_MACRO_FOR(f)                                           \
+  _GLIB_GNUC_DO_PRAGMA(                                                        \
+      GCC warning G_STRINGIFY(Deprecated pre - processor symbol                \
+                              : replace with #f))
+#define GLIB_UNAVAILABLE_MACRO(maj, min)                                       \
+  _GLIB_GNUC_DO_PRAGMA(GCC warning G_STRINGIFY(Not available before maj.min))
 #else
 #define GLIB_DEPRECATED_MACRO
 #define GLIB_DEPRECATED_MACRO_FOR(f)
-#define GLIB_UNAVAILABLE_MACRO(maj,min)
+#define GLIB_UNAVAILABLE_MACRO(maj, min)
 #endif
 
-#if !defined(GLIB_DISABLE_DEPRECATION_WARNINGS) && \
-    (G_GNUC_CHECK_VERSION(6, 1) ||                 \
-     (defined (__clang_major__) && (__clang_major__ > 3 || (__clang_major__ == 3 && __clang_minor__ >= 0))))
+#if !defined(GLIB_DISABLE_DEPRECATION_WARNINGS) &&                             \
+    (G_GNUC_CHECK_VERSION(6, 1) ||                                             \
+     (defined(__clang_major__) &&                                              \
+      (__clang_major__ > 3 ||                                                  \
+       (__clang_major__ == 3 && __clang_minor__ >= 0))))
 #define GLIB_DEPRECATED_ENUMERATOR G_DEPRECATED
 #define GLIB_DEPRECATED_ENUMERATOR_FOR(f) G_DEPRECATED_FOR(f)
-#define GLIB_UNAVAILABLE_ENUMERATOR(maj,min) G_UNAVAILABLE(maj,min)
+#define GLIB_UNAVAILABLE_ENUMERATOR(maj, min) G_UNAVAILABLE(maj, min)
 #else
 #define GLIB_DEPRECATED_ENUMERATOR
 #define GLIB_DEPRECATED_ENUMERATOR_FOR(f)
-#define GLIB_UNAVAILABLE_ENUMERATOR(maj,min)
+#define GLIB_UNAVAILABLE_ENUMERATOR(maj, min)
 #endif
 
-#if !defined(GLIB_DISABLE_DEPRECATION_WARNINGS) && \
-    (G_GNUC_CHECK_VERSION(3, 1) ||                 \
-     (defined (__clang_major__) && (__clang_major__ > 3 || (__clang_major__ == 3 && __clang_minor__ >= 0))))
+#if !defined(GLIB_DISABLE_DEPRECATION_WARNINGS) &&                             \
+    (G_GNUC_CHECK_VERSION(3, 1) ||                                             \
+     (defined(__clang_major__) &&                                              \
+      (__clang_major__ > 3 ||                                                  \
+       (__clang_major__ == 3 && __clang_minor__ >= 0))))
 #define GLIB_DEPRECATED_TYPE G_DEPRECATED
 #define GLIB_DEPRECATED_TYPE_FOR(f) G_DEPRECATED_FOR(f)
-#define GLIB_UNAVAILABLE_TYPE(maj,min) G_UNAVAILABLE(maj,min)
+#define GLIB_UNAVAILABLE_TYPE(maj, min) G_UNAVAILABLE(maj, min)
 #else
 #define GLIB_DEPRECATED_TYPE
 #define GLIB_DEPRECATED_TYPE_FOR(f)
-#define GLIB_UNAVAILABLE_TYPE(maj,min)
+#define GLIB_UNAVAILABLE_TYPE(maj, min)
 #endif
 
 #ifndef __GI_SCANNER__
@@ -1361,51 +1410,81 @@ typedef int GError;
 /* these macros are private; note that gstdio.h also uses _GLIB_CLEANUP */
 #define _GLIB_AUTOPTR_FUNC_NAME(TypeName) glib_autoptr_cleanup_##TypeName
 #define _GLIB_AUTOPTR_CLEAR_FUNC_NAME(TypeName) glib_autoptr_clear_##TypeName
-#define _GLIB_AUTOPTR_TYPENAME(TypeName)  TypeName##_autoptr
-#define _GLIB_AUTOPTR_LIST_FUNC_NAME(TypeName) glib_listautoptr_cleanup_##TypeName
-#define _GLIB_AUTOPTR_LIST_TYPENAME(TypeName)  TypeName##_listautoptr
-#define _GLIB_AUTOPTR_SLIST_FUNC_NAME(TypeName) glib_slistautoptr_cleanup_##TypeName
-#define _GLIB_AUTOPTR_SLIST_TYPENAME(TypeName)  TypeName##_slistautoptr
-#define _GLIB_AUTOPTR_QUEUE_FUNC_NAME(TypeName) glib_queueautoptr_cleanup_##TypeName
-#define _GLIB_AUTOPTR_QUEUE_TYPENAME(TypeName)  TypeName##_queueautoptr
-#define _GLIB_AUTO_FUNC_NAME(TypeName)    glib_auto_cleanup_##TypeName
-#define _GLIB_CLEANUP(func)               __attribute__((cleanup(func)))
-#define _GLIB_DEFINE_AUTOPTR_CLEANUP_FUNCS(TypeName, ParentName, cleanup) \
-  typedef TypeName *_GLIB_AUTOPTR_TYPENAME(TypeName);                                                           \
-  typedef GList *_GLIB_AUTOPTR_LIST_TYPENAME(TypeName);                                                         \
-  typedef GSList *_GLIB_AUTOPTR_SLIST_TYPENAME(TypeName);                                                       \
-  typedef GQueue *_GLIB_AUTOPTR_QUEUE_TYPENAME(TypeName);                                                       \
-  G_GNUC_BEGIN_IGNORE_DEPRECATIONS                                                                              \
-  static G_GNUC_UNUSED inline void _GLIB_AUTOPTR_CLEAR_FUNC_NAME(TypeName) (TypeName *_ptr)                     \
-    { if (_ptr) (cleanup) ((ParentName *) _ptr); }                                                              \
-  static G_GNUC_UNUSED inline void _GLIB_AUTOPTR_FUNC_NAME(TypeName) (TypeName **_ptr)                          \
-    { _GLIB_AUTOPTR_CLEAR_FUNC_NAME(TypeName) (*_ptr); }                                                        \
-  static G_GNUC_UNUSED inline void _GLIB_AUTOPTR_LIST_FUNC_NAME(TypeName) (GList **_l)                          \
-    { g_list_free_full (*_l, (GDestroyNotify) (void(*)(void)) cleanup); }                                       \
-  static G_GNUC_UNUSED inline void _GLIB_AUTOPTR_SLIST_FUNC_NAME(TypeName) (GSList **_l)                        \
-    { g_slist_free_full (*_l, (GDestroyNotify) (void(*)(void)) cleanup); }                                      \
-  static G_GNUC_UNUSED inline void _GLIB_AUTOPTR_QUEUE_FUNC_NAME(TypeName) (GQueue **_q)                        \
-    { if (*_q) g_queue_free_full (*_q, (GDestroyNotify) (void(*)(void)) cleanup); }                             \
+#define _GLIB_AUTOPTR_TYPENAME(TypeName) TypeName##_autoptr
+#define _GLIB_AUTOPTR_LIST_FUNC_NAME(TypeName)                                 \
+  glib_listautoptr_cleanup_##TypeName
+#define _GLIB_AUTOPTR_LIST_TYPENAME(TypeName) TypeName##_listautoptr
+#define _GLIB_AUTOPTR_SLIST_FUNC_NAME(TypeName)                                \
+  glib_slistautoptr_cleanup_##TypeName
+#define _GLIB_AUTOPTR_SLIST_TYPENAME(TypeName) TypeName##_slistautoptr
+#define _GLIB_AUTOPTR_QUEUE_FUNC_NAME(TypeName)                                \
+  glib_queueautoptr_cleanup_##TypeName
+#define _GLIB_AUTOPTR_QUEUE_TYPENAME(TypeName) TypeName##_queueautoptr
+#define _GLIB_AUTO_FUNC_NAME(TypeName) glib_auto_cleanup_##TypeName
+#define _GLIB_CLEANUP(func) __attribute__((cleanup(func)))
+#define _GLIB_DEFINE_AUTOPTR_CLEANUP_FUNCS(TypeName, ParentName, cleanup)      \
+  typedef TypeName *_GLIB_AUTOPTR_TYPENAME(TypeName);                          \
+  typedef GList *_GLIB_AUTOPTR_LIST_TYPENAME(TypeName);                        \
+  typedef GSList *_GLIB_AUTOPTR_SLIST_TYPENAME(TypeName);                      \
+  typedef GQueue *_GLIB_AUTOPTR_QUEUE_TYPENAME(TypeName);                      \
+  G_GNUC_BEGIN_IGNORE_DEPRECATIONS                                             \
+  static G_GNUC_UNUSED inline void _GLIB_AUTOPTR_CLEAR_FUNC_NAME(TypeName)(    \
+      TypeName * _ptr) {                                                       \
+    if (_ptr)                                                                  \
+      (cleanup)((ParentName *)_ptr);                                           \
+  }                                                                            \
+  static G_GNUC_UNUSED inline void _GLIB_AUTOPTR_FUNC_NAME(TypeName)(          \
+      TypeName * *_ptr) {                                                      \
+    _GLIB_AUTOPTR_CLEAR_FUNC_NAME(TypeName)(*_ptr);                            \
+  }                                                                            \
+  static G_GNUC_UNUSED inline void _GLIB_AUTOPTR_LIST_FUNC_NAME(TypeName)(     \
+      GList * *_l) {                                                           \
+    g_list_free_full(*_l, (GDestroyNotify)(void (*)(void))cleanup);            \
+  }                                                                            \
+  static G_GNUC_UNUSED inline void _GLIB_AUTOPTR_SLIST_FUNC_NAME(TypeName)(    \
+      GSList * *_l) {                                                          \
+    g_slist_free_full(*_l, (GDestroyNotify)(void (*)(void))cleanup);           \
+  }                                                                            \
+  static G_GNUC_UNUSED inline void _GLIB_AUTOPTR_QUEUE_FUNC_NAME(TypeName)(    \
+      GQueue * *_q) {                                                          \
+    if (*_q)                                                                   \
+      g_queue_free_full(*_q, (GDestroyNotify)(void (*)(void))cleanup);         \
+  }                                                                            \
   G_GNUC_END_IGNORE_DEPRECATIONS
-#define _GLIB_DEFINE_AUTOPTR_CHAINUP(ModuleObjName, ParentName) \
-  _GLIB_DEFINE_AUTOPTR_CLEANUP_FUNCS(ModuleObjName, ParentName, _GLIB_AUTOPTR_CLEAR_FUNC_NAME(ParentName))
-
+#define _GLIB_DEFINE_AUTOPTR_CHAINUP(ModuleObjName, ParentName)                \
+  _GLIB_DEFINE_AUTOPTR_CLEANUP_FUNCS(                                          \
+      ModuleObjName, ParentName, _GLIB_AUTOPTR_CLEAR_FUNC_NAME(ParentName))
 
 /* these macros are API */
-#define G_DEFINE_AUTOPTR_CLEANUP_FUNC(TypeName, func) \
+#define G_DEFINE_AUTOPTR_CLEANUP_FUNC(TypeName, func)                          \
   _GLIB_DEFINE_AUTOPTR_CLEANUP_FUNCS(TypeName, TypeName, func)
-#define G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(TypeName, func) \
-  G_GNUC_BEGIN_IGNORE_DEPRECATIONS                                                                              \
-  static G_GNUC_UNUSED inline void _GLIB_AUTO_FUNC_NAME(TypeName) (TypeName *_ptr) { (func) (_ptr); }                         \
+#define G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(TypeName, func)                       \
+  G_GNUC_BEGIN_IGNORE_DEPRECATIONS                                             \
+  static G_GNUC_UNUSED inline void _GLIB_AUTO_FUNC_NAME(TypeName)(TypeName *   \
+                                                                  _ptr) {      \
+    (func)(_ptr);                                                              \
+  }                                                                            \
   G_GNUC_END_IGNORE_DEPRECATIONS
-#define G_DEFINE_AUTO_CLEANUP_FREE_FUNC(TypeName, func, none) \
-  G_GNUC_BEGIN_IGNORE_DEPRECATIONS                                                                              \
-  static G_GNUC_UNUSED inline void _GLIB_AUTO_FUNC_NAME(TypeName) (TypeName *_ptr) { if (*_ptr != none) (func) (*_ptr); }     \
+#define G_DEFINE_AUTO_CLEANUP_FREE_FUNC(TypeName, func, none)                  \
+  G_GNUC_BEGIN_IGNORE_DEPRECATIONS                                             \
+  static G_GNUC_UNUSED inline void _GLIB_AUTO_FUNC_NAME(TypeName)(TypeName *   \
+                                                                  _ptr) {      \
+    if (*_ptr != none)                                                         \
+      (func)(*_ptr);                                                           \
+  }                                                                            \
   G_GNUC_END_IGNORE_DEPRECATIONS
-#define g_autoptr(TypeName) _GLIB_CLEANUP(_GLIB_AUTOPTR_FUNC_NAME(TypeName)) _GLIB_AUTOPTR_TYPENAME(TypeName)
-#define g_autolist(TypeName) _GLIB_CLEANUP(_GLIB_AUTOPTR_LIST_FUNC_NAME(TypeName)) _GLIB_AUTOPTR_LIST_TYPENAME(TypeName)
-#define g_autoslist(TypeName) _GLIB_CLEANUP(_GLIB_AUTOPTR_SLIST_FUNC_NAME(TypeName)) _GLIB_AUTOPTR_SLIST_TYPENAME(TypeName)
-#define g_autoqueue(TypeName) _GLIB_CLEANUP(_GLIB_AUTOPTR_QUEUE_FUNC_NAME(TypeName)) _GLIB_AUTOPTR_QUEUE_TYPENAME(TypeName)
+#define g_autoptr(TypeName)                                                    \
+  _GLIB_CLEANUP(_GLIB_AUTOPTR_FUNC_NAME(TypeName))                             \
+  _GLIB_AUTOPTR_TYPENAME(TypeName)
+#define g_autolist(TypeName)                                                   \
+  _GLIB_CLEANUP(_GLIB_AUTOPTR_LIST_FUNC_NAME(TypeName))                        \
+  _GLIB_AUTOPTR_LIST_TYPENAME(TypeName)
+#define g_autoslist(TypeName)                                                  \
+  _GLIB_CLEANUP(_GLIB_AUTOPTR_SLIST_FUNC_NAME(TypeName))                       \
+  _GLIB_AUTOPTR_SLIST_TYPENAME(TypeName)
+#define g_autoqueue(TypeName)                                                  \
+  _GLIB_CLEANUP(_GLIB_AUTOPTR_QUEUE_FUNC_NAME(TypeName))                       \
+  _GLIB_AUTOPTR_QUEUE_TYPENAME(TypeName)
 #define g_auto(TypeName) _GLIB_CLEANUP(_GLIB_AUTO_FUNC_NAME(TypeName)) TypeName
 #define g_autofree _GLIB_CLEANUP(g_autoptr_cleanup_generic_gfree)
 
@@ -1443,8 +1522,8 @@ typedef int GError;
  *
  * Since: 2.64
  */
-#define G_SIZEOF_MEMBER(struct_type, member) \
-    GLIB_AVAILABLE_MACRO_IN_2_64 \
-    sizeof (((struct_type *) 0)->member)
+#define G_SIZEOF_MEMBER(struct_type, member)                                   \
+  GLIB_AVAILABLE_MACRO_IN_2_64                                                 \
+  sizeof(((struct_type *)0)->member)
 
 #endif /* __G_MACROS_H__ */

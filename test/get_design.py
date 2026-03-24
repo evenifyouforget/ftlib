@@ -10,7 +10,8 @@ import os
 import tempfile
 from get_ftlib_dir import get_ftlib_dir
 
-DISABLE_CACHE = 'DISABLE_CACHE'
+DISABLE_CACHE = "DISABLE_CACHE"
+
 
 class fcsim_piece_types(Enum):
     FCSIM_STATIC_RECT = 0
@@ -25,6 +26,7 @@ class fcsim_piece_types(Enum):
     FCSIM_WATER = 9
     FCSIM_WOOD = 10
 
+
 class fcxml_piece_types(Enum):
     StaticRectangle = 0
     StaticCircle = 1
@@ -38,16 +40,33 @@ class fcxml_piece_types(Enum):
     HollowRod = 9
     SolidRod = 10
 
+
 class XMLBadDataWarning(UserWarning):
     """
     Raised when the XML is valid XML but has missing or invalid data in the context the XML data is meant for
     """
+
     pass
 
-FCPieceStruct = namedtuple('FCPieceStruct', ['type_id', 'piece_id', 'x', 'y', 'w', 'h', 'angle', 'joints'])
-FCDesignStruct = namedtuple('FCDesignStruct', ['name', 'base_level_id', 'goal_pieces', 'design_pieces', 'level_pieces', 'build_area', 'goal_area'])
+
+FCPieceStruct = namedtuple(
+    "FCPieceStruct", ["type_id", "piece_id", "x", "y", "w", "h", "angle", "joints"]
+)
+FCDesignStruct = namedtuple(
+    "FCDesignStruct",
+    [
+        "name",
+        "base_level_id",
+        "goal_pieces",
+        "design_pieces",
+        "level_pieces",
+        "build_area",
+        "goal_area",
+    ],
+)
 
 fcsim_strtod_query_server = None
+
 
 def fcsim_strtod_query_server_clear():
     """
@@ -57,6 +76,7 @@ def fcsim_strtod_query_server_clear():
     fcsim_strtod_query_server.kill()
     fcsim_strtod_query_server = None
 
+
 def fcsim_strtod(istr):
     """
     Convert a string to double using the janky and slightly incorrect method.
@@ -65,14 +85,17 @@ def fcsim_strtod(istr):
     """
     global fcsim_strtod_query_server
     if not fcsim_strtod_query_server:
-        exec_path = get_ftlib_dir() / 'bin' / 'fcsim_strtod'
+        exec_path = get_ftlib_dir() / "bin" / "fcsim_strtod"
         command = [exec_path]
-        fcsim_strtod_query_server = subprocess.Popen(command, text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    fcsim_strtod_query_server.stdin.write(istr + '\n')
+        fcsim_strtod_query_server = subprocess.Popen(
+            command, text=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE
+        )
+    fcsim_strtod_query_server.stdin.write(istr + "\n")
     fcsim_strtod_query_server.stdin.flush()
     stdout = fcsim_strtod_query_server.stdout.readline()
     x_as_int = int(stdout.strip())
     return struct.unpack("d", struct.pack("Q", x_as_int))[0]
+
 
 def retrieveLevel(levelId, is_design=False, cache=None):
     # try to get it from cache first
@@ -81,9 +104,9 @@ def retrieveLevel(levelId, is_design=False, cache=None):
         if cache:
             cache_dir = Path(cache)
         else:
-            cache_dir = get_ftlib_dir() / '.fc_design_cache'
+            cache_dir = get_ftlib_dir() / ".fc_design_cache"
         cache_dir.mkdir(parents=True, exist_ok=True)
-        design_uid = f'D{levelId}' if is_design else f'L{levelId}'
+        design_uid = f"D{levelId}" if is_design else f"L{levelId}"
         design_file_path = cache_dir / design_uid
         if design_file_path.is_file():
             with open(design_file_path) as file:
@@ -93,13 +116,13 @@ def retrieveLevel(levelId, is_design=False, cache=None):
         URL = "http://www.fantasticcontraption.com/retrieveLevel.php"
 
         # defining a params dict for the parameters to be sent to the API
-        PARAMS = {'id' : levelId}
+        PARAMS = {"id": levelId}
 
         if is_design:
-            PARAMS['loadDesign'] = '1'
+            PARAMS["loadDesign"] = "1"
 
         # sending POST request and saving the response as response object
-        r = requests.post(URL, data = PARAMS)
+        r = requests.post(URL, data=PARAMS)
 
         raw_text = r.text
 
@@ -107,7 +130,7 @@ def retrieveLevel(levelId, is_design=False, cache=None):
         if cache != DISABLE_CACHE:
             fd, tmp_path = tempfile.mkstemp(dir=cache_dir)
             try:
-                with os.fdopen(fd, 'w') as f:
+                with os.fdopen(fd, "w") as f:
                     f.write(raw_text)
                 os.replace(tmp_path, design_file_path)
             except:
@@ -118,8 +141,10 @@ def retrieveLevel(levelId, is_design=False, cache=None):
 
     return dom
 
+
 def retrieveDesign(designId):
     return retrieveLevel(designId, is_design=True)
+
 
 def pieceDomToStruct(dom, use_fcsim_strtod=True):
     to_float = fcsim_strtod if use_fcsim_strtod else float
@@ -129,28 +154,44 @@ def pieceDomToStruct(dom, use_fcsim_strtod=True):
         piece_type = getattr(fcxml_piece_types, xml_type)
     except AttributeError:
         piece_type = None
-    if piece_type == fcxml_piece_types.NoSpinWheel and dom.getElementsByTagName("goalBlock")[0].firstChild.toxml() == "true":
+    if (
+        piece_type == fcxml_piece_types.NoSpinWheel
+        and dom.getElementsByTagName("goalBlock")[0].firstChild.toxml() == "true"
+    ):
         piece_type = fcxml_piece_types.FCSIM_GP_CIRC__SPECIAL_CASE
     if piece_type is not None:
         piece_type = piece_type.value
     # get id if present
     piece_id = dom.getAttribute("id")
-    piece_id = int(piece_id) if piece_id is not None and piece_id != '' else None
+    piece_id = int(piece_id) if piece_id is not None and piece_id != "" else None
     # get joints
     joints = []
     if len(dom.getElementsByTagName("joints")) > 0:
-        for joint in dom.getElementsByTagName("joints")[0].getElementsByTagName("jointedTo"):
+        for joint in dom.getElementsByTagName("joints")[0].getElementsByTagName(
+            "jointedTo"
+        ):
             joints.append(int(joint.firstChild.nodeValue))
     # get xywhr
-    x = to_float(dom.getElementsByTagName("position")[0].getElementsByTagName("x")[0].firstChild.nodeValue)
-    y = to_float(dom.getElementsByTagName("position")[0].getElementsByTagName("y")[0].firstChild.nodeValue)
+    x = to_float(
+        dom.getElementsByTagName("position")[0]
+        .getElementsByTagName("x")[0]
+        .firstChild.nodeValue
+    )
+    y = to_float(
+        dom.getElementsByTagName("position")[0]
+        .getElementsByTagName("y")[0]
+        .firstChild.nodeValue
+    )
     w = to_float(dom.getElementsByTagName("width")[0].firstChild.nodeValue)
     h = to_float(dom.getElementsByTagName("height")[0].firstChild.nodeValue)
     angle = 0
-    if(len(dom.getElementsByTagName("rotation")) > 0):
+    if len(dom.getElementsByTagName("rotation")) > 0:
         angle = to_float(dom.getElementsByTagName("rotation")[0].firstChild.nodeValue)
     # static circles and dynamic circles use radius instead of diameter like every other piece. let's fix that
-    use_radius = piece_type in (fcsim_piece_types.FCSIM_STATIC_CIRC.value, fcsim_piece_types.FCSIM_DYNAMIC_CIRC.value)
+    use_radius = piece_type in (
+        fcsim_piece_types.FCSIM_STATIC_CIRC.value,
+        fcsim_piece_types.FCSIM_DYNAMIC_CIRC.value,
+    )
     if use_radius:
         w *= 2
         h *= 2
@@ -164,7 +205,8 @@ def pieceDomToStruct(dom, use_fcsim_strtod=True):
         h=h,
         angle=angle,
         joints=joints,
-        )
+    )
+
 
 def designDomToStruct(dom):
     retrievelevel = dom.firstChild
@@ -176,7 +218,9 @@ def designDomToStruct(dom):
         name = None
     # get level id this design is based on
     try:
-        base_level_id = int(retrievelevel.getElementsByTagName("levelId")[0].firstChild.toxml())
+        base_level_id = int(
+            retrievelevel.getElementsByTagName("levelId")[0].firstChild.toxml()
+        )
     except:
         base_level_id = None
     # get pieces
@@ -184,15 +228,21 @@ def designDomToStruct(dom):
     goal_pieces = []
     design_pieces = []
     for element in level.getElementsByTagName("levelBlocks")[0].childNodes:
-        if element.nodeType == 1: #1 = ELEMENT_NODE
+        if element.nodeType == 1:  # 1 = ELEMENT_NODE
             level_pieces.append(pieceDomToStruct(element))
     for element in level.getElementsByTagName("playerBlocks")[0].childNodes:
-        if element.nodeType == 1: #1 = ELEMENT_NODE
+        if element.nodeType == 1:  # 1 = ELEMENT_NODE
             is_goal = False
             try:
-                is_goal = element.getElementsByTagName("goalBlock")[0].firstChild.toxml() == "true"
+                is_goal = (
+                    element.getElementsByTagName("goalBlock")[0].firstChild.toxml()
+                    == "true"
+                )
             except IndexError as err:
-                warnings.warn(f'Will assume piece is not goal piece due to error: {err}', XMLBadDataWarning)
+                warnings.warn(
+                    f"Will assume piece is not goal piece due to error: {err}",
+                    XMLBadDataWarning,
+                )
             (design_pieces, goal_pieces)[is_goal].append(pieceDomToStruct(element))
     # get areas
     build_area = pieceDomToStruct(level.getElementsByTagName("start")[0])
@@ -206,4 +256,4 @@ def designDomToStruct(dom):
         design_pieces=design_pieces,
         build_area=build_area,
         goal_area=goal_area,
-        )
+    )

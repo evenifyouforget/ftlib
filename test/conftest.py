@@ -1,30 +1,31 @@
 import datetime
 import json
 import pytest
-from pathlib import Path
 import re
 import subprocess
 from get_ftlib_dir import get_ftlib_dir
 
 # assign (probably) unique and sequential ID to current run
 now = datetime.datetime.now(tz=datetime.timezone.utc)
-current_run_uid = now.strftime('%Y-%m-%d-%H-%M-%S')
+current_run_uid = now.strftime("%Y-%m-%d-%H-%M-%S")
 
 current_run_results = {}
 
 # supported terminal colors, and at what pass rate we apply each color
 pass_rate_colors = [
-    ('red', 0),
-    ('yellow', 0.5),
-    ('green', 0.8),
-    ('cyan', 0.95),
-    ('blue', 1)
-    ]
+    ("red", 0),
+    ("yellow", 0.5),
+    ("green", 0.8),
+    ("cyan", 0.95),
+    ("blue", 1),
+]
+
 
 def abbreviate_list(lines, max_lines=3):
     if len(lines) > max_lines:
-        return lines[:max_lines] + [f'... ({len(lines) - max_lines} more lines)']
+        return lines[:max_lines] + [f"... ({len(lines) - max_lines} more lines)"]
     return lines
+
 
 def fix_text_table_alignment(table):
     if not table:
@@ -33,14 +34,29 @@ def fix_text_table_alignment(table):
     for column_i in range(num_columns):
         max_len = max(len(row[column_i]) for row in table)
         for row in table:
-            row[column_i] += ' ' * (max_len - len(row[column_i]))
+            row[column_i] += " " * (max_len - len(row[column_i]))
+
 
 def pytest_addoption(parser):
-    parser.addoption("--all", action="store_true", help="Run all tests, and disable global tick limit. (slow)")
-    parser.addoption("--max-ticks", type=int, default=None, help="Override max ticks limit per design. Has priority over --all")
-    parser.addoption("--classic", action="store_true", help="Switch to old behaviour of passing on incomplete tests, rather than skipping")
+    parser.addoption(
+        "--all",
+        action="store_true",
+        help="Run all tests, and disable global tick limit. (slow)",
+    )
+    parser.addoption(
+        "--max-ticks",
+        type=int,
+        default=None,
+        help="Override max ticks limit per design. Has priority over --all",
+    )
+    parser.addoption(
+        "--classic",
+        action="store_true",
+        help="Switch to old behaviour of passing on incomplete tests, rather than skipping",
+    )
 
-@pytest.fixture(scope='session')
+
+@pytest.fixture(scope="session")
 def global_max_ticks(pytestconfig):
     use_all = pytestconfig.getoption("--all")
     max_ticks_override = pytestconfig.getoption("--max-ticks")
@@ -50,23 +66,28 @@ def global_max_ticks(pytestconfig):
         return None
     return 2000
 
-@pytest.fixture(scope='session')
+
+@pytest.fixture(scope="session")
 def use_classic_timeout(pytestconfig):
-    return pytestconfig.getoption('--classic')
+    return pytestconfig.getoption("--classic")
+
 
 def pytest_sessionstart(session):
     # xdist workers re-run this hook; skip the build there since the controller already ran it
-    if hasattr(session.config, 'workerinput'):
+    if hasattr(session.config, "workerinput"):
         return
     root_dir = get_ftlib_dir()
     # sanity check that this looks like the root dir for ftlib
     root_children = set(child.name for child in root_dir.iterdir())
-    if not {'cli_adapter', 'example', 'fcsim', 'src', 'test'} <= root_children:
-        raise RuntimeError(f'ftlib tests should be run from the root directory, and the current working directory seems wrong: {root_dir} with children {root_children}')
+    if not {"cli_adapter", "example", "fcsim", "src", "test"} <= root_children:
+        raise RuntimeError(
+            f"ftlib tests should be run from the root directory, and the current working directory seems wrong: {root_dir} with children {root_children}"
+        )
     # build once the binary we will run for every test
-    fcsim_dir = root_dir / 'fcsim'
-    subprocess.check_call(['scons'])
-    subprocess.check_call(['scons'], cwd=fcsim_dir)
+    fcsim_dir = root_dir / "fcsim"
+    subprocess.check_call(["scons"])
+    subprocess.check_call(["scons"], cwd=fcsim_dir)
+
 
 def pytest_runtest_logreport(report):
     """
@@ -79,11 +100,11 @@ def pytest_runtest_logreport(report):
 
         # Extract the function name, stripping any parameter part
         function_name = report.nodeid.split("::")[-1]
-        params = ''
-        if '[' in function_name:
+        params = ""
+        if "[" in function_name:
             function_name, params = function_name.split("[")
-        params = params[:-1] # remove last ]
-        design_key = re.search('[DL]\\d{6,8}', params)
+        params = params[:-1]  # remove last ]
+        design_key = re.search("[DL]\\d{6,8}", params)
 
         if design_key:
             # design acts as a unique key resistant to other internal changes
@@ -95,6 +116,7 @@ def pytest_runtest_logreport(report):
         # will be "passed" or "failed" or "skipped"
         current_run_results[function_name][params] = report.outcome
 
+
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     """
     Add a section to the terminal summary report.
@@ -102,16 +124,16 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
     You may still need to scroll up a bit to see the output.
     """
     # write results
-    live_results_dir = get_ftlib_dir() / 'test' / 'history' / 'live'
+    live_results_dir = get_ftlib_dir() / "test" / "history" / "live"
     live_results_dir.mkdir(parents=True, exist_ok=True)
-    with open(live_results_dir / f'{current_run_uid}.json', 'w') as file:
+    with open(live_results_dir / f"{current_run_uid}.json", "w") as file:
         json.dump(current_run_results, file, indent=2, sort_keys=True)
 
     # get reference results if available
     reference_run_results = {}
-    reference_run_dir = get_ftlib_dir() / 'test' / 'history' / 'reference'
+    reference_run_dir = get_ftlib_dir() / "test" / "history" / "reference"
     reference_run_dir.mkdir(parents=True, exist_ok=True)
-    reference_run_paths = sorted(reference_run_dir.glob('*.json'))
+    reference_run_paths = sorted(reference_run_dir.glob("*.json"))
     if reference_run_paths:
         latest_reference_run_path = reference_run_paths[-1]
         with open(latest_reference_run_path) as file:
@@ -128,8 +150,8 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         passed = 0
         failed = 0
         for params, result in per_test_results.items():
-            passed += result == 'passed'
-            failed += result == 'failed'
+            passed += result == "passed"
+            failed += result == "failed"
         total = passed + failed
 
         if total == 0:
@@ -139,8 +161,8 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         row.append(function_name)
 
         pass_rate = passed / total
-        row.append(f'{pass_rate:.2%}')
-        row.append(f'({passed}/{total})')
+        row.append(f"{pass_rate:.2%}")
+        row.append(f"({passed}/{total})")
 
         color = None
         for possible_color, required_pass_rate in pass_rate_colors:
@@ -152,74 +174,114 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
 
     fix_text_table_alignment(table)
 
-    for color, row, (function_name, per_test_results) in zip(colors, table, current_run_results_list):
+    for color, row, (function_name, per_test_results) in zip(
+        colors, table, current_run_results_list
+    ):
         settings = {color: True}
-        terminalreporter.write_line(' '.join(row), **settings)
+        terminalreporter.write_line(" ".join(row), **settings)
 
         # add regression table below
         ref_per_test_results = reference_run_results.get(function_name, {})
         pf_table = [[0] * 4 for _ in range(3)]
         for params, result in per_test_results.items():
             ref_result = ref_per_test_results.get(params, None)
-            y = 0 if result == 'passed' else 1 if result == 'failed' else 2 if result == 'skipped' else None
-            x = 0 if ref_result == 'passed' else 1 if ref_result == 'failed' else 2 if ref_result == 'skipped' else 3
+            y = (
+                0
+                if result == "passed"
+                else 1
+                if result == "failed"
+                else 2
+                if result == "skipped"
+                else None
+            )
+            x = (
+                0
+                if ref_result == "passed"
+                else 1
+                if ref_result == "failed"
+                else 2
+                if ref_result == "skipped"
+                else 3
+            )
             if y is not None:
                 pf_table[y][x] += 1
         regression_table = []
-        regression_table.append(['Now \\ Ref', 'Pass', 'Fail', 'Skip', 'No data'])
-        regression_table.append(['Pass'] + list(map(str, pf_table[0])))
-        regression_table.append(['Fail'] + list(map(str, pf_table[1])))
-        regression_table.append(['Skip'] + list(map(str, pf_table[2])))
+        regression_table.append(["Now \\ Ref", "Pass", "Fail", "Skip", "No data"])
+        regression_table.append(["Pass"] + list(map(str, pf_table[0])))
+        regression_table.append(["Fail"] + list(map(str, pf_table[1])))
+        regression_table.append(["Skip"] + list(map(str, pf_table[2])))
         fix_text_table_alignment(regression_table)
         caused_regression = pf_table[1][0] != 0
-        regression_color = 'red' if caused_regression else color
+        regression_color = "red" if caused_regression else color
         for regression_row in regression_table:
             regression_settings = {regression_color: True}
-            terminalreporter.write_line(' '.join(regression_row), **regression_settings)
-    
+            terminalreporter.write_line(" ".join(regression_row), **regression_settings)
+
     # backend comparison between test_single_design (ftlib) and test_single_design_fcsim
-    if 'test_single_design' in current_run_results and 'test_single_design_fcsim' in current_run_results:
+    if (
+        "test_single_design" in current_run_results
+        and "test_single_design_fcsim" in current_run_results
+    ):
         terminalreporter.write_sep("=", "backend comparison: ftlib vs fcsim")
-        
-        ftlib_results = current_run_results['test_single_design']
-        fcsim_results = current_run_results['test_single_design_fcsim']
-        
+
+        ftlib_results = current_run_results["test_single_design"]
+        fcsim_results = current_run_results["test_single_design_fcsim"]
+
         # build comparison table
         backend_table = [[0] * 3 for _ in range(3)]
         all_params = set(ftlib_results.keys()) | set(fcsim_results.keys())
-        
+
         # also build disagreements list
         ftlib_better = []
         fcsim_better = []
-        
+
         for params in all_params:
             ftlib_result = ftlib_results.get(params, None)
             fcsim_result = fcsim_results.get(params, None)
-            y = 0 if ftlib_result == 'passed' else 1 if ftlib_result == 'failed' else 2 if ftlib_result == 'skipped' else None
-            x = 0 if fcsim_result == 'passed' else 1 if fcsim_result == 'failed' else 2 if fcsim_result == 'skipped' else None
+            y = (
+                0
+                if ftlib_result == "passed"
+                else 1
+                if ftlib_result == "failed"
+                else 2
+                if ftlib_result == "skipped"
+                else None
+            )
+            x = (
+                0
+                if fcsim_result == "passed"
+                else 1
+                if fcsim_result == "failed"
+                else 2
+                if fcsim_result == "skipped"
+                else None
+            )
             if y is not None and x is not None:
                 backend_table[y][x] += 1
                 if x != y and x + y == 1:
-                    [ftlib_better, fcsim_better][y].append(f'{params} - ftlib {ftlib_result}, fcsim {fcsim_result}')
-        
+                    [ftlib_better, fcsim_better][y].append(
+                        f"{params} - ftlib {ftlib_result}, fcsim {fcsim_result}"
+                    )
+
         comparison_table = []
-        comparison_table.append(['ftlib \\ fcsim', 'Pass', 'Fail', 'Skip'])
-        comparison_table.append(['Pass'] + list(map(str, backend_table[0])))
-        comparison_table.append(['Fail'] + list(map(str, backend_table[1])))
-        comparison_table.append(['Skip'] + list(map(str, backend_table[2])))
+        comparison_table.append(["ftlib \\ fcsim", "Pass", "Fail", "Skip"])
+        comparison_table.append(["Pass"] + list(map(str, backend_table[0])))
+        comparison_table.append(["Fail"] + list(map(str, backend_table[1])))
+        comparison_table.append(["Skip"] + list(map(str, backend_table[2])))
         fix_text_table_alignment(comparison_table)
-        
+
         # determine color based on backend agreement
-        backend_color = [['green', 'cyan'],
-                         ['yellow', 'red']][bool(backend_table[1][0])][bool(backend_table[0][1])]
-        
+        backend_color = [["green", "cyan"], ["yellow", "red"]][
+            bool(backend_table[1][0])
+        ][bool(backend_table[0][1])]
+
         for comp_row in comparison_table:
-            terminalreporter.write_line(' '.join(comp_row), **{backend_color: True})
-        
+            terminalreporter.write_line(" ".join(comp_row), **{backend_color: True})
+
         if ftlib_better:
-            print('### Tests where ftlib did better')
-            print('\n'.join(abbreviate_list(ftlib_better)))
-        
+            print("### Tests where ftlib did better")
+            print("\n".join(abbreviate_list(ftlib_better)))
+
         if fcsim_better:
-            print('### Tests where fcsim did better')
-            print('\n'.join(abbreviate_list(fcsim_better)))
+            print("### Tests where fcsim did better")
+            print("\n".join(abbreviate_list(fcsim_better)))
