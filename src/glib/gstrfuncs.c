@@ -28,17 +28,16 @@
  * MT safe
  */
 
-//#include "config.h"
+// #include "config.h"
 
+#include <errno.h>
+#include <locale.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <locale.h>
 #include <string.h>
-#include <locale.h>
-#include <errno.h>
-//#include <garray.h>
-#include <ctype.h>              /* For tolower() */
+// #include <garray.h>
+#include <ctype.h> /* For tolower() */
 
 #ifdef HAVE_XLOCALE_H
 /* Needed on BSD/OS X for e.g. strtod_l */
@@ -53,10 +52,9 @@
 
 #include "gstrfuncs.h"
 
-//#include "gprintf.h"
-//#include "gprintfint.h"
-//#include "glibintl.h"
-
+// #include "gprintf.h"
+// #include "gprintfint.h"
+// #include "glibintl.h"
 
 /**
  * SECTION:string_utils
@@ -297,294 +295,261 @@
  * The standard delimiters, used in g_strdelimit().
  */
 
- static const guint16 ascii_table_data[256] = {
-   0x004, 0x004, 0x004, 0x004, 0x004, 0x004, 0x004, 0x004,
-   0x004, 0x104, 0x104, 0x004, 0x104, 0x104, 0x004, 0x004,
-   0x004, 0x004, 0x004, 0x004, 0x004, 0x004, 0x004, 0x004,
-   0x004, 0x004, 0x004, 0x004, 0x004, 0x004, 0x004, 0x004,
-   0x140, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0,
-   0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0,
-   0x459, 0x459, 0x459, 0x459, 0x459, 0x459, 0x459, 0x459,
-   0x459, 0x459, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0,
-   0x0d0, 0x653, 0x653, 0x653, 0x653, 0x653, 0x653, 0x253,
-   0x253, 0x253, 0x253, 0x253, 0x253, 0x253, 0x253, 0x253,
-   0x253, 0x253, 0x253, 0x253, 0x253, 0x253, 0x253, 0x253,
-   0x253, 0x253, 0x253, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0,
-   0x0d0, 0x473, 0x473, 0x473, 0x473, 0x473, 0x473, 0x073,
-   0x073, 0x073, 0x073, 0x073, 0x073, 0x073, 0x073, 0x073,
-   0x073, 0x073, 0x073, 0x073, 0x073, 0x073, 0x073, 0x073,
-   0x073, 0x073, 0x073, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x004
-   /* the upper 128 are all zeroes */
- };
+static const guint16 ascii_table_data[256] = {
+    0x004, 0x004, 0x004, 0x004, 0x004, 0x004, 0x004, 0x004, 0x004, 0x104, 0x104,
+    0x004, 0x104, 0x104, 0x004, 0x004, 0x004, 0x004, 0x004, 0x004, 0x004, 0x004,
+    0x004, 0x004, 0x004, 0x004, 0x004, 0x004, 0x004, 0x004, 0x004, 0x004, 0x140,
+    0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0,
+    0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x459, 0x459, 0x459, 0x459, 0x459, 0x459, 0x459,
+    0x459, 0x459, 0x459, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x653,
+    0x653, 0x653, 0x653, 0x653, 0x653, 0x253, 0x253, 0x253, 0x253, 0x253, 0x253,
+    0x253, 0x253, 0x253, 0x253, 0x253, 0x253, 0x253, 0x253, 0x253, 0x253, 0x253,
+    0x253, 0x253, 0x253, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x473, 0x473,
+    0x473, 0x473, 0x473, 0x473, 0x073, 0x073, 0x073, 0x073, 0x073, 0x073, 0x073,
+    0x073, 0x073, 0x073, 0x073, 0x073, 0x073, 0x073, 0x073, 0x073, 0x073, 0x073,
+    0x073, 0x073, 0x0d0, 0x0d0, 0x0d0, 0x0d0, 0x004
+    /* the upper 128 are all zeroes */
+};
 
- const guint16 * const g_ascii_table = ascii_table_data;
+const guint16 *const g_ascii_table = ascii_table_data;
 
- gdouble
- g_ascii_strtod (const gchar *nptr,
-                 gchar      **endptr)
- {
- #if defined(USE_XLOCALE) && defined(HAVE_STRTOD_L)
+gdouble g_ascii_strtod(const gchar *nptr, gchar **endptr) {
+#if defined(USE_XLOCALE) && defined(HAVE_STRTOD_L)
 
-   g_return_val_if_fail (nptr != NULL, 0);
+  g_return_val_if_fail(nptr != NULL, 0);
 
-   errno = 0;
+  errno = 0;
 
-   return strtod_l (nptr, endptr, get_C_locale ());
+  return strtod_l(nptr, endptr, get_C_locale());
 
- #else
+#else
 
-   gchar *fail_pos;
-   gdouble val;
- #ifndef __BIONIC__
-   struct lconv *locale_data;
- #endif
-   const char *decimal_point;
-   gsize decimal_point_len;
-   const char *p, *decimal_point_pos;
-   const char *end = NULL; /* Silence gcc */
-   int strtod_errno;
+  gchar *fail_pos;
+  gdouble val;
+#ifndef __BIONIC__
+  struct lconv *locale_data;
+#endif
+  const char *decimal_point;
+  gsize decimal_point_len;
+  const char *p, *decimal_point_pos;
+  const char *end = NULL; /* Silence gcc */
+  int strtod_errno;
 
-   g_return_val_if_fail (nptr != NULL, 0);
+  g_return_val_if_fail(nptr != NULL, 0);
 
-   fail_pos = NULL;
+  fail_pos = NULL;
 
- #ifndef __BIONIC__
-   locale_data = localeconv ();
-   decimal_point = locale_data->decimal_point;
-   decimal_point_len = strlen (decimal_point);
- #else
-   decimal_point = ".";
-   decimal_point_len = 1;
- #endif
+#ifndef __BIONIC__
+  locale_data = localeconv();
+  decimal_point = locale_data->decimal_point;
+  decimal_point_len = strlen(decimal_point);
+#else
+  decimal_point = ".";
+  decimal_point_len = 1;
+#endif
 
-   g_assert (decimal_point_len != 0);
+  g_assert(decimal_point_len != 0);
 
-   decimal_point_pos = NULL;
-   end = NULL;
+  decimal_point_pos = NULL;
+  end = NULL;
 
-   if (decimal_point[0] != '.' ||
-       decimal_point[1] != 0)
-     {
-       p = nptr;
-       /* Skip leading space */
-       while (g_ascii_isspace (*p))
-         p++;
+  if (decimal_point[0] != '.' || decimal_point[1] != 0) {
+    p = nptr;
+    /* Skip leading space */
+    while (g_ascii_isspace(*p))
+      p++;
 
-       /* Skip leading optional sign */
-       if (*p == '+' || *p == '-')
-         p++;
+    /* Skip leading optional sign */
+    if (*p == '+' || *p == '-')
+      p++;
 
-       if (p[0] == '0' &&
-           (p[1] == 'x' || p[1] == 'X'))
-         {
-           p += 2;
-           /* HEX - find the (optional) decimal point */
+    if (p[0] == '0' && (p[1] == 'x' || p[1] == 'X')) {
+      p += 2;
+      /* HEX - find the (optional) decimal point */
 
-           while (g_ascii_isxdigit (*p))
-             p++;
+      while (g_ascii_isxdigit(*p))
+        p++;
 
-           if (*p == '.')
-             decimal_point_pos = p++;
+      if (*p == '.')
+        decimal_point_pos = p++;
 
-           while (g_ascii_isxdigit (*p))
-             p++;
+      while (g_ascii_isxdigit(*p))
+        p++;
 
-           if (*p == 'p' || *p == 'P')
-             p++;
-           if (*p == '+' || *p == '-')
-             p++;
-           while (g_ascii_isdigit (*p))
-             p++;
+      if (*p == 'p' || *p == 'P')
+        p++;
+      if (*p == '+' || *p == '-')
+        p++;
+      while (g_ascii_isdigit(*p))
+        p++;
 
-           end = p;
-         }
-       else if (g_ascii_isdigit (*p) || *p == '.')
-         {
-           while (g_ascii_isdigit (*p))
-             p++;
+      end = p;
+    } else if (g_ascii_isdigit(*p) || *p == '.') {
+      while (g_ascii_isdigit(*p))
+        p++;
 
-           if (*p == '.')
-             decimal_point_pos = p++;
+      if (*p == '.')
+        decimal_point_pos = p++;
 
-           while (g_ascii_isdigit (*p))
-             p++;
+      while (g_ascii_isdigit(*p))
+        p++;
 
-           if (*p == 'e' || *p == 'E')
-             p++;
-           if (*p == '+' || *p == '-')
-             p++;
-           while (g_ascii_isdigit (*p))
-             p++;
+      if (*p == 'e' || *p == 'E')
+        p++;
+      if (*p == '+' || *p == '-')
+        p++;
+      while (g_ascii_isdigit(*p))
+        p++;
 
-           end = p;
-         }
-       /* For the other cases, we need not convert the decimal point */
-     }
+      end = p;
+    }
+    /* For the other cases, we need not convert the decimal point */
+  }
 
-   if (decimal_point_pos)
-     {
-       char *copy, *c;
+  if (decimal_point_pos) {
+    char *copy, *c;
 
-       /* We need to convert the '.' to the locale specific decimal point */
-       copy = (char*)g_malloc (end - nptr + 1 + decimal_point_len);
+    /* We need to convert the '.' to the locale specific decimal point */
+    copy = (char *)g_malloc(end - nptr + 1 + decimal_point_len);
 
-       c = copy;
-       memcpy (c, nptr, decimal_point_pos - nptr);
-       c += decimal_point_pos - nptr;
-       memcpy (c, decimal_point, decimal_point_len);
-       c += decimal_point_len;
-       memcpy (c, decimal_point_pos + 1, end - (decimal_point_pos + 1));
-       c += end - (decimal_point_pos + 1);
-       *c = 0;
+    c = copy;
+    memcpy(c, nptr, decimal_point_pos - nptr);
+    c += decimal_point_pos - nptr;
+    memcpy(c, decimal_point, decimal_point_len);
+    c += decimal_point_len;
+    memcpy(c, decimal_point_pos + 1, end - (decimal_point_pos + 1));
+    c += end - (decimal_point_pos + 1);
+    *c = 0;
 
-       errno = 0;
-       val = strtod (copy, &fail_pos);
-       strtod_errno = errno;
+    errno = 0;
+    val = strtod(copy, &fail_pos);
+    strtod_errno = errno;
 
-       if (fail_pos)
-         {
-           if (fail_pos - copy > decimal_point_pos - nptr)
-             fail_pos = (char *)nptr + (fail_pos - copy) - (decimal_point_len - 1);
-           else
-             fail_pos = (char *)nptr + (fail_pos - copy);
-         }
+    if (fail_pos) {
+      if (fail_pos - copy > decimal_point_pos - nptr)
+        fail_pos = (char *)nptr + (fail_pos - copy) - (decimal_point_len - 1);
+      else
+        fail_pos = (char *)nptr + (fail_pos - copy);
+    }
 
-       g_free (copy);
+    g_free(copy);
 
-     }
-   else if (end)
-     {
-       char *copy;
+  } else if (end) {
+    char *copy;
 
-       copy = (char*)g_malloc (end - (char *)nptr + 1);
-       memcpy (copy, nptr, end - nptr);
-       *(copy + (end - (char *)nptr)) = 0;
+    copy = (char *)g_malloc(end - (char *)nptr + 1);
+    memcpy(copy, nptr, end - nptr);
+    *(copy + (end - (char *)nptr)) = 0;
 
-       errno = 0;
-       val = strtod (copy, &fail_pos);
-       strtod_errno = errno;
+    errno = 0;
+    val = strtod(copy, &fail_pos);
+    strtod_errno = errno;
 
-       if (fail_pos)
-         {
-           fail_pos = (char *)nptr + (fail_pos - copy);
-         }
+    if (fail_pos) {
+      fail_pos = (char *)nptr + (fail_pos - copy);
+    }
 
-       g_free (copy);
-     }
-   else
-     {
-       errno = 0;
-       val = strtod (nptr, &fail_pos);
-       strtod_errno = errno;
-     }
+    g_free(copy);
+  } else {
+    errno = 0;
+    val = strtod(nptr, &fail_pos);
+    strtod_errno = errno;
+  }
 
-   if (endptr)
-     *endptr = fail_pos;
+  if (endptr)
+    *endptr = fail_pos;
 
-   errno = strtod_errno;
+  errno = strtod_errno;
 
-   return val;
- #endif
- }
+  return val;
+#endif
+}
 
- gchar *
- g_ascii_dtostr (gchar       *buffer,
-                 gint         buf_len,
-                 gdouble      d)
- {
-   return g_ascii_formatd (buffer, buf_len, "%.17g", d);
- }
+gchar *g_ascii_dtostr(gchar *buffer, gint buf_len, gdouble d) {
+  return g_ascii_formatd(buffer, buf_len, "%.17g", d);
+}
 
- gchar *
- g_ascii_formatd (gchar       *buffer,
-                  gint         buf_len,
-                  const gchar *format,
-                  gdouble      d)
- {
- #ifdef USE_XLOCALE
-   locale_t old_locale;
+gchar *g_ascii_formatd(gchar *buffer, gint buf_len, const gchar *format,
+                       gdouble d) {
+#ifdef USE_XLOCALE
+  locale_t old_locale;
 
-   g_return_val_if_fail (buffer != NULL, NULL);
-   g_return_val_if_fail (format[0] == '%', NULL);
-   g_return_val_if_fail (strpbrk (format + 1, "'l%") == NULL, NULL);
+  g_return_val_if_fail(buffer != NULL, NULL);
+  g_return_val_if_fail(format[0] == '%', NULL);
+  g_return_val_if_fail(strpbrk(format + 1, "'l%") == NULL, NULL);
 
-   old_locale = uselocale (get_C_locale ());
-    _g_snprintf (buffer, buf_len, format, d);
-   uselocale (old_locale);
+  old_locale = uselocale(get_C_locale());
+  _g_snprintf(buffer, buf_len, format, d);
+  uselocale(old_locale);
 
-   return buffer;
- #else
- #ifndef __BIONIC__
-   struct lconv *locale_data;
- #endif
-   const char *decimal_point;
-   gsize decimal_point_len;
-   gchar *p;
-   int rest_len;
-   gchar format_char;
+  return buffer;
+#else
+#ifndef __BIONIC__
+  struct lconv *locale_data;
+#endif
+  const char *decimal_point;
+  gsize decimal_point_len;
+  gchar *p;
+  int rest_len;
+  gchar format_char;
 
-   g_return_val_if_fail (buffer != NULL, NULL);
-   g_return_val_if_fail (format[0] == '%', NULL);
-   g_return_val_if_fail (strpbrk (format + 1, "'l%") == NULL, NULL);
+  g_return_val_if_fail(buffer != NULL, NULL);
+  g_return_val_if_fail(format[0] == '%', NULL);
+  g_return_val_if_fail(strpbrk(format + 1, "'l%") == NULL, NULL);
 
-   format_char = format[strlen (format) - 1];
+  format_char = format[strlen(format) - 1];
 
-   g_return_val_if_fail (format_char == 'e' || format_char == 'E' ||
-                         format_char == 'f' || format_char == 'F' ||
-                         format_char == 'g' || format_char == 'G',
-                         NULL);
+  g_return_val_if_fail(format_char == 'e' || format_char == 'E' ||
+                           format_char == 'f' || format_char == 'F' ||
+                           format_char == 'g' || format_char == 'G',
+                       NULL);
 
-   if (format[0] != '%')
-     return NULL;
+  if (format[0] != '%')
+    return NULL;
 
-   if (strpbrk (format + 1, "'l%"))
-     return NULL;
+  if (strpbrk(format + 1, "'l%"))
+    return NULL;
 
-   if (!(format_char == 'e' || format_char == 'E' ||
-         format_char == 'f' || format_char == 'F' ||
-         format_char == 'g' || format_char == 'G'))
-     return NULL;
+  if (!(format_char == 'e' || format_char == 'E' || format_char == 'f' ||
+        format_char == 'F' || format_char == 'g' || format_char == 'G'))
+    return NULL;
 
-   _g_snprintf (buffer, buf_len, format, d);
+  _g_snprintf(buffer, buf_len, format, d);
 
- #ifndef __BIONIC__
-   locale_data = localeconv ();
-   decimal_point = locale_data->decimal_point;
-   decimal_point_len = strlen (decimal_point);
- #else
-   decimal_point = ".";
-   decimal_point_len = 1;
- #endif
+#ifndef __BIONIC__
+  locale_data = localeconv();
+  decimal_point = locale_data->decimal_point;
+  decimal_point_len = strlen(decimal_point);
+#else
+  decimal_point = ".";
+  decimal_point_len = 1;
+#endif
 
-   g_assert (decimal_point_len != 0);
+  g_assert(decimal_point_len != 0);
 
-   if (decimal_point[0] != '.' ||
-       decimal_point[1] != 0)
-     {
-       p = buffer;
+  if (decimal_point[0] != '.' || decimal_point[1] != 0) {
+    p = buffer;
 
-       while (g_ascii_isspace (*p))
-         p++;
+    while (g_ascii_isspace(*p))
+      p++;
 
-       if (*p == '+' || *p == '-')
-         p++;
+    if (*p == '+' || *p == '-')
+      p++;
 
-       while (isdigit ((guchar)*p))
-         p++;
+    while (isdigit((guchar)*p))
+      p++;
 
-       if (strncmp (p, decimal_point, decimal_point_len) == 0)
-         {
-           *p = '.';
-           p++;
-           if (decimal_point_len > 1)
-             {
-               rest_len = strlen (p + (decimal_point_len - 1));
-               memmove (p, p + (decimal_point_len - 1), rest_len);
-               p[rest_len] = 0;
-             }
-         }
-     }
+    if (strncmp(p, decimal_point, decimal_point_len) == 0) {
+      *p = '.';
+      p++;
+      if (decimal_point_len > 1) {
+        rest_len = strlen(p + (decimal_point_len - 1));
+        memmove(p, p + (decimal_point_len - 1), rest_len);
+        p[rest_len] = 0;
+      }
+    }
+  }
 
-   return buffer;
- #endif
- }
+  return buffer;
+#endif
+}
