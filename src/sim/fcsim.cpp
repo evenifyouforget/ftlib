@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <cmath>
 
 #include "fcsim.h"
 #include "ftmath.h"
@@ -593,13 +594,90 @@ bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
     return ft_sub(bdef.x, bex2) >= area_xa && ft_add(bdef.x, bex2) <= area_xb && ft_sub(bdef.y, bey2) >= area_ya & ft_add(bdef.y, bey2) <= area_yb;
 }
 
+// Flash stores DisplayObject.x/y as integer twips (1/20 unit, truncated toward zero)
+static double flash_twips(double v) {
+	double t = ft_mul(v, 20.0);
+	// out of int32 range (or NaN): Flash stores 0x80000000 twips
+	if (!(t > -2147483648.0 && t < 2147483648.0))
+		return ft_div(-2147483648.0, 20.0);
+	return ft_div((double)(int32_t)t, 20.0);
+}
+
+// Win check as the original game does it: Player.hasWon(), which works on
+// Flash display-list values rather than physics values:
+//
+// - a block's x/y and the goal area's centre are DisplayObject.x/y, stored as
+//   integer twips, while the goal area's width/height are plain Numbers;
+// - goal circles use x +- radius;
+// - goal rects use DisplayObject.width/height minus 4. That is the axis-
+//   aligned bounds of the block's rendered graphic after rotation, whose
+//   corner anchor circles extend it to +-(w/2 + 4) x +-(h/2 + 4). The rotated
+//   bounds are the extent of the four transformed corners, each truncated to
+//   twips.
+//
+// Port of evenifyouforget/fcsim#137 (flash_block_inside in src/arena.cpp).
+bool fcsim_in_goal_area(const fcsim_block_def& bdef, const fcsim_rect& area) {
+	double x = flash_twips(bdef.x);
+	double y = flash_twips(bdef.y);
+	double ex, ey;
+
+	if (block_physics_tbl[bdef.type].circle) {
+		ex = ey = ft_mul(bdef.w, 0.5);
+	} else {
+		// Block.updateFromPhysicsBody: rotation = m_rotation * (180 / pi)
+		double deg = ft_mul(bdef.angle, 180 / 3.141592653589793);
+		// matches FC on the "huge rotation" test levels
+		if (std::abs(deg) >= 32768)
+			deg = -32768;
+		// DisplayObject.rotation keeps the angle in [-180, 180)
+		if (deg == deg) { // not NaN
+			deg = std::fmod(ft_add(deg, 180), 360);
+			if (deg < 0)
+				deg = ft_add(deg, 360);
+			deg = ft_sub(deg, 180);
+		}
+		double rad = ft_mul(deg, 3.141592653589793 / 180);
+		double c = ft_cos(rad);
+		double s = ft_sin(rad);
+		double a = ft_add(ft_mul(bdef.w, 0.5), 4);
+		double b = ft_add(ft_mul(bdef.h, 0.5), 4);
+		double xmin = 0, xmax = 0, ymin = 0, ymax = 0;
+		bool first = true;
+		for (int sx = -1; sx <= 1; sx += 2) {
+			for (int sy = -1; sy <= 1; sy += 2) {
+				double px = flash_twips(ft_sub(ft_mul(ft_mul(c, sx), a), ft_mul(ft_mul(s, sy), b)));
+				double py = flash_twips(ft_add(ft_mul(ft_mul(s, sx), a), ft_mul(ft_mul(c, sy), b)));
+				if (first) {
+					xmin = xmax = px;
+					ymin = ymax = py;
+					first = false;
+				}
+				xmin = std::fmin(xmin, px);
+				xmax = std::fmax(xmax, px);
+				ymin = std::fmin(ymin, py);
+				ymax = std::fmax(ymax, py);
+			}
+		}
+		ex = ft_div(ft_sub(ft_sub(xmax, xmin), 4), 2);
+		ey = ft_div(ft_sub(ft_sub(ymax, ymin), 4), 2);
+	}
+
+	double gx = flash_twips(area.x);
+	double gy = flash_twips(area.y);
+	double x0 = ft_sub(gx, ft_div(area.w, 2));
+	double x1 = ft_add(gx, ft_div(area.w, 2));
+	double y0 = ft_sub(gy, ft_div(area.h, 2));
+	double y1 = ft_add(gy, ft_div(area.h, 2));
+	return !(ft_sub(x, ex) < x0 || ft_add(x, ex) > x1 || ft_sub(y, ey) < y0 || ft_add(y, ey) > y1);
+}
+
 bool fcsim_is_solved(const std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec) {
 	bool goal_exist = false;
 	for (int i = 0; i < sim->block_cnt; ++i) {
 		fcsim_block_def& bdef = sim->blocks[i].bdef;
 		if (!is_goal_object(bdef.type))continue;
 		goal_exist = true;
-		if (!fcsim_in_area(bdef, spec.goal))return false;
+		if (!fcsim_in_goal_area(bdef, spec.goal))return false;
 	}
 	return goal_exist;
 }
