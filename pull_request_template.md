@@ -2,7 +2,7 @@
 
 - [ ] I ran the tests with `--all`
 - [ ] There are no regressions
-- [ ] If the pass rate changed, I also put my run result in `test/history/reference/`
+- [ ] If the pass rate changed, I also put my run result in `test/history/reference/` (as explained in README.md)
 
 # Motivation
 
