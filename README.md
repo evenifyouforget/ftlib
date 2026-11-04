@@ -81,3 +81,15 @@ They are not hard rules, but are likely to result in higher quality code based o
 * Use squash or rebase, not merge. Merge makes the git history a mess, and is sometimes erroneous. (GitHub is configured to block it)
 * Test every new feature you add, with automated tests if possible. If you make any change at all, check the tests again.
 * Document everything, especially if it's not obvious. Your future self and everyone else will thank you.
+
+## Regenerating snapshots when pushing new tests
+
+1. Run the tests:
+
+```sh
+pytest --rootdir . -s -n auto --all > stdout.txt 2> stderr.txt
+```
+
+2. Copy-paste the table into the PR description.
+3. Copy the latest file from `test/history/live/` to `test/history/reference/` and rename it accordingly.
+4. Run the tests again. When you check the table now, the "Ref" and "Now" should be identical, with no entries in "No data".
