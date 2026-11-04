@@ -101,6 +101,11 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
     This hook runs after all tests are complete and pytest's main summary is generated.
     You may still need to scroll up a bit to see the output.
     """
+    # xdist workers only hold their own share of the results, and their later
+    # current_run_uid would make a partial file sort as the newest run;
+    # the controller receives every report, so it alone writes and summarizes
+    if hasattr(config, 'workerinput'):
+        return
     # write results
     live_results_dir = get_ftlib_dir() / 'test' / 'history' / 'live'
     live_results_dir.mkdir(parents=True, exist_ok=True)
