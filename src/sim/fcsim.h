@@ -125,6 +125,9 @@ template <typename T> void delete_all(std::vector<T*>& vec) {
 
 bool fcsim_in_area(const fcsim_block_def& bdef, const fcsim_rect& area);
 
+// the original game's win check for one goal block; see fcsim.cpp
+bool fcsim_in_goal_area(const fcsim_block_def& bdef, const fcsim_rect& area);
+
 bool fcsim_is_solved(const std::shared_ptr<ft_sim_state> sim, const ft_design_spec& spec);
 
 #endif
