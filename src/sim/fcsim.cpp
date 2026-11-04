@@ -411,6 +411,16 @@ static void create_wheel_joints(block* b, const std::shared_ptr<ft_sim_state> ha
 			ft_add(y, ft_mul(ft_sin(ft_add(bdef.angle, a[i])), r)));
 	}
 
+	// Wheel.as constructor: if radius > 20, four more joints at
+	// (x+20, y), (x, y+20), (x-20, y), (x, y-20) from the (snapped) centre,
+	// not rotated with the wheel, added after the circumference joints
+	if (r > 20) {
+		double dx[4] = { 20.0, 0.0, -20.0, 0.0 };
+		double dy[4] = { 0.0, 20.0, 0.0, -20.0 };
+		for (int i = 0; i < 4; i++)
+			create_joint(b, ft_add(x, dx[i]), ft_add(y, dy[i]));
+	}
+
 	if (jc)
 		replace_joint(b, jcl, jc);
 }
